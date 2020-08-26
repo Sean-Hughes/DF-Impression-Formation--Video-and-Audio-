@@ -67,6 +67,24 @@ parseJSON <- function(input) {
 
 ```
 
+# Extract data files from zip file 
+
+```{r}
+
+# Github does not play nicely with files > 100mb. So I compressed the data files so they could be uploaded. You need to uncompress them to run the code chunks below
+
+genuine_data <- c("raw/Experiment_3_Genuine_data.zip")
+
+unzip(genuine_data, exdir = "raw")
+
+deepfaked_data <- c("raw/Experiment_3_DF_data.zip")
+
+unzip(deepfaked_data, exdir = "raw")
+
+rm(genuine_data, deepfaked_data)
+
+```
+
 # Genuine Videos: Connect to the SQL Database
 
 ```{r}

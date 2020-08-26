@@ -66,6 +66,19 @@ parseJSON <- function(input) {
 
 ```
 
+
+# Extract data files from zip file 
+
+```{r}
+
+# Github does not play nicely with files > 100mb. So I compressed the data files so they could be uploaded. You need to uncompress them to run the code chunks below
+
+files.temp <- c("raw/data.zip")
+
+unzip(files.temp, exdir = "raw")
+
+```
+
 # Connect to the SQL Database
 
 ```{r}
