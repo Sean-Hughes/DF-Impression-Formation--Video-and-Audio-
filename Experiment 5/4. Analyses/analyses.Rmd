@@ -19,7 +19,6 @@ knitr::opts_chunk$set(message=FALSE,
 
 .libPaths()
 
-
 # Dependencies & functions
 
 ```{r}
@@ -39,6 +38,8 @@ library(ez)
 library(schoRsch)
 library(nnet)
 library(epitools)
+library(writexl)
+library(readxl)
 
 options(knitr.kable.NA = "/")
 
@@ -127,15 +128,18 @@ OR_to_d <- function(OR){
 }
 
 ```
-
-# Data and exclusions
+# Data Exclusions
 
 ```{r}
+
+# DATA EXCLUSIONS
 
 # full data
 data_processed <-
       read_csv("C:/Users/Sean/Desktop/git/DF-Impression-Formation--Video-and-Audio-/Experiment 5/2. Data/processed/data_processed.csv")%>%
-  # set factor levels for t test comparisons
+
+# set factor levels for experimental condition (pos vs. neg video) and video type (genuine vs. deepfaked)
+  
   mutate(experiment_condition = fct_relevel(experiment_condition,
                                             "positive video",
                                             "negative video")) %>%
@@ -143,27 +147,406 @@ data_processed <-
                                             "genuine video",
                                             "deepfake video")) %>%
   
-  # create exclusion variable for IAT data
+# create an exclusion variable for IAT data
+  
   mutate(exclude_iat = ifelse(complete_iat_data == "complete" & passed_iat_performance == TRUE,
                           FALSE, TRUE),
          # if exclude variable is missing, then exclude
          exclude_iat = ifelse(is.na(exclude_iat), TRUE, exclude_iat)) %>%
-  # create exclusion variable for missing exploratory question data 
-  mutate(exclude_exploratory = ifelse(is.na(memory_of_video_content), TRUE,
+  
+# create exclusion variable for missing exploratory question data 
+ 
+   mutate(exclude_exploratory = ifelse(is.na(memory_of_video_content), TRUE,
                                       ifelse(is.na(diagnosticity_question), TRUE,
                                              ifelse(is.na(demand), TRUE, 
                                                     ifelse(is.na(reactance), TRUE, 
                                                            ifelse(is.na(hypothesis_awareness), TRUE,
-                                                                  ifelse(is.na(influence_awareness), TRUE, FALSE))))))) %>%
-  #create compound exclusion criteria
+                                                                  ifelse(is.na(influence_awareness), TRUE,
+                                                                         ifelse(is.na(deepfake_video_check), TRUE, FALSE)))))))) %>%
+  
+#create compound exclusion criteria
   mutate(exclude = exclude_iat + exclude_exploratory)
   
-  # remove missing data
+# remove missing data
+
 data_processed_after_exclusions <- data_processed %>%
   filter(exclude == 0) 
 
+# Write file to disk for hand scoring of open ended questions 
+write_xlsx(data_processed_after_exclusions, "results/data_processed_after_exclusions.xlsx")
+
+# Import file after hand scoring of open ended questions
+data_processed_after_hand_scoring <- read_xlsx("results/Data_Cleaned_Recoded.xlsx") %>%
+  select(-...1)
 
 ```
+
+# Data Transformations
+
+```{r}
+
+# DATA TRANSFORMATIONS (ordered alphabetically)
+
+# RECODE ANALYTIC THINKING (CRT):  
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+    mutate(crt_q1_recoded = ifelse(crt_q1 == 4, 1, 0),
+         crt_q2_recoded = ifelse(crt_q2 == 10, 1, 0),
+         crt_q3_recoded = ifelse(crt_q3 == 39, 1, 0),
+         crt_q4_recoded = ifelse(crt_q4 == 2, 1, 0),
+         crt_q5_recoded = ifelse(crt_q5 == 8, 1, 0),
+         crt_q6_recoded = ifelse(crt_q6 == "Emily" | crt_q6 == "emily", 1 ,0),
+         crt_q7_recoded = ifelse(crt_q7 == 27, 1, 0),
+         analytic_thinking_crt_score = crt_q1_recoded + crt_q2_recoded + crt_q3_recoded + crt_q4_recoded + crt_q5_recoded + crt_q6_recoded + crt_q7_recoded)
+
+# RECODE BELIEF IN CONSPIRACY THEORIES SCALE: calculate a mean score
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+  mutate(belief_in_conspiracy_mean = (q1_bcti + q2_bcti + q3_bcti + q4_bcti + q5_bcti + q6_bcti + q7_bcti + q8_bcti + q9_bcti + q10_bcti + q11_bcti + q12_bcti + q13_bcti + q14_bcti + q15_bcti)/15) 
+
+
+# RECODE DEMAND: responses on the demand variable assigned a value of 0 (No Demand) or 1 (Demand)
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+  mutate(demand_recoded = case_when(grepl("No", demand) ~ 0,
+                                    grepl("I", demand) ~ 0,
+                                    grepl("Demand", demand) ~ 1)) 
+
+# RECODE DIAGNOSTICITY: responses on the diagnostic variable are assigned a value from 0 (Not Diagnostic) to 3 (Strongly Diagnostic)
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+  mutate(diagnosticity_question_recoded = case_when(grepl("Not", diagnosticity_question) ~ 0,
+                                       grepl("Slight", diagnosticity_question) ~ 1,
+                                       grepl("Moderate", diagnosticity_question) ~ 2,
+                                       grepl("Strong", diagnosticity_question) ~ 3))
+
+# RECODE EDUCATION: responses on the education variable are assigned a number from lowest education level (1; less that high school) to highest education level (7; doctoral or professional degree)
+
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+  mutate(education_recoded = case_when(grepl("Less than high school", education) ~ 1,
+                                       grepl("High school", education) ~ 2,
+                                       grepl("Some college", education) ~ 3,
+                                       grepl("Associate degree", education) ~ 4,
+                                       grepl("Bachelor", education) ~ 5,
+                                       grepl("Masters", education) ~ 6,
+                                       grepl("Doctoral degree", education) ~ 7,
+                                       grepl("Professional degree", education) ~ 7))
+    
+# RECODE EMPLOYMENT: responses on the employment variable are assigned to one of three categories: those who respond ‘Employed for wages (part-time)’, ‘Employed for wages (full time)’, or ‘Self-employed’ will be assigned to one group (‘Currently Employed’); those who respond ‘Out of work and looking for work’, ‘Out of work and not looking for work’, ‘Retired’, or ‘Unable to work’, will be assigned to a second group (‘Not Currently Employed’) while those who responded ‘A homemaker’, ‘A student’, or ‘military’ will be assigned to a  third group (‘Vocational Occupation’). 
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+  mutate(employment_recoded = case_when(grepl("full time", employment) ~ "Currently Employed",
+                                        grepl("part-time", employment) ~ "Currently Employed",
+                                        grepl("Self-", employment) ~ "Currently Employed",
+                                        grepl("looking", employment) ~ "Not Currently Employed",
+                                        grepl("not looking", employment) ~ "Not Currently Employed",
+                                        grepl("Retired", employment) ~ "Not Currently Employed",
+                                        grepl("Unable to work", employment) ~ "Not Currently Employed",
+                                        grepl("Homemaker", employment) ~ "Vocational Occupation",
+                                        grepl("Student", employment) ~ "Vocational Occupation",
+                                        grepl("Military", employment) ~ "Vocational Occupation",
+                                        grepl("responding", employment) ~ "Prefer Not to Say",
+                                        TRUE ~ "missing"))
+
+# RECODE EVALUATIONS: Create two variables (self-report recoded and IAT recoded). An analytic aim (see sections below) is to compare genuine and deepfaked videos in terms of their effect sizes. However, in order to do this, we need to control for the valence of the videos themselves (some conditions got positive videos whereas others got negative videos). So the self-reported rating/IAT score * by -1 for those in the negative video condition. This ensures that the negative and positive videos are being compared along the same dimension (strength) rather than valence, and that deepfake and genuine videos can be directly compared to one another
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>% 
+  mutate(self_report_recoded = ifelse(experiment_condition == "negative video", self_reported_rating * -1, self_reported_rating),
+         IAT_recoded = ifelse(experiment_condition == "negative video", IAT_D2_score * -1, IAT_D2_score))
+
+
+
+# RECODE INCOME: responses on the income variable are assigned a value from 1 (lower income: Less than $25,000) to 8 (higher income: $200,000 or more).
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+  mutate(income_recoded = case_when(grepl("Less", income) ~ "1",
+                                       grepl("34", income) ~ "2",
+                                       grepl("35", income) ~ "3",
+                                       grepl("74", income) ~ "4",
+                                       grepl("75", income) ~ "5",
+                                       grepl("100", income) ~ "6",
+                                       grepl("19", income) ~ "7",
+                                       grepl("200", income) ~ "8",
+                                       grepl("know", income) ~ "Don't Know",
+                                       grepl("Prefer", income) ~ "Prefer Not to Say")) 
+
+# RECODE OVERCLAIMING SCALE: calculate a mean score
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+   mutate(overclaiming_mean = (ocq_1 + ocq_2 + ocq_3 + ocq_4 + ocq_5 + ocq_6 + ocq_7 + ocq_8 + ocq_9 + ocq_10 + ocq_11 + ocq_12 + ocq_13 + ocq_14 + ocq_15 + ocq_16 + ocq_17 + ocq_18 + ocq_19 + ocq_20 + ocq_21 + ocq_22 + ocq_23 + ocq_24 + ocq_25 + ocq_26 + ocq_27 + ocq_28 + ocq_29 + ocq_30)/30) 
+
+
+# RECODE POLITICAL IDENTITY: responses on this variable assigned a value from -3 (Strongly Disagree) to 3 (Strongly Agree) with 0 (Neither Agree nor Disagree) as a midpoint 
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+  mutate(political_identity_recoded = case_when(grepl("Strongly Agree", political_ideology_identity_1) ~ 3,
+                                    grepl("Moderately Agree", political_ideology_identity_1) ~ 2,
+                                    grepl("Somewhat Agree", political_ideology_identity_1) ~ 1,
+                                    grepl("Neither", political_ideology_identity_1) ~ 0,
+                                    grepl("Somewhat disagree", political_ideology_identity_1) ~ -1,
+                                    grepl("Moderately disagree", political_ideology_identity_1) ~ -2,
+                                    grepl("Strongly disagree", political_ideology_identity_1) ~ -3))
+
+
+# RECODE POLITICAL IDEOLOGY (SOCIAL): responses on this variable assigned a value from 1 (Strongly Liberal) to 5 (Strongly Conservative) 
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+   mutate(political_ideology_social_issues_recoded = case_when(grepl("Strongly Liberal", political_ideology_social_issues) ~ 1,
+                                    grepl("Somewhat Liberal", political_ideology_social_issues) ~ 2,
+                                    grepl("Moderate", political_ideology_social_issues) ~ 3,
+                                    grepl("Somewhat Conservative", political_ideology_social_issues) ~ 4,
+                                    grepl("Strongly Conservative", political_ideology_social_issues) ~ 5))
+
+
+# RECODE POLITICAL IDEOLOGY (ECONOMIC): responses on this variable assigned a value from 1 (Strongly Liberal) to 5 (Strongly Conservative)
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+    mutate(political_ideology_economic_issues_recoded = case_when(grepl("Strongly Liberal", political_ideology_economic_issues) ~ 1,
+                                    grepl("Somewhat Liberal", political_ideology_economic_issues) ~ 2,
+                                    grepl("Moderate", political_ideology_economic_issues) ~ 3,
+                                    grepl("Somewhat Conservative", political_ideology_economic_issues) ~ 4,
+                                    grepl("Strongly Conservative", political_ideology_economic_issues) ~ 5))
+
+
+# RECODE REACTANCE: responses on the reactance variable assigned a value of 0 (No Reactance) or 1 (Reactance)
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+  mutate(reactance_recoded = case_when(grepl("No", reactance) ~ 0,
+                                    grepl("I", reactance) ~ 0,
+                                    grepl("React", reactance) ~ 1)) 
+
+# RECODE RATIONAL EXPERIENTAL INVENTORY (REI): calculate a mean score
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+  mutate(thinking_style_rei_mean = (q1_rei + q2_rei + q3_rei + q4_rei + q5_rei + q6_rei + q7_rei + q8_rei + q9_rei + q10_rei + q11_rei + q12_rei + q13_rei + q14_rei + q15_rei  + q16_rei  + q17_rei  + q18_rei  + q19_rei  + q20_rei)/20) 
+
+
+# RECODE RELIGIOUS AFFILITATION: responses on this variable assigned to one of three categories: Religious, Agnostic, Atheist (note: no religion individuals are assigned to the atheist group)
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+   mutate(religious_affiliation_general_recoded = case_when(grepl("Agnostic", religious_affiliation_general) ~ "Agnostic",
+                                    grepl("Atheist", religious_affiliation_general) ~ "Atheist",
+                                    grepl("Christian", religious_affiliation_general) ~ "Religious",
+                                    grepl("Hindu", religious_affiliation_general) ~ "Religious",
+                                    grepl("Humanist", religious_affiliation_general) ~ "Religious",
+                                    grepl("Jewish", religious_affiliation_general) ~ "Religious",
+                                    grepl("Muslim", religious_affiliation_general) ~ "Religious",
+                                    grepl("No religion", religious_affiliation_general) ~ "Atheist",
+                                    grepl("Other not listed", religious_affiliation_general) ~ "Religious",
+                                    grepl("Sikh", religious_affiliation_general) ~ "Religious"))  
+
+
+# RECODE RELIGIOUS AFFILITATION SCALE: responses on this variable scored from 1 (I strongly disagree) to 5 (I strongly agree). Responses to each item will be summed to create a total score representing ‘Religiosity’, with higher scores indicating higher religiosity.
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+  mutate(ras_q1_recoded = case_when(grepl("I strongly disagree", ras_q1) ~ 1,
+                                    grepl("I disagree", ras_q1) ~ 2,
+                                    grepl("I don't know", ras_q1) ~ 3,
+                                    grepl("I agree", ras_q1) ~ 4,
+                                    grepl("I strongly agree", ras_q1) ~ 5),
+         ras_q2_recoded = case_when(grepl("I strongly disagree", ras_q2) ~ 1,
+                                    grepl("I disagree", ras_q2) ~ 2,
+                                    grepl("I don't know", ras_q2) ~ 3,
+                                    grepl("I agree", ras_q2) ~ 4,
+                                    grepl("I strongly agree", ras_q2) ~ 5),
+         ras_q3_recoded = case_when(grepl("I strongly disagree", ras_q3) ~ 1,
+                                    grepl("I disagree", ras_q3) ~ 2,
+                                    grepl("I don't know", ras_q3) ~ 3,
+                                    grepl("I agree", ras_q3) ~ 4,
+                                    grepl("I strongly agree", ras_q3) ~ 5),
+         ras_q4_recoded = case_when(grepl("I strongly disagree", ras_q4) ~ 1,
+                                    grepl("I disagree", ras_q4) ~ 2,
+                                    grepl("I don't know", ras_q4) ~ 3,
+                                    grepl("I agree", ras_q4) ~ 4,
+                                    grepl("I strongly agree", ras_q4) ~ 5),
+         ras_q5_recoded = case_when(grepl("I strongly disagree", ras_q5) ~ 1,
+                                    grepl("I disagree", ras_q5) ~ 2,
+                                    grepl("I don't know", ras_q5) ~ 3,
+                                    grepl("I agree", ras_q5) ~ 4,
+                                    grepl("I strongly agree", ras_q5) ~ 5),
+         ras_q6_recoded = case_when(grepl("I strongly disagree", ras_q6) ~ 1,
+                                    grepl("I disagree", ras_q6) ~ 2,
+                                    grepl("I don't know", ras_q6) ~ 3,
+                                    grepl("I agree", ras_q6) ~ 4,
+                                    grepl("I strongly agree", ras_q6) ~ 5),
+         ras_q7_recoded = case_when(grepl("I strongly disagree", ras_q7) ~ 1,
+                                    grepl("I disagree", ras_q7) ~ 2,
+                                    grepl("I don't know", ras_q7) ~ 3,
+                                    grepl("I agree", ras_q7) ~ 4,
+                                    grepl("I strongly agree", ras_q7) ~ 5),
+         relgious_affliation_score_mean = ((ras_q1_recoded + ras_q2_recoded + ras_q3_recoded + ras_q4_recoded + ras_q5_recoded + ras_q6_recoded + ras_q7_recoded)/7))
+
+
+# Order Variables in File for Later Analysis
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+  mutate(demographic_items = "*",
+          method_items = "*",
+          evaluative_items = "*",
+          exploratory_items = "*",
+          individual_difference_items = "*") %>%
+  select(numeric_id,
+         experiment,
+         demographic_items,
+         age,
+         gender,
+         gender_self_describe,
+         ethnicity,
+         ethnicity_self_describe,
+         education,
+         education_recoded,
+         employment,
+         employment_recoded,
+         location,
+         income,
+         income_recoded,
+         method_items,
+         condition,
+         experiment_condition,
+         video_type,
+         task_order,
+         IAT_block_order,
+         complete_iat_data,
+         passed_iat_performance,
+         exclude_iat,
+         exclude_exploratory,
+         exclude,
+         evaluative_items,
+         pos_neg,
+         good_bad,
+         like_dislike,
+         self_reported_rating,
+         self_report_recoded,
+         IAT_D2_score,
+         IAT_recoded,
+         exploratory_items,
+         memory_of_video_content,
+         diagnosticity_question,
+         diagnosticity_question_recoded,
+         demand,
+         demand_recoded,
+         reactance,
+         reactance_recoded,
+         hypothesis_awareness,
+         hypothesis_awareness_recoded,
+         influence_awareness,
+         influence_awareness_recoded,
+         recognised_video_manipulation,
+         deepfake_video_check,
+         deepfake_video_check_recoded,
+         deepfake_concept_check,
+         deepfake_concept_check_recoded,
+         issues_with_study,
+         individual_difference_items,
+         political_ideology_identity_1,
+         political_ideology_social_issues,
+         political_ideology_economic_issues,
+         religious_affiliation_general,
+         political_identity_recoded,
+         political_ideology_social_issues_recoded,
+         political_ideology_economic_issues_recoded,
+         ras_q1,
+         ras_q2,
+         ras_q3,
+         ras_q4,
+         ras_q5,
+         ras_q6,
+         ras_q7,
+         ras_q8,
+         religious_affiliation_general_recoded,
+         ras_q1_recoded,
+         ras_q2_recoded,
+         ras_q3_recoded,
+         ras_q4_recoded,
+         ras_q5_recoded,
+         ras_q6_recoded,
+         ras_q7_recoded,
+         relgious_affliation_score_mean,
+         q1_bcti,
+         q2_bcti,
+         q3_bcti,
+         q4_bcti,
+         q5_bcti,
+         q6_bcti,
+         q7_bcti,
+         q8_bcti,
+         q9_bcti,
+         q10_bcti,
+         q11_bcti,
+         q12_bcti,
+         q13_bcti,
+         q14_bcti,
+         q15_bcti,
+         belief_in_conspiracy_mean,
+         ocq_1,
+         ocq_2,
+         ocq_3,
+         ocq_4,
+         ocq_5,
+         ocq_6,
+         ocq_7,
+         ocq_8,
+         ocq_9,
+         ocq_10,
+         ocq_11,
+         ocq_12,
+         ocq_13,
+         ocq_14,
+         ocq_15,
+         ocq_16,
+         ocq_17,
+         ocq_18,
+         ocq_19,
+         ocq_20,
+         ocq_21,
+         ocq_22,
+         ocq_23,
+         ocq_24,
+         ocq_25,
+         ocq_26,
+         ocq_27,
+         ocq_28,
+         ocq_29,
+         ocq_30,
+         overclaiming_mean,
+         q1_rei,
+         q2_rei,
+         q3_rei,
+         q4_rei,
+         q5_rei,
+         q6_rei,
+         q7_rei,
+         q8_rei,
+         q9_rei,
+         q10_rei,
+         q11_rei,
+         q12_rei,
+         q13_rei,
+         q14_rei,
+         q15_rei,
+         q16_rei,
+         q17_rei,
+         q18_rei,
+         q19_rei,
+         q20_rei,
+         thinking_style_rei_mean,
+         crt_q1,
+         crt_q2,
+         crt_q3,
+         crt_q4,
+         crt_q5,
+         crt_q6,
+         crt_q7,
+         crt_q8,
+         crt_q9,
+         crt_q1_recoded,
+         crt_q2_recoded,
+         crt_q3_recoded,
+         crt_q4_recoded,
+         crt_q5_recoded,
+         crt_q6_recoded,
+         crt_q7_recoded,
+         analytic_thinking_crt_score)
+
+```
+
 
 # Demographics
 
@@ -279,14 +662,6 @@ results_iat_selfreports_video_type %>%
 
 
 ```{r}
-
-# Firs recode the self-reported ratings in order to compare positive and negative videos along the same scale. Do this by * the self-reported rating score by -1 for those in the negative video condition. This ensures that the negative and positive videos are being compared along the same dimension (strength) rather than valence
-
-data_processed_after_exclusions <- data_processed_after_exclusions %>% 
-  mutate(self_report_recoded = ifelse(experiment_condition == "negative video", self_reported_rating * -1, self_reported_rating),
-         IAT_recoded = ifelse(experiment_condition == "negative video", IAT_D2_score * -1, IAT_D2_score))
-
-write_csv(data_processed_after_exclusions, "results/sean.csv")
 
 results_iat_selfreports_evaluation_strength <- data_processed_after_exclusions %>%
   rename(IV = video_type) %>%
