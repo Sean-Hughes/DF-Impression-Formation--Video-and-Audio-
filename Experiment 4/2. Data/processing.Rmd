@@ -277,6 +277,17 @@ rm(database_deepfaked_audio_meta_data)
 
 # Reduce the length of the random id variable to five characters (this is a sufficient length to identify each unique participant)
 
+
+count_unique <- function(x) {
+  return(length(unique(x)))
+}
+information_preserved <- function(x, length) {
+  return(
+    count_unique(str_sub(x, end=i)) ==
+      count_unique(x)
+  )
+}
+
 for (i in 5:36) {
   if (
     information_preserved(database_deepfaked_audio$session, i) &&
@@ -761,21 +772,11 @@ data_processed <- data_processed %>%
 ```{r}
 # We used an open ended questions to gauge if people were aware that the deepfaked audio was deepfaked. In order to score this as 1 (aware) or 0 (unaware) we exported the values to an excel sheet, manually scored them, and them imported the values back into R for later analysis.
 
-# Select out the deepfake check info and participant id values. Write these values to an excel sheet
-data_deepfake_check <- data_processed %>% 
-  select(numeric_id, deepfake_check)
-
-write.xlsx(data_deepfake_check, "processed/data_deepfake_check.xlsx")
+write.xlsx(data_processed, "processed/data_processed.xlsx")
 
 # Import the manually scored values back into R for later analysis
 
-data_deepfake_check <- read_excel("processed/data_deepfake_check_coded.xlsx") %>%
-  select(numeric_id, deepfake_awareness)
-
-# Add the information to the processed data file
-data_processed <- data_processed %>% 
-  full_join(data_deepfake_check, by = "numeric_id")
-
+data_processed_after_hand_scoring <- read_excel("processed/data_hand_scored.xlsx") 
 
 ```
 
@@ -787,7 +788,7 @@ data_processed <- data_processed %>%
 dir.create("processed")
 
 # write to disk
-write_csv(data_processed, "processed/data_processed.csv")
+write_csv(data_processed_after_hand_scoring, "processed/data_processed.csv")
 
 data <- read_csv("processed/data_processed.csv")
 

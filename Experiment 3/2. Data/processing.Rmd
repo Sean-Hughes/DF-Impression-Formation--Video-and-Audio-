@@ -35,6 +35,7 @@ library(Hmisc)
 library(ggplot2)
 library(haven)
 library(IATscores)
+library(xlsx)
 
 # Used to reduce unique ids to a smaller number
 count_unique <- function(x) {
@@ -274,6 +275,17 @@ rm(database_deepfaked_videos_meta_data)
 ```{r}
 
 # Reduce the length of the random id variable to five characters (this is a sufficient length to identify each unique participant)
+
+# Used to reduce unique ids to a smaller number
+count_unique <- function(x) {
+  return(length(unique(x)))
+}
+information_preserved <- function(x, length) {
+  return(
+    count_unique(str_sub(x, end=i)) ==
+      count_unique(x)
+  )
+}
 
 for (i in 5:36) {
   if (
@@ -754,6 +766,20 @@ data_processed <- data_processed %>%
 
 ```
 
+
+## Scoring People as Aware or Non-Aware of the Deepfake Manipulation
+
+```{r}
+# We used an open ended questions to gauge if people were aware that the deepfaked audio was deepfaked. In order to score this as 1 (aware) or 0 (unaware) we exported the values to an excel sheet, manually scored them, and them imported the values back into R for later analysis.
+
+write.xlsx(data_processed, "processed/data_processed.xlsx")
+
+# Import the manually scored values back into R for later analysis
+
+data_processed_after_hand_scoring <- read_excel("processed/data_hand_scored.xlsx") 
+
+```
+
 # Combine and write to disk
 
 ```{r}
@@ -762,10 +788,11 @@ data_processed <- data_processed %>%
 dir.create("processed")
 
 # write to disk
-write_csv(data_processed, "processed/data_processed.csv")
+write_csv(data_processed_after_hand_scoring, "processed/data_processed.csv")
 
 data <- read_csv("processed/data_processed.csv")
 
 ```
+
 
 

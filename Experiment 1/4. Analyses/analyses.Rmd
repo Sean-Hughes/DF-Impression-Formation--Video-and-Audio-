@@ -1,5 +1,5 @@
 ---
-title: "Deepfaking"
+title: "Experiment 1"
 subtitle: "Analyses"
 author: "Sean Hughes"
 date: "`r format(Sys.time(), '%d %B %Y')`"
@@ -132,7 +132,7 @@ OR_to_d <- function(OR){
 
 # full data
 data_processed <-
-      read_csv("C:/Users/Sean/Desktop/git/Deepfaking/Experiment 1/2. Data/processed/data_processed.csv") %>%
+      read_csv("C:/Users/Sean/Desktop/git/DF-Impression-Formation--Video-and-Audio-/Experiment 1/2. Data/processed/data_processed.csv") %>%
   # set factor levels for t test comparisons
   mutate(experiment_condition = fct_relevel(experiment_condition,
                                             "Positive Video",
@@ -158,6 +158,104 @@ data_processed_after_exclusions <- data_processed %>%
 
 
 ```
+
+
+# Data Transformations
+
+```{r}
+
+# RECODE DEMAND: responses on the demand variable assigned a value of 0 (No Demand) or 1 (Demand)
+
+data_processed_after_exclusions <- data_processed_after_exclusions %>%
+  mutate(demand_recoded = case_when(grepl("No", demand) ~ 0,
+                                    grepl("I", demand) ~ 0,
+                                    grepl("Demand", demand) ~ 1)) 
+
+# RECODE DIAGNOSTICITY: responses on the diagnostic variable are assigned a value from 0 (Not Diagnostic) to 3 (Strongly Diagnostic)
+
+data_processed_after_exclusions <- data_processed_after_exclusions %>%
+  mutate(diagnosticity_question_recoded = case_when(grepl("Not", diagnosticity_question) ~ 0,
+                                       grepl("Slight", diagnosticity_question) ~ 1,
+                                       grepl("Moderate", diagnosticity_question) ~ 2,
+                                       grepl("Strong", diagnosticity_question) ~ 3))
+
+
+# RECODE EVALUATIONS: Create two variables (self-report recoded and IAT recoded). An analytic aim (see sections below) is to compare genuine and deepfaked audio in terms of their effect sizes. However, in order to do this, we need to control for the valence of the audio themselves (some conditions got positive audio whereas others got negative audio). So the self-reported rating/IAT score * by -1 for those in the negative audio condition. This ensures that the negative and positive audio are being compared along the same dimension (strength) rather than valence, and that deepfake and genuine audio can be directly compared to one another
+
+data_processed_after_exclusions <- data_processed_after_exclusions %>% 
+  mutate(self_report_recoded = ifelse(experiment_condition == "Negative Video", self_reported_rating * -1, self_reported_rating),
+         IAT_recoded = ifelse(experiment_condition == "Negative Video", IAT_D2_score * -1, IAT_D2_score))
+
+# RECODE EXPLORATORY QUESTION CHECKS: responses on this variable assigned a value of 0 (Not Aware it was a Deepfake) or 1 (Aware it was a Deepfake)
+
+
+data_processed_after_exclusions <- data_processed_after_exclusions %>%
+  mutate(influence_awareness_recoded_ = case_when(grepl("Yes", influence_awareness_recoded) ~ 1,
+                                                   grepl("No", influence_awareness_recoded) ~ 0)) %>% 
+  mutate(hypothesis_awareness_recoded_ = case_when(grepl("Yes", hypothesis_awareness_recoded) ~ 1,
+                                                   grepl("No", hypothesis_awareness_recoded) ~ 0))
+
+# RECODE REACTANCE: responses on the reactance variable assigned a value of 0 (No Reactance) or 1 (Reactance)
+
+data_processed_after_exclusions <- data_processed_after_exclusions %>%
+  mutate(reactance_recoded = case_when(grepl("No", reactance) ~ 0,
+                                    grepl("I", reactance) ~ 0,
+                                    grepl("React", reactance) ~ 1))
+
+
+# Order Variables in File for Later Analysis
+
+data_processed_after_exclusions <- data_processed_after_exclusions %>%
+  mutate(demographic_items = "*",
+          method_items = "*",
+          evaluative_items = "*",
+          exploratory_items = "*",
+          individual_difference_items = "*") %>%
+  select(numeric_id,
+         experiment,
+         demographic_items,
+         age,
+         gender,
+         method_items,
+         experiment_condition,
+         task_order,
+         IAT_block_order,
+         complete_iat_data,
+         passed_iat_performance,
+         exclude_iat,
+         exclude_exploratory,
+         exclude,
+         evaluative_items,
+         pos_neg,
+         good_bad,
+         like_dislike,
+         self_reported_rating,
+         self_report_recoded,
+         IAT_D2_score,
+         IAT_recoded,
+         exploratory_items,
+         memory_of_video_content,
+         diagnosticity_question,
+         diagnosticity_question_recoded,
+         demand,
+         demand_recoded,
+         reactance,
+         reactance_recoded,
+         hypothesis_awareness,
+         hypothesis_awareness_recoded,
+         hypothesis_awareness_recoded_,
+         influence_awareness,
+         influence_awareness_recoded,
+         influence_awareness_recoded_,
+         issues_with_study)
+
+
+  # Write total dataset after exclusions to file
+  write_csv(data_processed_after_exclusions, "results/total_data.csv")
+  
+```
+
+
 
 # Demographics
 

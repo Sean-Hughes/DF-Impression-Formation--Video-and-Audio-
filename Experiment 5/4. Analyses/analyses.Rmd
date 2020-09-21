@@ -669,9 +669,15 @@ data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
 write_xlsx(data_processed_after_hand_scoring, "results/data_for_analysis.xlsx")
 
 # Write deepfake only condition subset of data
-sean <- data_processed_after_hand_scoring %>%
+data_deepfake_condition <- data_processed_after_hand_scoring %>%
 filter(video_type == "deepfake video") %>%
   write_xlsx("results/deepfake_only.xlsx")
+
+# Write genuine only condition subset of data
+data_genuine_condition <- data_processed_after_hand_scoring %>%
+filter(video_type == "genuine video") %>%
+  write_xlsx("results/genuine_only.xlsx")
+
 ```
 
 # Demographics

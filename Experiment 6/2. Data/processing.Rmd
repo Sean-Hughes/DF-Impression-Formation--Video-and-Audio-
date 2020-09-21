@@ -1,5 +1,5 @@
 ---
-title: "Experiment 4"
+title: "Experiment 6"
 subtitle: "Data processing"
 author: "Sean Hughes"
 date: "`r format(Sys.time(), '%d %B %Y')`"
@@ -36,6 +36,7 @@ library(ggplot2)
 library(haven)
 library(IATscores)
 library(xlsx)
+library(hablar)
 
 # Used to reduce unique ids to a smaller number
 count_unique <- function(x) {
@@ -74,11 +75,11 @@ parseJSON <- function(input) {
 
 # Github does not play nicely with files > 100mb. So I compressed the data files so they could be uploaded. You need to uncompress them to run the code chunks below
 
-genuine_data <- c("raw/Experiment_4_Genuine_data.zip")
+genuine_data <- c("raw/Experiment_6_Genuine_data.zip")
 
 unzip(genuine_data, exdir = "raw")
 
-deepfaked_data <- c("raw/Experiment_4_DF_data.zip")
+deepfaked_data <- c("raw/Experiment_6_DF_data.zip")
 
 unzip(deepfaked_data, exdir = "raw")
 
@@ -94,7 +95,7 @@ rm(genuine_data, deepfaked_data)
 # 'Connect' to database
 connection <- dbConnect(
   drv=RSQLite::SQLite(),
-  dbname= "raw/Experiment_4_Genuine_data.sqlite")
+  dbname= "raw/Experiment_6_Genuine_data.sqlite")
 
 # Extract main table
 database_genuine_audio <- dbGetQuery(
@@ -133,6 +134,16 @@ rm(database_genuine_audio_meta_data)
 ```{r}
 
 # Reduce the length of the random id variable to five characters (this is a sufficient length to identify each unique participant)
+count_unique <- function(x) {
+  return(length(unique(x)))
+}
+information_preserved <- function(x, length) {
+  return(
+    count_unique(str_sub(x, end=i)) ==
+      count_unique(x)
+  )
+}
+
 
 for (i in 5:36) {
   if (
@@ -201,13 +212,13 @@ raw_data_genuine_audio <- database_genuine_audio_full %>%
     database_genuine_audio_incremental %>% 
       filter(!(observation %in% database_genuine_audio_full$observation))) %>%
   type_convert()
-
+                              
 gc()
 
 # rename the observation column to subject
 
 raw_data_genuine_audio <- raw_data_genuine_audio %>% 
-  rename(subject = observation)
+  rename(subject = observation) 
 
 ```
 
@@ -237,7 +248,7 @@ Raw_Data_genuine <- raw_data_genuine_audio
 # 'Connect' to database
 connection <- dbConnect(
   drv=RSQLite::SQLite(),
-  dbname= "raw/Experiment_4_DF_data.sqlite")
+  dbname= "raw/Experiment_6_DF_data.sqlite")
 
 # Extract main table
 database_deepfaked_audio <- dbGetQuery(
@@ -276,6 +287,16 @@ rm(database_deepfaked_audio_meta_data)
 ```{r}
 
 # Reduce the length of the random id variable to five characters (this is a sufficient length to identify each unique participant)
+
+count_unique <- function(x) {
+  return(length(unique(x)))
+}
+information_preserved <- function(x, length) {
+  return(
+    count_unique(str_sub(x, end=i)) ==
+      count_unique(x)
+  )
+}
 
 for (i in 5:36) {
   if (
@@ -376,10 +397,12 @@ Raw_Data_deepfake <- raw_data_deepfaked_audio
 ```{r}
 
 raw_data_genuine_audio <- raw_data_genuine_audio %>% 
-  mutate(audio_type = "genuine audio") 
+  mutate(audio_type = "genuine audio") %>%
+  convert(chr(crt_q1, crt_q2, crt_q3, crt_q4, crt_q5, crt_q6, crt_q7))
 
 raw_data_deepfaked_audio <- raw_data_deepfaked_audio %>% 
-  mutate(audio_type = "deepfake audio")
+  mutate(audio_type = "deepfake audio") %>%
+  convert(chr(crt_q1, crt_q2, crt_q3, crt_q4, crt_q5, crt_q6, crt_q7))
 
 raw_data_combined <- raw_data_genuine_audio %>% 
   full_join(raw_data_deepfaked_audio)
@@ -390,19 +413,12 @@ raw_data_combined <- raw_data_genuine_audio %>%
 
 ```{r}
 
-current_experiment_number <- 4
+current_experiment_number <- 6
 
 # Select out the demographic and method factor information
 
 data_demographics_and_methods <- raw_data_combined %>% 
-  select(subject,
-         audio_type,
-         prolific_id, 
-         age, 
-         gender, 
-         condition, 
-         name) %>%
-  
+
   group_by(subject) %>%
   
   # Remove na values (note: this does not exclude participants)
@@ -421,7 +437,39 @@ data_demographics_and_methods <- raw_data_combined %>%
                                           grepl("Negative_Audio", condition) ~ "negative audio")) %>% 
   
   mutate(task_order = case_when(grepl("IAT_First", condition) ~ "iat first", 
-                                grepl("SR_First", condition) ~ "ratings first"))
+                                grepl("SR_First", condition) ~ "ratings first")) %>%
+  
+    select(subject,
+         prolific_id, 
+         audio_type,
+         condition,
+         condition_number, 
+         IAT_block_order,
+         experiment_condition,
+         task_order,
+         age, 
+         gender,
+         gender_self_describe,
+         ethnicity,
+         ethnicity_self_describe,
+         education,
+         employment,
+         location,
+         income,
+         political_ideology_identity_1,
+         political_ideology_social_issues,
+         political_ideology_economic_issues,
+         religious_affiliation_general,
+         ras_q1,
+         ras_q2,
+         ras_q3, 
+         ras_q4,
+         ras_q5,
+         ras_q6, 
+         ras_q7,
+         ras_q8)
+
+
 
 ```
 
@@ -436,13 +484,17 @@ data_self_reports <- raw_data_combined %>%
   select(subject, 
          pos_neg, 
          good_bad, 
-         like_dislike) %>% 
+         like_dislike,
+         intentions_q1,
+         intentions_q2,
+         intentions_q3) %>% 
   
   group_by(subject) %>%
   
   summarise_all(funs(first(na.omit(.)))) %>% 
   # create an average rating score 
   mutate(self_reported_rating = (pos_neg + good_bad + like_dislike)/3) %>% 
+  mutate(behavioral_intentions = (intentions_q1 + intentions_q2 + intentions_q3)/3) %>%
   mutate_if(is.numeric, round, digits = 2) 
 
 ```
@@ -462,9 +514,101 @@ data_exploratory_questions <- raw_data_combined %>%
          demand, 
          reactance, 
          hypothesis_awareness, 
-         influence_awareness, 
-         issues_with_study,
-         deepfake_check) %>% 
+         influence_awareness,
+         deepfake_audio_check,
+         deepfake_concept_check,
+         issues_with_study) %>% 
+  
+  group_by(subject) %>%
+  
+  summarise_all(funs(first(na.omit(.))))
+
+
+```
+
+
+# Individual Difference Data
+
+```{r}
+
+# select out the self-reported ratings and the participant id (subject)
+
+data_individual_differences <- raw_data_combined %>% 
+  
+  select(subject,
+         rn_s1_q1_awareness,
+         rn_s1_q2_accuracy,
+         rn_s1_q3_sharing,
+         rn_s2_q1_awareness,
+         rn_s2_q2_accuracy,
+         rn_s2_q3_sharing,
+         rn_s3_q1_awareness,
+         rn_s3_q2_accuracy,
+         rn_s3_q3_sharing,
+         rn_s4_q1_awareness,
+         rn_s4_q2_accuracy,
+         rn_s4_q3_sharing,
+         rn_s5_q1_awareness,
+         rn_s5_q2_accuracy,
+         rn_s5_q3_sharing,
+         rn_s6_q1_awareness,
+         rn_s6_q2_accuracy,
+         rn_s6_q3_sharing,
+         fn_s1_q1_awareness,
+         fn_s1_q2_accuracy,
+         fn_s1_q3_sharing,
+         fn_s2_q1_awareness,
+         fn_s2_q2_accuracy,
+         fn_s2_q3_sharing,
+         fn_s3_q1_awareness,
+         fn_s3_q2_accuracy,
+         fn_s3_q3_sharing,
+         fn_s4_q1_awareness, 
+         fn_s4_q2_accuracy, 
+         fn_s4_q3_sharing,
+         fn_s5_q1_awareness,
+         fn_s5_q2_accuracy,
+         fn_s5_q3_sharing,
+         fn_s6_q1_awareness,
+         fn_s6_q2_accuracy,
+         fn_s6_q3_sharing,
+         q1_aot_e,
+         q2_aot_e,
+         q3_aot_e,
+         q4_aot_e,
+         q5_aot_e,
+         q6_aot_e,
+         q7_aot_e,
+         q8_aot_e,
+         q1_rei,
+         q2_rei,
+         q3_rei,
+         q4_rei,
+         q5_rei,
+         q6_rei,
+         q7_rei,
+         q8_rei,
+         q9_rei,
+         q10_rei,
+         q11_rei,
+         q12_rei,
+         q13_rei,
+         q14_rei,
+         q15_rei,
+         q16_rei,
+         q17_rei,
+         q18_rei,
+         q19_rei,
+         q20_rei,
+         crt_q1,
+         crt_q2,
+         crt_q3,
+         crt_q4,
+         crt_q5,
+         crt_q6,
+         crt_q7,
+         crt_q8,
+         crt_q9) %>% 
   
   group_by(subject) %>%
   
@@ -559,7 +703,7 @@ mutate(revised_block = ifelse(condition_number %in% c(1, 2),
 select(subject, 
        condition,
        condition_number,
-       name = name.x,
+       name,
        corr,
        trial_number, 
        block, 
@@ -701,7 +845,9 @@ data_iat_D2_scores <- data_iat_cleaned %>%
   rename(IAT_D2_score = p2112) 
 
 ```
-## Join the Various Files Together
+
+
+# Join the Various Files Together
 
 ```{r}
 
@@ -709,8 +855,9 @@ data_iat_D2_scores <- data_iat_cleaned %>%
 
 data_processed <- data_demographics_and_methods %>% 
   full_join(data_self_reports, by ='subject') %>%
-  full_join(data_exploratory_questions, by ='subject') %>%
   full_join(data_iat_D2_scores, by='subject') %>% 
+  full_join(data_exploratory_questions, by ='subject') %>%
+  full_join(data_individual_differences, by='subject') %>% 
   full_join(data_iat_completeness, by='subject') %>% 
   full_join(data_iat_performance, by='subject') 
 
@@ -725,14 +872,22 @@ data_processed <- data_processed %>%
   full_join(unique_ids, by = "subject") 
 
 # Order the columns for subsequent analyses
+names(data_processed)
 
 data_processed <- data_processed %>% 
   mutate(experiment = current_experiment_number) %>%
   select(numeric_id, 
          #subject, 
          experiment,
-         gender, 
          age, 
+         gender,
+         gender_self_describe,
+         ethnicity,
+         ethnicity_self_describe,
+         education,
+         employment,
+         location,
+         income,
          condition,
          experiment_condition, 
          audio_type,
@@ -745,37 +900,104 @@ data_processed <- data_processed %>%
          like_dislike, 
          self_reported_rating,
          IAT_D2_score,
+         intentions_q1,
+         intentions_q2,
+         intentions_q3,
+         behavioral_intentions,
          memory_of_audio_content, 
          diagnosticity_question, 
          demand, 
          reactance, 
          hypothesis_awareness, 
          influence_awareness, 
+         deepfake_audio_check,
+         deepfake_concept_check,
          issues_with_study,
-         deepfake_check)
-
-```
-
-## Scoring People as Aware or Non-Aware of the Deepfake Manipulation
-
-```{r}
-# We used an open ended questions to gauge if people were aware that the deepfaked audio was deepfaked. In order to score this as 1 (aware) or 0 (unaware) we exported the values to an excel sheet, manually scored them, and them imported the values back into R for later analysis.
-
-# Select out the deepfake check info and participant id values. Write these values to an excel sheet
-data_deepfake_check <- data_processed %>% 
-  select(numeric_id, deepfake_check)
-
-write.xlsx(data_deepfake_check, "processed/data_deepfake_check.xlsx")
-
-# Import the manually scored values back into R for later analysis
-
-data_deepfake_check <- read_excel("processed/data_deepfake_check_coded.xlsx") %>%
-  select(numeric_id, deepfake_awareness)
-
-# Add the information to the processed data file
-data_processed <- data_processed %>% 
-  full_join(data_deepfake_check, by = "numeric_id")
-
+         political_ideology_identity_1,
+         political_ideology_social_issues,
+         political_ideology_economic_issues,
+         religious_affiliation_general,
+         ras_q1,
+         ras_q2,
+         ras_q3,
+         ras_q4,
+         ras_q5,
+         ras_q6,
+         ras_q7,
+         ras_q8,
+         rn_s1_q1_awareness,
+         rn_s1_q2_accuracy,
+         rn_s1_q3_sharing,
+         rn_s2_q1_awareness,
+         rn_s2_q2_accuracy,
+         rn_s2_q3_sharing,
+         rn_s3_q1_awareness,
+         rn_s3_q2_accuracy,
+         rn_s3_q3_sharing,
+         rn_s4_q1_awareness,
+         rn_s4_q2_accuracy,
+         rn_s4_q3_sharing,
+         rn_s5_q1_awareness,
+         rn_s5_q2_accuracy,
+         rn_s5_q3_sharing,
+         rn_s6_q1_awareness,
+         rn_s6_q2_accuracy,
+         rn_s6_q3_sharing,
+         fn_s1_q1_awareness,
+         fn_s1_q2_accuracy,
+         fn_s1_q3_sharing,
+         fn_s2_q1_awareness,
+         fn_s2_q2_accuracy,
+         fn_s2_q3_sharing,
+         fn_s3_q1_awareness,
+         fn_s3_q2_accuracy,
+         fn_s3_q3_sharing,
+         fn_s4_q1_awareness, 
+         fn_s4_q2_accuracy, 
+         fn_s4_q3_sharing,
+         fn_s5_q1_awareness,
+         fn_s5_q2_accuracy,
+         fn_s5_q3_sharing,
+         fn_s6_q1_awareness,
+         fn_s6_q2_accuracy,
+         fn_s6_q3_sharing,
+         q1_aot_e,
+         q2_aot_e,
+         q3_aot_e,
+         q4_aot_e,
+         q5_aot_e,
+         q6_aot_e,
+         q7_aot_e,
+         q8_aot_e,
+         q1_rei,
+         q2_rei,
+         q3_rei,
+         q4_rei,
+         q5_rei,
+         q6_rei,
+         q7_rei,
+         q8_rei,
+         q9_rei,
+         q10_rei,
+         q11_rei,
+         q12_rei,
+         q13_rei,
+         q14_rei,
+         q15_rei,
+         q16_rei,
+         q17_rei,
+         q18_rei,
+         q19_rei,
+         q20_rei,
+         crt_q1,
+         crt_q2,
+         crt_q3,
+         crt_q4,
+         crt_q5,
+         crt_q6,
+         crt_q7,
+         crt_q8,
+         crt_q9)
 
 ```
 
