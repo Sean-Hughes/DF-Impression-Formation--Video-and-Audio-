@@ -317,6 +317,31 @@ data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
 
 
 
+# RECODE INTENTIONS: the raw scoring of intentions was 1 (strongly disagree) 2 (disagree) 3 (neutral) 4 (agree) and 5 (strongly agree). I've recoded the scores as follows: -2 (strongly disagree) -1 (disagree) 0 (neutral) 1 (agree) 2 (strongly agree)
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+  mutate(intentions_q1_recoded = case_when((intentions_q1 == 1) ~ -2,
+                                           (intentions_q1 == 2) ~ -1,
+                                           (intentions_q1 == 3) ~  0,
+                                           (intentions_q1 == 4) ~  1,
+                                           (intentions_q1 == 5) ~  2)) %>%
+  
+  mutate(intentions_q2_recoded = case_when((intentions_q2 == 1) ~ -2,
+                                           (intentions_q2 == 2) ~ -1,
+                                           (intentions_q2 == 3) ~  0,
+                                           (intentions_q2 == 4) ~  1,
+                                           (intentions_q2 == 5) ~  2)) %>% 
+  
+  mutate(intentions_q3_recoded = case_when((intentions_q3 == 1) ~ -2,
+                                           (intentions_q3 == 2) ~ -1,
+                                           (intentions_q3 == 3) ~  0,
+                                           (intentions_q3 == 4) ~  1,
+                                           (intentions_q3 == 5) ~  2)) %>%
+  
+  mutate(overall_intentions_score = (intentions_q1_recoded + intentions_q2_recoded + intentions_q3_recoded)/3)
+  
+         
+
 # RECODE NEWS EVALUATION TASK DATA: three measures here: accuracy of the news statement, familarity  with the news statement, and willingness to share it with others. Accuracy is not recoded. Familiarity is (originally 1 = yes , 2 = No, 3 = Maybe, recoded so that 0 = no or maybe and 1 = yes - that way higher scores indicate higher familiarity with the news story). Sharing was originally 1 = yes 2 = no 3 = maybe. recoded so that no = 0 and yes or maybe = 1 that way higher scores indicate higher chance of sharing).
 
     ## AWARENESS
@@ -619,10 +644,17 @@ data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
          pos_neg,
          good_bad,
          like_dislike,
+         intentions_q1,
+         intentions_q1_recoded,
+         intentions_q2,
+         intentions_q2_recoded,
+         intentions_q3,
+         intentions_q3_recoded,
          self_reported_rating,
          self_report_recoded,
          IAT_D2_score,
          IAT_recoded,
+         overall_intentions_score,
          exploratory_items,
          memory_of_audio_content,
          diagnosticity_question,
