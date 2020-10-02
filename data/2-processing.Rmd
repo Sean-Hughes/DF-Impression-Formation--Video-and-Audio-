@@ -1,0 +1,470 @@
+---
+title: "Data processing"
+author: "Sean Hughes & Ian Hussey"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes 
+    toc_float: yes
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(message=FALSE,
+                      warning=FALSE)
+```
+
+# Functions and dependencies
+
+```{r}
+
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(IATscores)
+
+```
+
+# Get raw data
+
+```{r}
+
+data_preprocessed <- read_rds("processed/data_preprocessed.rds")
+
+```
+
+# Trial-level data 
+
+Bring data into 'tidy' format, apply IAT block labeling corrections, drop rows and columns that aren't used to score the tasks, etc.
+
+```{r}
+
+data_trial_level <- data_preprocessed %>%
+  
+  mutate(task = tolower(sender),
+         task = case_when(task == "stimulus" ~ "iat",
+                          task == "demographics_1" ~ "demographics",
+                          task == "demographics_2" ~ "demographics",
+                          TRUE ~ task)) %>%
+  
+  # retain only rows with useful information used to score the tasks
+  filter(task %in% c("demographics",
+                     "iat",
+                     "ratings_good_bad",
+                     "ratings_like_dislike",
+                     "ratings_negative_positive",
+                     "memory questions",
+                     "exploratory questions",
+                     "rei (cognitive preference)",
+                     "crt (cognitive ability)",
+                     "ocq (overclaiming)",
+                     "bcti (conspiratorial thinking)",
+                     "issues")) %>%
+  
+  
+  # wrangle ratings
+  mutate(ratings_item = case_when(task == "ratings_good_bad" ~ "good_bad",
+                                  task == "ratings_like_dislike" ~ "like_dislike",
+                                  task == "ratings_negative_positive" ~ "negative_positive"),
+         task = ifelse(task %in% c("ratings_good_bad",
+                                   "ratings_like_dislike",
+                                   "ratings_negative_positive"), "self-reported ratings", task),
+         ratings_response = case_when(!is.na(pos_neg) ~ pos_neg,
+                                      !is.na(good_bad) ~ good_bad,
+                                      !is.na(like_dislike) ~ like_dislike)) %>%
+
+  
+  # wrangle methods variables
+  mutate(condition_number = case_when(str_detect(condition, "C1") ~ 1, 
+                                      str_detect(condition, "C2") ~ 2, 
+                                      str_detect(condition, "C3") ~ 3, 
+                                      str_detect(condition, "C4") ~ 4, 
+                                      str_detect(condition, "C5") ~ 5, 
+                                      str_detect(condition, "C6") ~ 6, 
+                                      str_detect(condition, "C7") ~ 7, 
+                                      str_detect(condition, "C8") ~ 8),
+         source_valence = case_when(str_detect(condition, "Positive_") ~ "positive", 
+                                    str_detect(condition, "Negative_") ~ "negative"),
+         intervention_medium = case_when(str_detect(condition, "Video_") ~ "video", 
+                                         str_detect(condition, "Audio_") ~ "audio"),
+         task_order = case_when(str_detect(condition, "IAT_First") ~ "IAT first", 
+                                str_detect(condition, "SR_First") ~ "self-report ratings first"),
+         # IAT block order was natively coded in different ways between the experiments. In exp 1 it was con/incon first based on stimulus identity, but in later studies was coded as con/inconsistent with the learning in the training phase. Parse this variable, but then adjust it based on the condition numbers, which differed slightly between experiments. 
+         # note that this variable is calculated here but is not used to invert IAT D scores for block order later on - that is done by relabeling the blocks themselves, again by using the condition numbers.
+         iat_block_order = case_when(str_detect(condition, "Incon B") ~ "training-inconsistent block first", 
+                                     str_detect(condition, "Con B") ~ "training-consistent block first",
+                                     TRUE ~ condition),
+         iat_block_order = case_when(condition_number %in% c(3, 4) ~ "training-inconsistent block first",
+                                     condition_number %in% c(7, 8) ~ "training-consistent block first",
+                                     TRUE ~ iat_block_order)) %>%
+  
+  
+  # wrangle IAT
+  # rename
+  rename(iat_stimulus = name) %>%
+  # round reaction time to millisecond 
+  mutate(latency = round(as.numeric(duration), 0)) %>%
+  # recode the TRUE/FALSE values from the correct column to 1,0 
+  mutate(correct = as.numeric(as.logical(correct))) %>%
+  
+  # create block and trial columns. Do so by renaming values from the 'sender_id' column to terms that the IAT scoring package will work with when applied later (e.g., block 1,2,3,4,5,6,7)
+  separate(sender_id, into = c("temp_1", "temp_2", "temp_3", "block", "trial"), sep = "_", remove = FALSE) %>%
+
+  # recode trial numbers so that they begin at 1 and run to 16 or 32
+  mutate(block = as.numeric(block),
+         trial = ifelse(!is.na(trial), as.numeric(trial) + 1, trial)) %>%
+  
+  # recode block
+  # for participants in Conditions 1-4 the 'sender_id' variable corresponds to the following block order (this can be seen by inspecting the name and corr variables in the raw data):
+  
+  # _3_0_0   = block 1 (Bob Chris)
+  # _5_0_0   = block 2 (Bad Good)
+  # _7_0_0   = block 3 (Bob Bad Chris Good)
+  # _9_0_0   = block 4 (Bob Bad Chris Good)
+  # _11_0_0  = block 5 (Chris Bob)
+  # _13_0_0  = block 6 (Chris Bad Bob Good)
+  # _15_0_0  = block 7 (Chris Bad Bob Good)
+  
+  # for participants in Conditions 5-8 the 'sender_id' variable corresponds to the following block order:
+  
+  # _3_0_0   = block 5 (Chris Bob)
+  # _5_0_0   = block 2 (Bad Good)
+  # _7_0_0   = block 6 (Chris Bad Bob Good)
+  # _9_0_0   = block 7 (Chris Bad Bob Good)
+  # _11_0_0  = block 1 (Bob Chris)
+  # _13_0_0  = block 3 (Bob Bad Chris Good)
+  # _15_0_0  = block 4 (Bob Bad Chris Good)
+
+  # update block numbering so that it is correct following the above
+  mutate(block = ifelse(condition_number %in% c(1, 2, 3, 4), 
+                                case_when(block == 3 ~ 1,
+                                          block == 5 ~ 2,
+                                          block == 7 ~ 3,
+                                          block == 9 ~ 4,
+                                          block == 11 ~ 5,
+                                          block == 13 ~ 6,
+                                          block == 15 ~ 7), 
+                                ifelse(condition_number %in% c(5, 6, 7, 8), 
+                                       case_when(block == 3 ~ 5,
+                                                 block == 5 ~ 2,
+                                                 block == 7 ~ 6,
+                                                 block == 9 ~ 7,
+                                                 block == 11 ~ 1,
+                                                 block == 13 ~ 3,
+                                                 block == 15 ~ 4), 
+                                       NA))) %>%
+  
+  #  retain only the practice and critical test blocks that are used for scoring the task (i.e., block_number = 3, 4, 6, 7)
+  filter((task == "iat" & block %in% c(3, 4, 6, 7)) |
+            task != "iat") %>%
+  
+  # label block types in the way the IATScores package will later need to D score the IAT data. 
+  # compatible vs incompatible refers to congruence with learning in training phase
+  mutate(blockcode = ifelse(block %in% c(3, 4), "pair1", 
+                            ifelse(block %in% c(6, 7), "pair2", NA)),
+         praccrit = ifelse(block %in% c(3, 6), "prac", 
+                           ifelse(block %in% c(4, 7), "crit", NA))) %>%
+
+  
+  # select variables needed for data processing and analysis
+  select(subject,
+         
+         # experiment
+         experiment,
+         experiment_condition, 
+         task,
+         #condition_number,
+         source_valence,
+         intervention_medium,
+         task_order,
+         iat_block_order,
+         
+         # demographics
+         age,
+         gender,
+
+         # self reported evaluations
+         ratings_item,
+         ratings_response,
+         
+         # IAT
+         block,
+         trial,
+         iat_stimulus,
+         correct,
+         latency,
+         blockcode,
+         praccrit,
+         
+         # detection
+         memory_of_video_content,
+
+         # exploratory questions
+         diagnosticity_question,
+         demand,
+         reactance,
+         hypothesis_awareness,
+         influence_awareness,
+         issues_with_study) %>%
+
+  # guess appropriate data types
+  type_convert()
+
+```
+
+## Write to disk
+
+data_trial_level.csv contains participant level data in tidy format.
+
+```{r}
+
+write_csv(data_trial_level, "processed/data_trial_level.csv")
+# data_trial_level <- read_csv("processed/data_trial_level.csv")
+
+```
+
+# Participant-level data
+
+## Study conditions, demographics and method variables
+
+```{r}
+
+data_conditions_and_demographics <- data_trial_level %>% 
+  select(subject, 
+         experiment, 
+         intervention_medium,
+         task_order,
+         iat_block_order,
+         source_valence,
+         experiment_condition,
+         age, 
+         gender) %>%
+  drop_na()
+
+```
+
+## IAT
+
+### Subset
+
+Subset variables and rows
+
+```{r}
+
+data_trial_level_iat <- data_trial_level %>%
+  filter(task == "iat") %>%
+  select(subject, 
+         block,
+         trial,
+         correct, 
+         latency, 
+         blockcode,
+         praccrit) 
+
+```
+
+### Completeness
+
+```{r}
+
+data_completeness_iat <- data_trial_level_iat %>%
+  count(subject) %>%
+  mutate(complete_iat_data = case_when(n == 128 ~ "complete", 
+                                       n > 128 ~ "excess", 
+                                       n < 128 ~"partial")) %>%
+  select(-n)
+
+# print
+data_completeness_iat %>%
+  count(complete_iat_data) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+### Performance
+
+```{r}
+
+# exclude if total error rate > 30% 
+data_iat_accuracy_overall <- data_trial_level_iat %>% 
+  group_by(subject) %>% 
+  summarise(iat_accuracy_overall = mean(correct)) %>%
+  ungroup() %>%
+  mutate(passed_iat_accuracy_overall = ifelse(iat_accuracy_overall >= .70, TRUE, FALSE)) %>%
+  select(subject, passed_iat_accuracy_overall)
+
+# exclude if error rate on any one block > 40% 
+data_iat_accuracy_by_block <- data_trial_level_iat %>% 
+  group_by(subject, block) %>% 
+  summarise(iat_accuracy_by_block = mean(correct)) %>%
+  ungroup() %>%
+  mutate(passed_iat_accuracy_by_block = ifelse(iat_accuracy_by_block >= .60, TRUE, FALSE)) %>%
+  group_by(subject) %>%
+  summarise(passed_iat_accuracy_by_block = as.logical(min(passed_iat_accuracy_by_block))) %>%
+  ungroup()
+
+# exclude if > 10% trials are <300ms 
+data_iat_fast_responding <- data_trial_level_iat %>% 
+  mutate(fast_response = ifelse(latency < 300, 1, 0)) %>%
+  group_by(subject) %>% 
+  summarise(iat_percent_fast_responses = mean(fast_response)) %>%
+  ungroup() %>%
+  mutate(passed_iat_percent_fast_responses = ifelse(iat_percent_fast_responses <= .10, TRUE, FALSE)) %>%
+  select(subject, passed_iat_percent_fast_responses)
+
+# combine
+data_performance_iat <- data_iat_accuracy_overall %>%
+  full_join(data_iat_accuracy_by_block, by = "subject") %>%
+  full_join(data_iat_fast_responding, by = "subject") %>%
+  rowwise() %>%
+  mutate(passed_iat_performance = as.logical(min(c(passed_iat_accuracy_overall, 
+                                                   passed_iat_accuracy_by_block,   
+                                                   passed_iat_percent_fast_responses), na.rm = TRUE))) %>%
+  ungroup() %>%
+  select(subject, passed_iat_performance)
+
+rm(data_iat_accuracy_overall, data_iat_accuracy_by_block, data_iat_fast_responding)
+
+
+# print
+data_performance_iat %>%
+  count(passed_iat_performance) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+### D2 scoring
+
+```{r}
+
+data_trial_level_iat_dummy_subjects <- data_trial_level_iat %>%
+  distinct(subject) %>%
+  mutate(subject_original = subject,
+         subject = row_number()) 
+
+data_iat_D2_scores <- data_trial_level_iat %>%
+  rename(subject_original = subject) %>%
+  left_join(data_trial_level_iat_dummy_subjects, by = "subject_original") %>%
+  # parameters are identical to those the package lists in the D2 wrapper function
+  IATscores::RobustScores(IATdata = .,
+                          P1 = "fxtrim",  # Trim values < 400ms
+                          P2 = "ignore",  # do not trim errors
+                          P3 = "dscore",  # calculate d2 scores
+                          P4 = "dist",    # distinguish between the prac and test blocks
+                          verbose = FALSE,
+                          autoremove = TRUE) %>%
+  left_join(data_trial_level_iat_dummy_subjects, by = "subject") %>%
+  select(-subject) %>%
+  rename(subject = subject_original,
+         IAT_D2_score = p2112)
+
+```
+
+## Self-Reported Ratings 
+
+### Subset 
+
+Subset variables and rows
+
+```{r}
+
+data_trial_level_self_reported_evaluations <- data_trial_level %>%
+  filter(task == "self-reported ratings") %>%
+  select(subject, 
+         ratings_item,
+         ratings_response) 
+
+```
+
+### Completeness
+
+```{r}
+
+data_completeness_self_reported_evaluations <- data_trial_level_self_reported_evaluations %>%
+  count(subject) %>%
+  mutate(complete_selfreport_data = case_when(n == 3 ~ "complete", 
+                                              n > 3 ~ "excess", 
+                                              n < 3 ~"partial")) %>%
+  select(-n)
+
+# print
+data_completeness_self_reported_evaluations %>%
+  count(complete_selfreport_data) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+### Mean scoring
+
+```{r}
+
+data_self_reported_evaluations_mean_scores <- data_trial_level_self_reported_evaluations %>%
+  group_by(subject) %>%
+  summarize(mean_self_reported_evaluation = round(mean(ratings_response), 2), .groups = "drop") 
+
+```
+
+## Deep faking detection
+
+```{r}
+
+data_detection <- data_trial_level %>% 
+  select(subject, 
+         memory_of_video_content) %>% 
+  drop_na()
+
+```
+
+## Exploratory Questions
+
+```{r}
+
+data_exploratory_questions <- data_trial_level %>% 
+  select(subject, 
+         diagnosticity_question, 
+         demand, 
+         reactance, 
+         hypothesis_awareness, 
+         influence_awareness, 
+         issues_with_study) %>% 
+  group_by(subject) %>%
+  summarise_all(~ first(na.omit(.)))
+
+```
+
+## Combine
+
+```{r}
+
+data_participant_level <- data_conditions_and_demographics %>% 
+  full_join(data_completeness_iat, by = "subject") %>% 
+  full_join(data_performance_iat, by = "subject") %>%
+  full_join(data_iat_D2_scores, by = "subject") %>% 
+  full_join(data_completeness_self_reported_evaluations, by = "subject") %>%
+  full_join(data_self_reported_evaluations_mean_scores, by = "subject") %>%
+  full_join(data_detection, by = "subject") %>% 
+  full_join(data_exploratory_questions, by = "subject")
+
+```
+
+## Write to disk
+
+data_participant_level.csv contains trial level data in tidy format.
+
+data_detection_responses.csv contains just the open ended responses to the detection questions. After being written to disk, these were hand scored and then integrated back into the data (in a subsequent script) for analyses. 
+
+```{r}
+
+write_csv(data_participant_level, "processed/data_participant_level.csv")
+
+data_participant_level %>%
+  select(subject, memory_of_video_content) %>%
+  write_csv("processed/data_detection_responses.csv")
+
+```
+

@@ -1,0 +1,274 @@
+---
+title: "Data preprocessing"
+subtitle: "Convert from SQLite databases to single 'tidy' format dataframe"
+author: "Sean Hughes & Ian Hussey"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes 
+    toc_float: yes
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(message=FALSE,
+                      warning=FALSE)
+```
+
+# Functions and dependencies
+
+```{r}
+
+library(tidyverse)
+library(RSQLite)
+library(jsonlite)
+library(janitor)
+library(furrr)
+
+# set up parallel processing
+future::plan(multisession)
+
+# used to extract the JSON data
+parseJSON <- function(input) {
+  input %>%
+    fromJSON(flatten = TRUE) %>% {
+      # Coerce lists
+      if (class(.) == 'list') {
+        discard(., is.null) %>%
+          as_tibble()
+      } else {
+        .
+      } } %>%
+    # Sanitize names
+    janitor::clean_names() %>%
+    # Use only strings for now, and re-encode types later
+    mutate_all(as.character)
+}
+
+```
+
+# Uncompress data 
+
+Github does not play nicely with files > 100mb. So I compressed the data files so they could be uploaded. You need to uncompress them to run the code chunks below.
+
+```{r}
+
+unzip("../experiment 1/data/raw/Experiment_1_data.zip",         exdir = "../experiment 1/data/raw")
+unzip("../experiment 2/data/raw/Experiment_2_data.zip",         exdir = "../experiment 2/data/raw")
+unzip("../experiment 3/data/raw/Experiment_3_DF_data.zip",      exdir = "../experiment 3/data/raw")
+unzip("../experiment 3/data/raw/Experiment_3_Genuine_data.zip", exdir = "../experiment 3/data/raw")
+unzip("../experiment 4/data/raw/Experiment_4_DF_data.zip",      exdir = "../experiment 4/data/raw")
+unzip("../experiment 4/data/raw/Experiment_4_Genuine_data.zip", exdir = "../experiment 4/data/raw")
+unzip("../experiment 5/data/raw/Experiment_5_DF_data.zip",      exdir = "../experiment 5/data/raw")
+unzip("../experiment 5/data/raw/Experiment_5_Genuine_data.zip", exdir = "../experiment 5/data/raw")
+unzip("../experiment 6/data/raw/Experiment_6_DF_data.zip",      exdir = "../experiment 6/data/raw")
+unzip("../experiment 6/data/raw/Experiment_6_Genuine_data.zip", exdir = "../experiment 6/data/raw")
+
+```
+
+# Read from SQLite databases
+
+```{r}
+
+# connect to database
+connection_exp_1         <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 1/data/raw/Experiment_1_data.sqlite")
+connection_exp_2         <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 2/data/raw/Experiment_2_data.sqlite")
+connection_exp_3_df      <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 3/data/raw/Experiment_3_DF_data.sqlite")
+connection_exp_3_genuine <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 3/data/raw/Experiment_3_Genuine_data.sqlite")
+connection_exp_4_df      <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 4/data/raw/Experiment_4_DF_data.sqlite")
+connection_exp_4_genuine <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 4/data/raw/Experiment_4_Genuine_data.sqlite")
+connection_exp_5_df      <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 5/data/raw/Experiment_5_DF_data.sqlite")
+connection_exp_5_genuine <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 5/data/raw/Experiment_5_Genuine_data.sqlite")
+
+# extract main table
+data_database_exp_1         <- dbGetQuery(conn = connection_exp_1,         statement = 'SELECT * FROM labjs')
+data_database_exp_2         <- dbGetQuery(conn = connection_exp_2,         statement = 'SELECT * FROM labjs')
+data_database_exp_3_df      <- dbGetQuery(conn = connection_exp_3_df,      statement = 'SELECT * FROM labjs')
+data_database_exp_3_genuine <- dbGetQuery(conn = connection_exp_3_genuine, statement = 'SELECT * FROM labjs')
+data_database_exp_4_df      <- dbGetQuery(conn = connection_exp_4_df,      statement = 'SELECT * FROM labjs')
+data_database_exp_4_genuine <- dbGetQuery(conn = connection_exp_4_genuine, statement = 'SELECT * FROM labjs')
+data_database_exp_5_df      <- dbGetQuery(conn = connection_exp_5_df,      statement = 'SELECT * FROM labjs')
+data_database_exp_5_genuine <- dbGetQuery(conn = connection_exp_5_genuine, statement = 'SELECT * FROM labjs')
+
+# close connection
+dbDisconnect(conn = connection_exp_1)
+dbDisconnect(conn = connection_exp_2)
+dbDisconnect(conn = connection_exp_3_df)
+dbDisconnect(conn = connection_exp_3_genuine)
+dbDisconnect(conn = connection_exp_4_df)
+dbDisconnect(conn = connection_exp_4_genuine)
+dbDisconnect(conn = connection_exp_5_df)
+dbDisconnect(conn = connection_exp_5_genuine)
+
+# discard connection
+rm(connection_exp_1)
+rm(connection_exp_2)
+rm(connection_exp_3_df)
+rm(connection_exp_3_genuine)
+rm(connection_exp_4_df)
+rm(connection_exp_4_genuine)
+rm(connection_exp_5_df)
+rm(connection_exp_5_genuine)
+
+```
+
+# Delete uncompressed file
+
+```{r}
+
+file.remove("../experiment 1/data/raw/Experiment_1_data.sqlite")
+file.remove("../experiment 2/data/raw/Experiment_2_data.sqlite")
+file.remove("../experiment 3/data/raw/Experiment_3_DF_data.sqlite")
+file.remove("../experiment 3/data/raw/Experiment_3_Genuine_data.sqlite")
+file.remove("../experiment 4/data/raw/Experiment_4_DF_data.sqlite")
+file.remove("../experiment 4/data/raw/Experiment_4_Genuine_data.sqlite")
+file.remove("../experiment 5/data/raw/Experiment_5_DF_data.sqlite")
+file.remove("../experiment 5/data/raw/Experiment_5_Genuine_data.sqlite")
+file.remove("../experiment 6/data/raw/Experiment_6_DF_data.sqlite")
+file.remove("../experiment 6/data/raw/Experiment_6_Genuine_data.sqlite")
+
+```
+
+# Extract Metadata
+
+```{r}
+
+# extract metadata
+data_meta_data_exp_1         <- future_map_dfr(data_database_exp_1$metadata, fromJSON)         %>% dplyr::rename(subject = id)
+data_meta_data_exp_2         <- future_map_dfr(data_database_exp_2$metadata, fromJSON)         %>% dplyr::rename(subject = id)
+data_meta_data_exp_3_df      <- future_map_dfr(data_database_exp_3_df$metadata, fromJSON)      %>% dplyr::rename(subject = id)
+data_meta_data_exp_3_genuine <- future_map_dfr(data_database_exp_3_genuine$metadata, fromJSON) %>% dplyr::rename(subject = id)
+data_meta_data_exp_4_df      <- future_map_dfr(data_database_exp_4_df$metadata, fromJSON)      %>% dplyr::rename(subject = id)
+data_meta_data_exp_4_genuine <- future_map_dfr(data_database_exp_4_genuine$metadata, fromJSON) %>% dplyr::rename(subject = id)
+data_meta_data_exp_5_df      <- future_map_dfr(data_database_exp_5_df$metadata, fromJSON)      %>% dplyr::rename(subject = id)
+data_meta_data_exp_5_genuine <- future_map_dfr(data_database_exp_5_genuine$metadata, fromJSON) %>% dplyr::rename(subject = id)
+
+# remove metadata column
+data_database_exp_1          <- data_database_exp_1         %>% bind_cols(data_meta_data_exp_1)         %>% select(-metadata)
+data_database_exp_2          <- data_database_exp_2         %>% bind_cols(data_meta_data_exp_2)         %>% select(-metadata)
+data_database_exp_3_df       <- data_database_exp_3_df      %>% bind_cols(data_meta_data_exp_3_df)      %>% select(-metadata)
+data_database_exp_3_genuine  <- data_database_exp_3_genuine %>% bind_cols(data_meta_data_exp_3_genuine) %>% select(-metadata)
+data_database_exp_4_df       <- data_database_exp_4_df      %>% bind_cols(data_meta_data_exp_4_df)      %>% select(-metadata)
+data_database_exp_4_genuine  <- data_database_exp_4_genuine %>% bind_cols(data_meta_data_exp_4_genuine) %>% select(-metadata)
+data_database_exp_5_df       <- data_database_exp_5_df      %>% bind_cols(data_meta_data_exp_5_df)      %>% select(-metadata)
+data_database_exp_5_genuine  <- data_database_exp_5_genuine %>% bind_cols(data_meta_data_exp_5_genuine) %>% select(-metadata)
+
+# # remove temporary data frame
+# rm(data_meta_data_exp_1)
+# rm(data_meta_data_exp_2)
+# rm(data_meta_data_exp_3_df)
+# rm(data_meta_data_exp_3_genuine)
+# rm(data_meta_data_exp_4_df)
+# rm(data_meta_data_exp_4_genuine)
+# rm(data_meta_data_exp_5_df)
+# rm(data_meta_data_exp_5_genuine)
+
+```
+
+# Combined across experiments
+
+NB experiment_condition (i.e., genuine or deepfaked) is created from the file the data was taken from. This variable was also verified in the data itself, but I don't include this extra code here.
+
+- Genuine condition: sender == "Deepfake_Check_Genuine_Video"
+- Deepfaked condition: sender == "Deepfake_Check"
+
+```{r}
+
+data_database_combined <- 
+  bind_rows(mutate(data_database_exp_1,         experiment = 1, experiment_condition = "genuine"),
+            mutate(data_database_exp_2,         experiment = 2, experiment_condition = "genuine"),
+            mutate(data_database_exp_3_df,      experiment = 3, experiment_condition = "deepfaked"),
+            mutate(data_database_exp_3_genuine, experiment = 3, experiment_condition = "genuine"),
+            mutate(data_database_exp_4_df,      experiment = 4, experiment_condition = "deepfaked"),
+            mutate(data_database_exp_4_genuine, experiment = 4, experiment_condition = "genuine"),
+            mutate(data_database_exp_5_df,      experiment = 5, experiment_condition = "deepfaked"),
+            mutate(data_database_exp_5_genuine, experiment = 5, experiment_condition = "genuine"))
+
+# rm(data_database_exp_1,
+#    data_database_exp_2,
+#    data_database_exp_3_df,
+#    data_database_exp_3_genuine,
+#    data_database_exp_4_df,
+#    data_database_exp_4_genuine,
+#    data_database_exp_5_df,
+#    data_database_exp_5_genuine)
+
+```
+
+# Extract full data 
+
+```{r}
+
+data_database_combined_full <- data_database_combined %>%
+  dplyr::filter(payload == 'full') %>%
+  group_by(experiment, experiment_condition, subject, id) %>%
+  do(
+    { future_map_dfr(.$data, parseJSON) } %>%
+      bind_rows()
+  ) %>%
+  ungroup() %>%
+  select(-id)
+
+```
+
+# Extract incremental data 
+
+```{r}
+
+data_database_combined_incremental <- data_database_combined %>%
+  dplyr::filter(payload %in% c('incremental', 'latest')) %>%
+  group_by(experiment, experiment_condition, subject, id) %>%
+  do(
+    { future_map_dfr(.$data, parseJSON) } %>%
+      bind_rows()
+  ) %>%
+  ungroup() %>%
+  select(-id)
+
+```
+
+# Merge full and incremental data
+
+For analysis, we'll use the full data sets where available, and incremental data when it is the the only information we have for a user.
+
+```{r}
+
+data_combined <- 
+  bind_rows(data_database_combined_full,
+            filter(data_database_combined_incremental, !(subject %in% data_database_combined_full$subject))) 
+
+```
+
+# Fill empty cells
+
+Fill variables within subject IDs and subset variables i.e., propagate key variable values up and down rows into empty cells for each participant
+
+```{r}
+
+data_preprocessed <- data_combined %>%
+  group_by(subject) %>%
+  fill(matches('condition'), .direction = 'down') %>%
+  fill(matches('condition'), .direction = 'up') %>%
+  
+  fill(matches('code'), .direction = 'down') %>%
+  fill(matches('code'), .direction = 'up') %>%
+  ungroup()
+
+```
+
+# Write to disk
+
+data_preprocessed.rds contains all data from the sqlite databases, simply converted and flattened to an R dataframe. 
+
+Because of its size (>1GB if written to disk as an uncompressed csv file), data is written to disk as a compressed R data frame object.
+
+```{r}
+
+dir.create("processed")
+write_rds(data_preprocessed, "processed/data_preprocessed.rds", compress = "gz")
+
+```
+
+

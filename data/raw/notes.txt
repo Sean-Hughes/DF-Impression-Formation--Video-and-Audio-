@@ -1,0 +1,1 @@
+NB raw sqlite formatted data for each experiment is found in each experiment's data folder. 
