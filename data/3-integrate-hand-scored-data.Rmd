@@ -1,0 +1,64 @@
+---
+title: "Data processing"
+author: "Sean Hughes & Ian Hussey"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes 
+    toc_float: yes
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(message=FALSE,
+                      warning=FALSE)
+```
+
+# Functions and dependencies
+
+```{r}
+
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+
+```
+
+# Get raw data
+
+```{r}
+
+data_preprocessed <- read_rds("processed/data_preprocessed.rds")
+
+```
+
+
+
+Import the manually scored values back into R for later analysis
+
+```{r}
+
+data_processed_after_hand_scoring <- read_excel("processed/data_hand_scored.xlsx") 
+
+```
+
+
+```{r}
+
+data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
+  mutate(deepfake_concept_check_recoded_ = case_when(grepl("Yes", deepfake_concept_check_recoded) ~ 1,
+                                                      grepl("No", deepfake_concept_check_recoded) ~ 0),
+         deepfake_video_check_recoded_ = case_when(grepl("Yes", deepfake_video_check_recoded) ~ 1,
+                                                      grepl("No", deepfake_video_check_recoded) ~ 0),
+         deepfake_audio_check_recoded_ = case_when(grepl("Yes", deepfake_audio_check_recoded) ~ 1,
+                                                      grepl("No", deepfake_audio_check_recoded) ~ 0),
+         recognised_video_manipulation_ = case_when(grepl("Yes", recognised_video_manipulation) ~ 1,
+                                                      grepl("No", recognised_video_manipulation) ~ 0),
+         recognised_audio_manipulation_ = case_when(grepl("Yes", recognised_audio_manipulation) ~ 1))
+
+```
+
+
+

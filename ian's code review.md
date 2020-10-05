@@ -28,6 +28,8 @@ check if experiment_condition (manually created from data file name) and sender 
 
 
 
+Variables apparently present in data that still need to be extracted: education, employment, income, political_ideology_identity_1, political_ideology_social_issues, political_ideology_economic_issues, religious_affiliation_general.
+
 
 
 scripts json files are oddly named
