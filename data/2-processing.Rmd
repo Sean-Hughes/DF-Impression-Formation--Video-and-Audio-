@@ -797,7 +797,8 @@ data_participant_level <- data_conditions_and_demographics %>%
   # compound exclusions
   mutate(exclude_subject = ifelse(complete_iat_data == "complete" &
                                     complete_selfreport_data == "complete" & 
-                                    passed_iat_performance == TRUE, FALSE, TRUE)) %>%
+                                    passed_iat_performance == TRUE, FALSE, TRUE),
+         exclude_subject = ifelse(is.na(exclude_subject), TRUE, exclude_subject)) %>%
   
   select(subject, 
          experiment, 
@@ -868,10 +869,10 @@ data_detection_responses.csv contains just the open ended responses to the detec
 # all participant level data
 write_csv(data_participant_level, "processed/3_data_participant_level.csv")
 
-# just the open ended memory responses for hand scoring
-data_participant_level %>%
-  select(subject, memory_of_video_content) %>%
-  write_csv("processed/4_data_participant_level_detection_responses.csv")
+# # just the open ended memory responses for hand scoring
+# data_participant_level %>%
+#   select(subject, memory_of_video_content) %>%
+#   write_csv("processed/4_data_participant_level_detection_responses.csv")
 
 ```
 
