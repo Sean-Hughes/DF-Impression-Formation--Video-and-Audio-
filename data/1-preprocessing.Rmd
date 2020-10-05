@@ -28,7 +28,7 @@ library(janitor)
 library(furrr)
 
 # set up parallel processing
-future::plan(multisession)
+future::plan(multiprocess)
 
 # used to extract the JSON data
 parseJSON <- function(input) {
