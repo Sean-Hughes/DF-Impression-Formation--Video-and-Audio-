@@ -767,8 +767,8 @@ data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
          fake_news_awareness,
          fake_news_sharing)
 
-# Write file to disk for hand scoring of open ended questions 
-write_xlsx(data_processed_after_hand_scoring, "results/data_for_analysis.xlsx")
+# Write total datato disk
+write_xlsx(data_processed_after_hand_scoring, "results/total_data.xlsx")
 
 # Write deepfake only condition subset of data
 deepfake_only_data <- data_processed_after_hand_scoring %>%

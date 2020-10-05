@@ -665,8 +665,8 @@ data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
          crt_q7_recoded,
          analytic_thinking_crt_score)
 
-# Write file to disk for hand scoring of open ended questions 
-write_xlsx(data_processed_after_hand_scoring, "results/data_for_analysis.xlsx")
+# Write total data to disk  
+write_xlsx(data_processed_after_hand_scoring, "results/total_data.xlsx")
 
 # Write deepfake only condition subset of data
 data_deepfake_condition <- data_processed_after_hand_scoring %>%
