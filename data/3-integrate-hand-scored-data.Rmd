@@ -1,5 +1,6 @@
 ---
-title: "Data processing"
+title: "Data postprocessing"
+subtitle: "Integrate hand-scored data into final dataset"
 author: "Sean Hughes & Ian Hussey"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output: 
@@ -16,49 +17,33 @@ knitr::opts_chunk$set(message=FALSE,
                       warning=FALSE)
 ```
 
-# Functions and dependencies
+# Dependencies
 
 ```{r}
 
 library(tidyverse)
-library(knitr)
-library(kableExtra)
 
 ```
 
-# Get raw data
+# Get data, join, and write to disk
 
 ```{r}
 
-data_preprocessed <- read_rds("processed/data_preprocessed.rds")
+# processed data
+data_participant_level <- read_rds("processed/3_data_participant_level.csv")
 
+# hand scored data
+data_hand_scored <- read_excel("processed/4_data_hand_scored.csv") 
+
+# deepfake_concept_check
+# deepfake_check
+# recognised_manipulation
+
+# join
+data_participant_level_with_hand_scorings <- data_participant_level %>%
+  left_join(data_hand_scored, by = "subject")
+
+# write to disk
+write_csv(data_participant_level_with_hand_scorings, "processed/5_data_participant_level_with_hand_scorings.csv")
+  
 ```
-
-
-
-Import the manually scored values back into R for later analysis
-
-```{r}
-
-data_processed_after_hand_scoring <- read_excel("processed/data_hand_scored.xlsx") 
-
-```
-
-
-```{r}
-
-data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
-  mutate(deepfake_concept_check_recoded_ = case_when(grepl("Yes", deepfake_concept_check_recoded) ~ 1,
-                                                      grepl("No", deepfake_concept_check_recoded) ~ 0),
-         deepfake_video_check_recoded_ = case_when(grepl("Yes", deepfake_video_check_recoded) ~ 1,
-                                                      grepl("No", deepfake_video_check_recoded) ~ 0),
-         deepfake_audio_check_recoded_ = case_when(grepl("Yes", deepfake_audio_check_recoded) ~ 1,
-                                                      grepl("No", deepfake_audio_check_recoded) ~ 0),
-         recognised_video_manipulation_ = case_when(grepl("Yes", recognised_video_manipulation) ~ 1,
-                                                      grepl("No", recognised_video_manipulation) ~ 0),
-         recognised_audio_manipulation_ = case_when(grepl("Yes", recognised_audio_manipulation) ~ 1))
-
-```
-
-
-

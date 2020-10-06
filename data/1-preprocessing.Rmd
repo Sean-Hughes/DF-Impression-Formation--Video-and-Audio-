@@ -55,16 +55,16 @@ Github does not play nicely with files > 100mb. So I compressed the data files s
 
 ```{r}
 
-unzip("../experiment 1/data/raw/Experiment_1_data.zip",         exdir = "../experiment 1/data/raw")
-unzip("../experiment 2/data/raw/Experiment_2_data.zip",         exdir = "../experiment 2/data/raw")
-unzip("../experiment 3/data/raw/Experiment_3_DF_data.zip",      exdir = "../experiment 3/data/raw")
-unzip("../experiment 3/data/raw/Experiment_3_Genuine_data.zip", exdir = "../experiment 3/data/raw")
-unzip("../experiment 4/data/raw/Experiment_4_DF_data.zip",      exdir = "../experiment 4/data/raw")
-unzip("../experiment 4/data/raw/Experiment_4_Genuine_data.zip", exdir = "../experiment 4/data/raw")
-unzip("../experiment 5/data/raw/Experiment_5_DF_data.zip",      exdir = "../experiment 5/data/raw")
-unzip("../experiment 5/data/raw/Experiment_5_Genuine_data.zip", exdir = "../experiment 5/data/raw")
-unzip("../experiment 6/data/raw/Experiment_6_DF_data.zip",      exdir = "../experiment 6/data/raw")
-unzip("../experiment 6/data/raw/Experiment_6_Genuine_data.zip", exdir = "../experiment 6/data/raw")
+unzip("raw/experiment_1_data.zip",         exdir = "raw")
+unzip("raw/experiment_2_data.zip",         exdir = "raw")
+unzip("raw/experiment_3_DF_data.zip",      exdir = "raw")
+unzip("raw/experiment_3_Genuine_data.zip", exdir = "raw")
+unzip("raw/experiment_4_DF_data.zip",      exdir = "raw")
+unzip("raw/experiment_4_Genuine_data.zip", exdir = "raw")
+unzip("raw/experiment_5_DF_data.zip",      exdir = "raw")
+unzip("raw/experiment_5_Genuine_data.zip", exdir = "raw")
+unzip("raw/experiment_6_DF_data.zip",      exdir = "raw")
+unzip("raw/experiment_6_Genuine_data.zip", exdir = "raw")
 
 ```
 
@@ -73,17 +73,16 @@ unzip("../experiment 6/data/raw/Experiment_6_Genuine_data.zip", exdir = "../expe
 ```{r}
 
 # connect to database
-connection_exp_1         <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 1/data/raw/Experiment_1_data.sqlite")
-connection_exp_2         <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 2/data/raw/Experiment_2_data.sqlite")
-connection_exp_3_df      <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 3/data/raw/Experiment_3_DF_data.sqlite")
-connection_exp_3_genuine <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 3/data/raw/Experiment_3_Genuine_data.sqlite")
-connection_exp_4_df      <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 4/data/raw/Experiment_4_DF_data.sqlite")
-connection_exp_4_genuine <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 4/data/raw/Experiment_4_Genuine_data.sqlite")
-connection_exp_5_df      <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 5/data/raw/Experiment_5_DF_data.sqlite")
-connection_exp_5_genuine <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 5/data/raw/Experiment_5_Genuine_data.sqlite")
-connection_exp_6_df      <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 6/data/raw/Experiment_6_DF_data.sqlite")
-connection_exp_6_genuine <- dbConnect(drv = RSQLite::SQLite(), dbname = "../experiment 6/data/raw/Experiment_6_Genuine_data.sqlite")
-
+connection_exp_1         <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Experiment_1_data.sqlite")
+connection_exp_2         <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Experiment_2_data.sqlite")
+connection_exp_3_df      <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Experiment_3_DF_data.sqlite")
+connection_exp_3_genuine <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Experiment_3_Genuine_data.sqlite")
+connection_exp_4_df      <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Experiment_4_DF_data.sqlite")
+connection_exp_4_genuine <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Experiment_4_Genuine_data.sqlite")
+connection_exp_5_df      <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Experiment_5_DF_data.sqlite")
+connection_exp_5_genuine <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Experiment_5_Genuine_data.sqlite")
+connection_exp_6_df      <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Experiment_6_DF_data.sqlite")
+connection_exp_6_genuine <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Experiment_6_Genuine_data.sqlite")
 # extract main table
 data_database_exp_1         <- dbGetQuery(conn = connection_exp_1,         statement = 'SELECT * FROM labjs')
 data_database_exp_2         <- dbGetQuery(conn = connection_exp_2,         statement = 'SELECT * FROM labjs')
@@ -126,16 +125,16 @@ rm(connection_exp_6_genuine)
 
 ```{r}
 
-file.remove("../experiment 1/data/raw/Experiment_1_data.sqlite")
-file.remove("../experiment 2/data/raw/Experiment_2_data.sqlite")
-file.remove("../experiment 3/data/raw/Experiment_3_DF_data.sqlite")
-file.remove("../experiment 3/data/raw/Experiment_3_Genuine_data.sqlite")
-file.remove("../experiment 4/data/raw/Experiment_4_DF_data.sqlite")
-file.remove("../experiment 4/data/raw/Experiment_4_Genuine_data.sqlite")
-file.remove("../experiment 5/data/raw/Experiment_5_DF_data.sqlite")
-file.remove("../experiment 5/data/raw/Experiment_5_Genuine_data.sqlite")
-file.remove("../experiment 6/data/raw/Experiment_6_DF_data.sqlite")
-file.remove("../experiment 6/data/raw/Experiment_6_Genuine_data.sqlite")
+file.remove("raw/Experiment_1_data.sqlite")
+file.remove("raw/Experiment_2_data.sqlite")
+file.remove("raw/Experiment_3_DF_data.sqlite")
+file.remove("raw/Experiment_3_Genuine_data.sqlite")
+file.remove("raw/Experiment_4_DF_data.sqlite")
+file.remove("raw/Experiment_4_Genuine_data.sqlite")
+file.remove("raw/Experiment_5_DF_data.sqlite")
+file.remove("raw/Experiment_5_Genuine_data.sqlite")
+file.remove("raw/Experiment_6_DF_data.sqlite")
+file.remove("raw/Experiment_6_Genuine_data.sqlite")
 
 ```
 
