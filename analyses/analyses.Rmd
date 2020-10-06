@@ -31,14 +31,12 @@ library(BayesFactor)
 library(metafor)
 library(ez)
 library(schoRsch)
-#library(nnet)
 #library(epitools)
 
 options(knitr.kable.NA = "/")
 
-# Ensures that the processed data folder exists
+# create necessary folder
 dir.create("models")
-#dir.create("results")
 
 # functions -----
 # round p value using apa format
@@ -365,9 +363,16 @@ forest(fit_faking_condition_selfreport,
 
 ```{r}
 
-
+recognised_manipulation
 
 ```
+
+# Does detecting it matter?
+
+IAT ~ experiment_condition * detected_deepfake ??
+
+Is there sufficient N to ask this question?
+
 
 
 
