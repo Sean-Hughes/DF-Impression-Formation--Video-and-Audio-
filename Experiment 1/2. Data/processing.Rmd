@@ -65,6 +65,7 @@ parseJSON <- function(input) {
 }
 
 
+
 ```
 
 # Extract data files from zip file 
@@ -118,29 +119,6 @@ database <- database %>%
 
 # Remove temporary data frame
 rm(database_meta_data)
-
-```
-
-# Shorten random id for each participant
-
-```{r}
-
-# Reduce the length of the random id variable to five characters (this is a sufficient length to identify each unique participant)
-
-for (i in 5:36) {
-  if (
-    information_preserved(database$session, i) &&
-    information_preserved(database$observation, i)
-  ) {
-    break()
-  }
-}
-database <- database %>%
-  dplyr::mutate(
-    session=str_sub(session, end=i),
-    observation=str_sub(observation, end=i))
-
-rm(i, count_unique, information_preserved)
 
 ```
 
@@ -582,7 +560,7 @@ data_processed <- data_processed %>%
 data_processed <- data_processed %>% 
   mutate(experiment = current_experiment_number) %>%
   select(numeric_id, 
-         #subject, 
+         subject, 
          experiment,
          gender, 
          age, 
