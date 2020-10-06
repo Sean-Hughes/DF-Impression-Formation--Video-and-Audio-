@@ -361,6 +361,19 @@ forest(fit_faking_condition_selfreport,
 
 - how to get sensitivity/specificity etc?
 
+             was fake | was real
+rated fake | TP       | FP
+rated real | FN       | TN
+
+sensitivity = TP / (TP+FN)
+false negative rate = 1 - sensitivity
+specificity = TN / (FP+TN)
+false negative rate = 1 - specificity
+
+Youden's J statistic aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions" = sensitivity + specificity - 1 
+
+probability of misinformedness = 1 - J
+
 ```{r}
 
 recognised_manipulation
@@ -372,6 +385,8 @@ recognised_manipulation
 IAT ~ experiment_condition * detected_deepfake ??
 
 Is there sufficient N to ask this question?
+
+
 
 
 
