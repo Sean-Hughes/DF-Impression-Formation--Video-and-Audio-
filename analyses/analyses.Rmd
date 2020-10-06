@@ -1,0 +1,374 @@
+---
+title: "Analyses"
+author: "Sean Hughes & Ian Hussey"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(message=FALSE,
+                      warning=FALSE)
+```
+
+# Dependencies & functions
+
+```{r}
+
+# dependencies -----
+library(tidyverse)
+#library(ggthemes)
+library(knitr)
+library(kableExtra)
+#library(broom)
+library(effsize)
+library(BayesFactor)
+library(metafor)
+library(ez)
+library(schoRsch)
+#library(nnet)
+#library(epitools)
+
+options(knitr.kable.NA = "/")
+
+# Ensures that the processed data folder exists
+dir.create("models")
+#dir.create("results")
+
+# functions -----
+# round p value using apa format
+apa_p_value <- function(p){
+  p_formatted <- ifelse(p >= 0.0001, paste("=", round(p, 4)),
+                        ifelse(p < 0.0001, "< .0001", NA))
+  p_formatted <- gsub(pattern = "0.", replacement = ".", x = p_formatted, fixed = TRUE)
+  p_formatted
+}
+
+# calculate cohens d and return its output in tidy format - a helper function for analysis_workflow
+tidy_cohens_d <- function(data){
+  require(effsize)
+
+  fit <- effsize::cohen.d(DV ~ IV, data = data)
+
+  results <- tibble(cohens_d = fit$estimate,
+                    cohens_d_ci_lower = fit$conf.int["lower"],
+                    cohens_d_ci_upper = fit$conf.int["upper"])
+
+  return(results)
+}
+
+# calculate cohens d and return its output in tidy format - a helper function for analysis_workflow
+tidy_ttest_bf <- function(data){
+  require(BayesFactor)
+
+  fit <- data %>%
+    ttestBF(formula = DV ~ IV, data = .)
+
+  results <- data.frame(bf10 = extractBF(fit)$bf)
+  return(results)
+}
+
+
+# full analysis workflow
+# NB workflow returns mean_reference and mean_comparison, where reference is the first factor level and comparison is the next highest level.
+analysis_workflow <- function(data){
+
+  # frequentist t test
+  results_t_test <- data %>%
+    group_by(experiment, DV_type) %>%
+    do(broom::tidy(t.test(DV ~ IV, data = .))) %>%
+    ungroup() %>%
+    rename(t = statistic,
+           df = parameter,
+           p = p.value,
+           mean_reference = estimate1,
+           mean_comaprison = estimate2)
+
+  # cohens d
+  results_cohens_d <- data %>%
+    group_by(experiment, DV_type) %>%
+    do(tidy_cohens_d(data = .)) %>%
+    ungroup()
+
+  # BF t test
+  results_bf_t_test <- data %>%
+    group_by(experiment, DV_type) %>%
+    do(tidy_ttest_bf(data = .)) %>%
+    ungroup()
+
+  # combine
+  results <-
+    full_join(results_t_test,
+              results_cohens_d,
+              by = c("experiment", "DV_type")) %>%
+    full_join(results_bf_t_test,
+              by = c("experiment", "DV_type")) %>%
+    select(experiment, DV_type,
+           mean_reference, mean_comaprison,
+           t, df, p, cohens_d, cohens_d_ci_lower, cohens_d_ci_upper, bf10) %>%
+    mutate(reportable_result = paste0("Positive video M = ", round(mean_reference, 2), ", Negative video M = ", round(mean_comaprison, 2), ", t(", round(df, 2), ") = ", round(t, 2), ", p ", apa_p_value(p), ", d = ", round(cohens_d, 2), ", 95% CI [", round(cohens_d_ci_lower, 2), ", ", round(cohens_d_ci_upper, 2), "], BF10 = ", round(bf10, 1)))
+
+  return(results)
+}
+
+# OR_to_d <- function(OR){
+#   log(OR)*(sqrt(3)/pi)
+# }
+
+```
+
+# Data and exclusions
+
+```{r}
+
+# full data
+data_processed <- read_csv("../data/processed/3_data_participant_level.csv") %>%
+  # set factor levels for t test comparisons
+  mutate(source_valence = fct_relevel(source_valence,
+                                      "positive",
+                                      "negative"),
+         experiment_condition = fct_relevel(experiment_condition,
+                                            "deepfaked",
+                                            "genuine"))
+
+# apply exclusions
+data_after_exclusions <- data_processed %>%
+  filter(exclude_subject == FALSE)
+  
+```
+
+# Demographics
+
+```{r}
+
+data_processed %>%
+  group_by(experiment) %>%
+  summarise(n = n(),
+            excluded_n = sum(exclude_subject > 0),
+            excluded_percent = (excluded_n / n) *100) %>%
+  mutate_if(is.numeric, round, digits = 1) %>%
+  kable(align = "c") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+data_after_exclusions %>%
+  group_by(experiment) %>%
+  summarise(n = n(),
+            age_mean = mean(age, na.rm = TRUE),
+            age_sd = sd(age, na.rm = TRUE)) %>%
+  mutate_if(is.numeric, round, digits = 1) %>%
+  kable(align = "c") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+data_processed %>%
+  count(experiment, gender) %>%
+  spread(gender, n) %>%
+  kable(knitr.kable.NA = "/", align = "c") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+# Can genuine videos/audio induce attitudes?
+
+Differences between source valence conditions (positive vs. negative video/audio) in the subset of participants who were shown genuine audio/video.
+
+## By experiment
+
+```{r}
+
+results_genuine_valence <- data_after_exclusions %>%
+  filter(experiment_condition == "genuine") %>%
+  rename(IV = source_valence) %>%
+  gather(DV_type, DV, c(mean_self_reported_evaluation, IAT_D2)) %>%
+  select(experiment, DV_type, DV, IV) %>%
+  drop_na() %>%
+  analysis_workflow(data = .) %>%
+  left_join(data_after_exclusions %>% distinct(experiment, intervention_medium), by = "experiment")
+
+#write_csv(results_genuine_valence, "results/results_genuine_valence.csv")
+
+results_genuine_valence %>%
+  select(experiment, intervention_medium, DV_type, reportable_result) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+## Meta analysis
+
+```{r}
+
+results_for_meta_genuine_valence <- results_genuine_valence %>%
+  rename(yi = cohens_d) %>%
+  mutate(sei = (cohens_d_ci_upper - cohens_d_ci_lower)/(2*1.96)) %>%
+  select(experiment, intervention_medium, DV_type, yi, sei) %>%
+  mutate(DV_type = dplyr::recode(DV_type,
+                                 "IAT_D2" = "Implicit measure",
+                                 "mean_self_reported_evaluation" = "Self-report")) %>%
+  arrange(experiment, DV_type)
+
+```
+
+### Implicit
+
+```{r}
+
+fit_genuine_valence_implicit <- results_for_meta_genuine_valence %>%
+  filter(DV_type == "Implicit measure") %>%
+  rma.mv(yi      = yi,
+         V       = sei^2,
+         random  = ~ intervention_medium | experiment,
+         data    = .,
+         slab    = experiment) 
+
+forest(fit_genuine_valence_implicit, 
+       xlab = substitute(paste("Cohen's ", italic('d'))),
+       addcred = TRUE,
+       refline = 0)
+#        xlim = c(-2.5, 6),
+#        at = c(-1, 0, 1, 2, 3, 4))
+# text(-2.5, 23, "Basic IR effect", pos = 4)
+# text(6, 23, substitute(paste(italic('d'), " [95% CI]")), pos = 2)
+# 
+# # save model fits for making pdf plots for publication
+# write_rds(fit_basic_effect_ir, "models/fit_basic_effect_ir.rds")
+
+```
+
+### Self-report
+
+```{r}
+
+fit_genuine_valence_selfreport <- results_for_meta_genuine_valence %>%
+  filter(DV_type == "Self-report") %>%
+  rma.mv(yi      = yi,
+         V       = sei^2,
+         random  = ~ intervention_medium | experiment,
+         data    = .,
+         slab    = experiment) 
+
+forest(fit_genuine_valence_selfreport, 
+       xlab = substitute(paste("Cohen's ", italic('d'))),
+       addcred = TRUE,
+       refline = 0)
+#        xlim = c(-2.5, 6),
+#        at = c(-1, 0, 1, 2, 3, 4))
+# text(-2.5, 23, "Basic IR effect", pos = 4)
+# text(6, 23, substitute(paste(italic('d'), " [95% CI]")), pos = 2)
+# 
+# # save model fits for making pdf plots for publication
+# write_rds(fit_basic_effect_ir, "models/fit_basic_effect_ir.rds")
+
+```
+
+# Are deepfakes as effective as genuine video/audio at inducing attitudes?
+
+- DVs recoded for stimulus valence]
+- Differences between deepfaked and genuine audio/video conditions.
+
+## By experiment
+
+```{r}
+
+results_faking_condition <- data_after_exclusions %>%
+  filter(experiment >= 3) %>%
+  rename(IV = experiment_condition) %>%
+  gather(DV_type, DV, c(mean_self_reported_evaluation, IAT_D2)) %>%
+  select(experiment, DV_type, DV, IV) %>%
+  drop_na() %>%
+  analysis_workflow(data = .) %>%
+  left_join(data_after_exclusions %>% distinct(experiment, intervention_medium), by = "experiment")
+
+#write_csv(results_faking_condition, "results/results_faking_condition.csv")
+
+results_faking_condition %>%
+  select(experiment, intervention_medium, DV_type, reportable_result) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+## Meta analysis
+
+```{r}
+
+results_for_meta_faking_condition <- results_faking_condition %>%
+  rename(yi = cohens_d) %>%
+  mutate(sei = (cohens_d_ci_upper - cohens_d_ci_lower)/(2*1.96)) %>%
+  select(experiment, intervention_medium, DV_type, yi, sei) %>%
+  mutate(DV_type = dplyr::recode(DV_type,
+                                 "IAT_D2" = "Implicit measure",
+                                 "mean_self_reported_evaluation" = "Self-report")) %>%
+  arrange(experiment, DV_type)
+
+```
+
+### Implicit
+
+```{r}
+
+fit_faking_condition_implicit <- results_for_meta_faking_condition %>%
+  filter(DV_type == "Implicit measure") %>%
+  rma.mv(yi      = yi,
+         V       = sei^2,
+         random  = ~ intervention_medium | experiment,
+         data    = .,
+         slab    = experiment) 
+
+forest(fit_faking_condition_implicit, 
+       xlab = substitute(paste("Cohen's ", italic('d'))),
+       addcred = TRUE,
+       refline = 0)
+#        xlim = c(-2.5, 6),
+#        at = c(-1, 0, 1, 2, 3, 4))
+# text(-2.5, 23, "Basic IR effect", pos = 4)
+# text(6, 23, substitute(paste(italic('d'), " [95% CI]")), pos = 2)
+# 
+# # save model fits for making pdf plots for publication
+# write_rds(fit_basic_effect_ir, "models/fit_basic_effect_ir.rds")
+
+```
+
+### Self-report
+
+```{r}
+
+fit_faking_condition_selfreport <- results_for_meta_faking_condition %>%
+  filter(DV_type == "Self-report") %>%
+  rma.mv(yi      = yi,
+         V       = sei^2,
+         random  = ~ intervention_medium | experiment,
+         data    = .,
+         slab    = experiment) 
+
+forest(fit_faking_condition_selfreport, 
+       xlab = substitute(paste("Cohen's ", italic('d'))),
+       addcred = TRUE,
+       refline = 0)
+#        xlim = c(-2.5, 6),
+#        at = c(-1, 0, 1, 2, 3, 4))
+# text(-2.5, 23, "Basic IR effect", pos = 4)
+# text(6, 23, substitute(paste(italic('d'), " [95% CI]")), pos = 2)
+# 
+# # save model fits for making pdf plots for publication
+# write_rds(fit_basic_effect_ir, "models/fit_basic_effect_ir.rds")
+
+```
+
+# Can people accurately detect deepfakes?
+
+- how to get sensitivity/specificity etc?
+
+```{r}
+
+
+
+```
+
+
+
+
