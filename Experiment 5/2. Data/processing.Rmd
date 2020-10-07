@@ -86,8 +86,6 @@ unzip(deepfaked_data, exdir = "raw")
 rm(genuine_data, deepfaked_data)
 
 ```
-
-
 # Genuine videos: Connect to the SQL Database
 
 ```{r}
@@ -126,39 +124,6 @@ database_genuine_videos <- database_genuine_videos %>%
 
 # Remove temporary data frame
 rm(database_genuine_videos_meta_data)
-
-```
-
-## Shorten random id for each participant
-
-```{r}
-
-# Reduce the length of the random id variable to five characters (this is a sufficient length to identify each unique participant)
-count_unique <- function(x) {
-  return(length(unique(x)))
-}
-information_preserved <- function(x, length) {
-  return(
-    count_unique(str_sub(x, end=i)) ==
-      count_unique(x)
-  )
-}
-
-
-for (i in 5:36) {
-  if (
-    information_preserved(database_genuine_videos$session, i) &&
-    information_preserved(database_genuine_videos$observation, i)
-  ) {
-    break()
-  }
-}
-database_genuine_videos <- database_genuine_videos %>%
-  dplyr::mutate(
-    session=str_sub(session, end=i),
-    observation=str_sub(observation, end=i))
-
-rm(i, count_unique, information_preserved)
 
 ```
 
@@ -282,38 +247,6 @@ rm(database_deepfaked_videos_meta_data)
 
 ```
 
-## Shorten random id for each participant
-
-```{r}
-
-# Reduce the length of the random id variable to five characters (this is a sufficient length to identify each unique participant)
-
-count_unique <- function(x) {
-  return(length(unique(x)))
-}
-information_preserved <- function(x, length) {
-  return(
-    count_unique(str_sub(x, end=i)) ==
-      count_unique(x)
-  )
-}
-
-for (i in 5:36) {
-  if (
-    information_preserved(database_deepfaked_videos$session, i) &&
-    information_preserved(database_deepfaked_videos$observation, i)
-  ) {
-    break()
-  }
-}
-database_deepfaked_videos <- database_deepfaked_videos %>%
-  dplyr::mutate(
-    session=str_sub(session, end=i),
-    observation=str_sub(observation, end=i))
-
-rm(i, count_unique, information_preserved)
-
-```
 
 ## Extract full data from database
 
@@ -869,12 +802,11 @@ data_processed <- data_processed %>%
   full_join(unique_ids, by = "subject") 
 
 # Order the columns for subsequent analyses
-names(data_processed)
 
 data_processed <- data_processed %>% 
   mutate(experiment = current_experiment_number) %>%
   select(numeric_id, 
-         #subject, 
+         subject, 
          experiment,
          age, 
          gender,
@@ -995,18 +927,23 @@ data_processed <- data_processed %>%
 
 ```
 
-# Combine and write to disk
+
+## Handscoring Open Ended Questions & Saving to Disk
 
 ```{r}
 
 # Ensures that the processed data folder exists
 dir.create("processed")
 
-# write to disk
-write_csv(data_processed, "processed/data_processed.csv")
+# We asked a number of open-ended questions. In order to score them we exported the data to an excel sheet, manually scored the relevant variables, and then imported that data back into R for later analysis.
 
-data <- read_csv("processed/data_processed.csv")
+write.xlsx(data_processed, "processed/data_processed.xlsx")
+
+# Import the manually scored values back into R for later analysis
+
+data_processed_after_hand_scoring <- read_excel("processed/data_hand_scored.xlsx") 
 
 ```
+
 
 

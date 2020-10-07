@@ -1,5 +1,5 @@
 ---
-title: "Experiment 4"
+title: "Experiment 4: processing"
 subtitle: "Data processing"
 author: "Sean Hughes"
 date: "`r format(Sys.time(), '%d %B %Y')`"
@@ -128,29 +128,6 @@ rm(database_genuine_audio_meta_data)
 
 ```
 
-## Shorten random id for each participant
-
-```{r}
-
-# Reduce the length of the random id variable to five characters (this is a sufficient length to identify each unique participant)
-
-for (i in 5:36) {
-  if (
-    information_preserved(database_genuine_audio$session, i) &&
-    information_preserved(database_genuine_audio$observation, i)
-  ) {
-    break()
-  }
-}
-database_genuine_audio <- database_genuine_audio %>%
-  dplyr::mutate(
-    session=str_sub(session, end=i),
-    observation=str_sub(observation, end=i))
-
-rm(i, count_unique, information_preserved)
-
-```
-
 ## Extract full data from database
 
 ```{r}
@@ -268,40 +245,6 @@ database_deepfaked_audio <- database_deepfaked_audio %>%
 
 # Remove temporary data frame
 rm(database_deepfaked_audio_meta_data)
-
-```
-
-## Shorten random id for each participant
-
-```{r}
-
-# Reduce the length of the random id variable to five characters (this is a sufficient length to identify each unique participant)
-
-
-count_unique <- function(x) {
-  return(length(unique(x)))
-}
-information_preserved <- function(x, length) {
-  return(
-    count_unique(str_sub(x, end=i)) ==
-      count_unique(x)
-  )
-}
-
-for (i in 5:36) {
-  if (
-    information_preserved(database_deepfaked_audio$session, i) &&
-    information_preserved(database_deepfaked_audio$observation, i)
-  ) {
-    break()
-  }
-}
-database_deepfaked_audio <- database_deepfaked_audio %>%
-  dplyr::mutate(
-    session=str_sub(session, end=i),
-    observation=str_sub(observation, end=i))
-
-rm(i, count_unique, information_preserved)
 
 ```
 
@@ -740,7 +683,7 @@ data_processed <- data_processed %>%
 data_processed <- data_processed %>% 
   mutate(experiment = current_experiment_number) %>%
   select(numeric_id, 
-         #subject, 
+         subject, 
          experiment,
          gender, 
          age, 
@@ -767,10 +710,14 @@ data_processed <- data_processed %>%
 
 ```
 
-## Scoring People as Aware or Non-Aware of the Deepfake Manipulation
+## Handscoring Open Ended Questions & Saving to Disk
 
 ```{r}
-# We used an open ended questions to gauge if people were aware that the deepfaked audio was deepfaked. In order to score this as 1 (aware) or 0 (unaware) we exported the values to an excel sheet, manually scored them, and them imported the values back into R for later analysis.
+
+# Ensures that the processed data folder exists
+dir.create("processed")
+
+# We asked a number of open-ended questions. In order to score them we exported the data to an excel sheet, manually scored the relevant variables, and then imported that data back into R for later analysis.
 
 write.xlsx(data_processed, "processed/data_processed.xlsx")
 
@@ -780,18 +727,5 @@ data_processed_after_hand_scoring <- read_excel("processed/data_hand_scored.xlsx
 
 ```
 
-# Combine and write to disk
-
-```{r}
-
-# Ensures that the processed data folder exists
-dir.create("processed")
-
-# write to disk
-write_csv(data_processed_after_hand_scoring, "processed/data_processed.csv")
-
-data <- read_csv("processed/data_processed.csv")
-
-```
 
 

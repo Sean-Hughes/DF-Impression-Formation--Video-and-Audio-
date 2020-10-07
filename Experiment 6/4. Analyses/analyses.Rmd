@@ -138,7 +138,7 @@ OR_to_d <- function(OR){
 
 # full data
 data_processed <-
-      read_csv("C:/Users/Sean/Desktop/git/DF-Impression-Formation--Video-and-Audio-/Experiment 6/2. Data/processed/data_processed.csv")%>%
+      read_xlsx("C:/Users/Sean/Desktop/git/DF-Impression-Formation--Video-and-Audio-/Experiment 6/2. Data/processed/data_hand_scored.xlsx")%>%
 
 # set factor levels for experimental condition (pos vs. neg audio) and audio type (genuine vs. deepfaked)
   
@@ -173,12 +173,6 @@ data_processed <-
 
 data_processed_after_exclusions <- data_processed %>%
   filter(exclude == 0) 
-
-# Write file to disk for hand scoring of open ended questions 
-write_xlsx(data_processed_after_exclusions, "results/data_processed_after_exclusions.xlsx")
-
-# Import file after hand scoring of open ended questions
-data_processed_after_hand_scoring <- read_xlsx("results/Data_Cleaned_Recoded.xlsx")
 
 ```
 
@@ -222,8 +216,6 @@ data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
   mutate(actively_openminded_thinking_score = q1_aot_e + q2_aot_e + q3_aot_e_recoded + q4_aot_e_recoded + q5_aot_e_recoded + q6_aot_e + q7_aot_e + q8_aot_e_recoded)
   
   
-  
-
 # RECODE ANALYTIC THINKING (CRT):  
 data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
     mutate(crt_q1_recoded = ifelse(crt_q1 == 4, 1, 0),
@@ -768,7 +760,7 @@ data_processed_after_hand_scoring <- data_processed_after_hand_scoring %>%
          fake_news_sharing)
 
 # Write total datato disk
-write_xlsx(data_processed_after_hand_scoring, "results/total_data.xlsx")
+write_csv(data_processed_after_hand_scoring, "results/total_data.csv")
 
 # Write deepfake only condition subset of data
 deepfake_only_data <- data_processed_after_hand_scoring %>%

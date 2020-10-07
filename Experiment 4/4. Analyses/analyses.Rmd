@@ -1,5 +1,5 @@
 ---
-title: "Experiment 4"
+title: "Experiment 4: analyses"
 subtitle: "Analyses"
 author: "Sean Hughes"
 date: "`r format(Sys.time(), '%d %B %Y')`"
@@ -134,7 +134,7 @@ OR_to_d <- function(OR){
 
 # full data
 data_processed <-
-      read_csv("C:/Users/Sean/Desktop/git/DF-Impression-Formation--Video-and-Audio-/Experiment 4/2. Data/processed/data_processed.csv")%>%
+      read_xlsx("C:/Users/Sean/Desktop/git/DF-Impression-Formation--Video-and-Audio-/Experiment 4/2. Data/processed/data_hand_scored.xlsx")%>%
   # set factor levels for t test comparisons
   mutate(experiment_condition = fct_relevel(experiment_condition,
                                             "positive audio",
