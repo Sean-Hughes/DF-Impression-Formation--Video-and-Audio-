@@ -11,6 +11,11 @@ output:
     toc_float: yes
 ---
 
+# To do
+
+- prereg says we'll calculate POMP scores for all individual differences variables prior to analysis
+- what else does the prereg say that we'll have to add?
+
 ```{r include=FALSE}
 knitr::opts_chunk$set(message=FALSE,
                       warning=FALSE)
