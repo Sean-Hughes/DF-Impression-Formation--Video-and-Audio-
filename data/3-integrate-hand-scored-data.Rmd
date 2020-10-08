@@ -30,20 +30,18 @@ library(tidyverse)
 ```{r}
 
 # processed data
-data_participant_level <- read_rds("processed/3_data_participant_level.csv")
+data_participant_level <- read_csv("processed/3_data_participant_level.csv")
 
 # hand scored data
-data_hand_scored <- read_excel("processed/4_data_hand_scored.csv") 
-
-# deepfake_concept_check
-# deepfake_check
-# recognised_manipulation
+data_hand_scored <- read_csv("processed/4_data_hand_scored.csv")
 
 # join
-data_participant_level_with_hand_scorings <- data_participant_level %>%
-  left_join(data_hand_scored, by = "subject")
+data_participant_level_with_hand_scoring <- data_participant_level %>%
+  full_join(data_hand_scored, by = "subject")
 
 # write to disk
-write_csv(data_participant_level_with_hand_scorings, "processed/5_data_participant_level_with_hand_scorings.csv")
+write_csv(data_participant_level_with_hand_scoring, "processed/5_data_participant_level_with_hand_scoring.csv")
   
 ```
+
+
