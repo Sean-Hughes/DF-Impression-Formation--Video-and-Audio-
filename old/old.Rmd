@@ -126,7 +126,7 @@ analysis_workflow <- function(data){
 ```{r}
 
 # full data
-data_processed <- read_csv("../data/processed/5_data_participant_level_with_hand_scoring.csv") %>%
+data_processed <- read_csv("../data/processed/3_data_participant_level.csv") %>%
   # set factor levels for t test comparisons
   mutate(source_valence = fct_relevel(source_valence,
                                       "positive",
@@ -428,7 +428,7 @@ TOSTmeta(ES = fit_deepfaked_valence_selfreport$beta[1] - fit_genuine_valence_sel
 
 ```{r}
 
-analysis_workflow <- function(data){
+analysis_workflow2 <- function(data){
 
   # frequentist t test
   results_t_test <- data %>%
@@ -715,7 +715,7 @@ rated real | FN       | TN
 sensitivity = TP / (TP+FN)
 false negative rate = 1 - sensitivity
 specificity = TN / (FP+TN)
-false positive rate = 1 - specificity
+false negative rate = 1 - specificity
 
 Youden's J statistic aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions" = sensitivity + specificity - 1 
 
@@ -724,56 +724,6 @@ probability of misinformedness = 1 - J
 ```{r}
 
 recognised_manipulation
-
-data_after_exclusions %>%
-  count(recognised_manipulation, 
-        deepfake_check_recoded)
-
-x <- data_after_exclusions %>%
-  filter(experiment >= 4) %>%
-  select(recognised_manipulation, passed_iat_performance, exclude_subject)
-
-data_after_exclusions %>%
-  filter(experiment >= 4) %>%
-  count(experiment_condition, recognised_manipulation) 
-
-```
-
-             was fake    | was real
-rated fake | TP 177      | FP 38
-rated real | FN 216      | TN 179
-
-```{r}
-
-TP <- 177
-FP <- 38
-FN <- 216
-TN <- 179
-
-sensitivity <- TP / (TP+FN)
-false_negative_rate <- 1 - sensitivity
-specificity <- TN / (FP+TN)
-false_positive_rate <- 1 - specificity
-
-# Youden's J statistic aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions" 
-J <- sensitivity + specificity - 1 
-
-probability_of_misinformedness <- 1 - J
-
-tibble(variable = c("sensitivity",
-                    "false_negative_rate",
-                    "specificity",
-                    "false_positive_rate",
-                    "J",
-                    "probability_of_misinformedness"),
-       value = c(sensitivity,
-                 false_negative_rate,
-                 specificity,
-                 false_positive_rate,
-                 J,
-                 probability_of_misinformedness)) %>%
-  mutate(value = round(value, 2))
-  
 
 ```
 
