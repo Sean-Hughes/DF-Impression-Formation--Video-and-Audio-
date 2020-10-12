@@ -163,7 +163,7 @@ data_after_exclusions %>%
   kable(align = "c") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 
-data_processed %>%
+data_after_exclusions %>%
   count(experiment, gender) %>%
   spread(gender, n) %>%
   kable(knitr.kable.NA = "/", align = "c") %>%
@@ -677,14 +677,17 @@ NB this is a fixed effects only model
 
 library(BayesFactor)
 
-meta_bf <-
-  meta.ttestBF(t = results_faking_condition$t,
-               n1 = results_faking_condition$df + 1,    # ENSURE THIS IS RIGHT
+results_sr <- results_faking_condition %>%
+  filter(DV_type == "mean_self_reported_evaluation")
+
+meta_bf <- 
+  meta.ttestBF(t = results_sr$t,
+               n1 = results_sr$df + 1,    # ENSURE THIS IS RIGHT
                rscale = sqrt(2)/2)
 
 meta_bf_samples <-
-  meta.ttestBF(t = results_faking_condition$t,
-               n1 = results_faking_condition$df + 1,    # ENSURE THIS IS RIGHT
+  meta.ttestBF(t = results_sr$t,
+               n1 = results_sr$df + 1,    # ENSURE THIS IS RIGHT
                rscale = sqrt(2)/2,
                posterior = TRUE,
                iterations = 10000)
@@ -723,8 +726,6 @@ probability of misinformedness = 1 - J
 
 ```{r}
 
-recognised_manipulation
-
 data_after_exclusions %>%
   count(recognised_manipulation, 
         deepfake_check_recoded)
@@ -734,22 +735,23 @@ x <- data_after_exclusions %>%
   select(recognised_manipulation, passed_iat_performance, exclude_subject)
 
 data_after_exclusions %>%
-  filter(experiment >= 4) %>%
-  count(experiment_condition, recognised_manipulation) 
+  filter(experiment >= 5) %>%
+  count(experiment_condition, deepfake_check_recoded) 
 
 ```
 
              was fake    | was real
-rated fake | TP 177      | FP 38
-rated real | FN 216      | TN 179
+rated fake | TP 40       | FP 21
+rated real | FN 180      | TN 196
 
 ```{r}
 
-TP <- 177
-FP <- 38
-FN <- 216
-TN <- 179
+TP <- 40
+FP <- 21
+FN <- 180
+TN <- 196
 
+accuracy <- (TP+TN)/(TP+TN+FP+FN)
 sensitivity <- TP / (TP+FN)
 false_negative_rate <- 1 - sensitivity
 specificity <- TN / (FP+TN)
@@ -760,13 +762,15 @@ J <- sensitivity + specificity - 1
 
 probability_of_misinformedness <- 1 - J
 
-tibble(variable = c("sensitivity",
+tibble(variable = c("accuracy",
+                    "sensitivity",
                     "false_negative_rate",
                     "specificity",
                     "false_positive_rate",
                     "J",
                     "probability_of_misinformedness"),
-       value = c(sensitivity,
+       value = c(accuracy,
+                 sensitivity,
                  false_negative_rate,
                  specificity,
                  false_positive_rate,
@@ -774,7 +778,6 @@ tibble(variable = c("sensitivity",
                  probability_of_misinformedness)) %>%
   mutate(value = round(value, 2))
   
-
 ```
 
 # Does detecting it matter?
@@ -784,7 +787,83 @@ IAT ~ experiment_condition * detected_deepfake ??
 Is there sufficient N to ask this question?
 
 
+# Can deepfaked videos/audio induce attitudes?
 
+Differences between source valence conditions (positive vs. negative video/audio) in the subset of participants who were shown genuine audio/video.
+
+```{r}
+
+results_deepfaked_valence <- data_after_exclusions %>%
+  filter(experiment_condition == "deepfaked" & deepfake_check_recoded == "Yes") %>%
+  rename(IV = source_valence) %>%
+  gather(DV_type, DV, c(mean_self_reported_evaluation, IAT_D2)) %>%
+  select(experiment, DV_type, DV, IV) %>%
+  drop_na() %>%
+  analysis_workflow(data = .) %>%
+  left_join(data_after_exclusions %>% distinct(experiment, intervention_medium), by = "experiment")
+
+results_for_meta_deepfaked_valence <- results_deepfaked_valence %>%
+  rename(yi = cohens_d) %>%
+  mutate(sei = (cohens_d_ci_upper - cohens_d_ci_lower)/(2*1.96)) %>%
+  select(experiment, intervention_medium, DV_type, yi, sei) %>%
+  mutate(DV_type = dplyr::recode(DV_type,
+                                 "IAT_D2" = "Implicit measure",
+                                 "mean_self_reported_evaluation" = "Self-report")) %>%
+  arrange(experiment, DV_type)
+
+```
+
+### Implicit
+
+```{r}
+
+fit_deepfaked_valence_implicit <- results_for_meta_deepfaked_valence %>%
+  filter(DV_type == "Implicit measure") %>%
+  rma.mv(yi      = yi,
+         V       = sei^2,
+         random  = ~ 1 | intervention_medium,
+         data    = .,
+         slab    = experiment) 
+
+forest(fit_deepfaked_valence_implicit, 
+       xlab = substitute(paste("Cohen's ", italic('d'))),
+       addcred = TRUE,
+       refline = 0)
+#        xlim = c(-2.5, 6),
+#        at = c(-1, 0, 1, 2, 3, 4))
+# text(-2.5, 23, "Basic IR effect", pos = 4)
+# text(6, 23, substitute(paste(italic('d'), " [95% CI]")), pos = 2)
+# 
+# # save model fits for making pdf plots for publication
+# write_rds(fit_basic_effect_ir, "models/fit_basic_effect_ir.rds")
+
+```
+
+### Self-report
+
+```{r}
+
+fit_deepfaked_valence_selfreport <- results_for_meta_deepfaked_valence %>%
+  filter(DV_type == "Self-report") %>%
+  rma.mv(yi      = yi,
+         V       = sei^2,
+         random  = ~ 1 | intervention_medium,
+         data    = .,
+         slab    = experiment) 
+
+forest(fit_deepfaked_valence_selfreport, 
+       xlab = substitute(paste("Cohen's ", italic('d'))),
+       addcred = TRUE,
+       refline = 0)
+#        xlim = c(-2.5, 6),
+#        at = c(-1, 0, 1, 2, 3, 4))
+# text(-2.5, 23, "Basic IR effect", pos = 4)
+# text(6, 23, substitute(paste(italic('d'), " [95% CI]")), pos = 2)
+# 
+# # save model fits for making pdf plots for publication
+# write_rds(fit_basic_effect_ir, "models/fit_basic_effect_ir.rds")
+
+```
 
 
 

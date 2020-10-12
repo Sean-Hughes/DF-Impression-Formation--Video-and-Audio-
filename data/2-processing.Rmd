@@ -11,11 +11,6 @@ output:
     toc_float: yes
 ---
 
-# To do
-
-- prereg says we'll calculate POMP scores for all individual differences variables prior to analysis
-- what else does the prereg say that we'll have to add?
-
 ```{r include=FALSE}
 knitr::opts_chunk$set(message=FALSE,
                       warning=FALSE)
@@ -255,8 +250,6 @@ write_rds(data_trial_level, "processed/2_data_trial_level.rds", compress = "gz")
 # Participant-level data
 
 ## Study conditions, demographics and method variables
-
-Variables apparently present in data that still need to be extracted: education, employment, income, political_ideology_identity_1, political_ideology_social_issues, political_ideology_economic_issues, religious_affiliation_general.
 
 ```{r}
 

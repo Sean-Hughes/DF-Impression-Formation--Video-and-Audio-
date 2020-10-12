@@ -14,23 +14,19 @@ instructions on how to use scripts needed, what generated them, etc. ie if all I
 
 exp 1 "Five Things you Didn't Know About Me !" video has two versions, which is right (both in content and in its file name running with the script), should one be deleted?
 
-
-
-
-
 # TO DO 
+
+sean to check corrispondence with preregistrations
+
+add POMP scores to all individual differences 
+
+change 5 to drop vars and add note saying so.
 
 ENSURE all ORIGINAL TEXT RESPONSES ARE IN 3_data_participant_level DATA
 
-WHAT WAS DONE WITH MEMORY OF VIDEO variable?
-
-recode recognised_manipulation, 
-           deepfake_check_recoded, 
-           deepfake_concept_check_recoded
-
 why is deepfake_concept_check_recoded empty?
 
-drop text responses from 5 participant level and hand scoring, including memory-of_video, issues_with_study, text hypothesis awarenes, influence awarness, 
+drop text responses from 5 participant level and hand scoring, including memory-of_video, issues_with_study, text hypothesis awarenes, influence awarness, deepfaking text
 
 re order variables in 5
 
