@@ -569,6 +569,35 @@ data_individual_differences_temp <- data_preprocessed %>%
   summarise_all(funs(first(na.omit(.)))) %>%
   ungroup()
 
+# define n items, min and max possible item level data. this is used for completeness exclusions below, and also for POMP scores further down. 
+master_aot_n_items = 8
+master_bcti_n_items = 15
+master_crt_n_items = 7
+master_ocq_n_items = 30
+master_ras_n_items = 8
+master_rei_n_items = 10
+master_me_n_items = 6
+
+aot_min_item = 2  # seems too high?
+bcti_min_item = 1
+crt_min_item = 0
+ocq_min_item = 0
+ras_min_item = 1
+rei_min_item = 1
+me_awareness_min_item = 0
+me_accuracy_min_item = 1  # check
+me_sharing_min_item = 0
+
+aot_max_item = 6
+bcti_max_item = 9
+crt_max_item = 1
+ocq_max_item = 6
+ras_max_item = 5
+rei_max_item = 7
+me_awareness_max_item = 1
+me_accuracy_max_item = 4 # check
+me_sharing_max_item = 1
+
 ```
 
 ### AOT Actively openminded thinking
@@ -585,7 +614,8 @@ data_aot <- data_individual_differences_temp %>%
   summarize(aot_actively_openminded_thinking_sum = sum(aote_score, na.rm = TRUE),
             aot_n_items = n(),
             .groups = "drop") %>%
-  mutate(aot_actively_openminded_thinking_sum = ifelse(aot_n_items == 8, aot_actively_openminded_thinking_sum, NA)) %>%
+  mutate(aot_actively_openminded_thinking_sum = ifelse(aot_n_items == master_aot_n_items,
+                                                       aot_actively_openminded_thinking_sum, NA)) %>%
   select(-aot_n_items)
 
 ```
@@ -602,7 +632,8 @@ data_bcti <- data_individual_differences_temp %>%
   summarize(bcti_belief_in_conspiracy_sum = sum(as.numeric(bcti_score), na.rm = TRUE),
             bcti_n_items = n(),
             .groups = "drop") %>%
-  mutate(bcti_belief_in_conspiracy_sum = ifelse(bcti_n_items == 15, bcti_belief_in_conspiracy_sum, NA)) %>%
+  mutate(bcti_belief_in_conspiracy_sum = ifelse(bcti_n_items == master_bcti_n_items, 
+                                                bcti_belief_in_conspiracy_sum, NA)) %>%
   select(-bcti_n_items)
 
 ```
@@ -630,9 +661,75 @@ data_crt <- data_individual_differences_temp %>%
   summarize(crt_analytic_thinking_sum = sum(crt_score, na.rm = TRUE),
             crt_n_items = n(),
             .groups = "drop") %>%
-  mutate(crt_analytic_thinking_sum = ifelse(crt_n_items == 7, crt_analytic_thinking_sum, NA)) %>%
+  mutate(crt_analytic_thinking_sum = ifelse(crt_n_items == master_crt_n_items, 
+                                            crt_analytic_thinking_sum, NA)) %>%
   select(-crt_n_items)
   
+```
+
+### ME Media endoresement
+
+```{r}
+
+# awareness
+data_me_awareness <- data_individual_differences_temp %>%
+  select(subject, starts_with("fn_"), starts_with("rn_")) %>%
+  select(subject, contains("awareness")) %>%
+  gather(me_item, me_score, contains("n_s")) %>%
+  drop_na() %>%
+  mutate(me_score = case_when((me_score %in% c(2, 3)) ~ 0,
+                              (me_score == 1) ~ 1),
+         me_subscale = ifelse(str_detect(me_item, "rn_"), "me_fake_news", "me_real_news")) %>%
+  spread(me_subscale, me_score) %>%
+  group_by(subject) %>%
+  summarize(me_fake_news_awareness_sum = sum(me_fake_news, na.rm = TRUE),
+            me_real_news_awareness_sum = sum(me_real_news, na.rm = TRUE),
+            me_n_items = n(),
+            .groups = "drop") %>%
+  mutate(me_fake_news_awareness_sum = ifelse(me_n_items == master_me_n_items*2, me_fake_news_awareness_sum, NA),
+         me_real_news_awareness_sum = ifelse(me_n_items == master_me_n_items*2, me_real_news_awareness_sum, NA)) %>%
+  select(-me_n_items)
+
+# accuracy
+data_me_accuracy <- data_individual_differences_temp %>%
+  select(subject, starts_with("fn_"), starts_with("rn_")) %>%
+  select(subject, contains("accuracy")) %>%
+  gather(me_item, me_score, contains("n_s")) %>%
+  drop_na() %>%
+  mutate(me_subscale = ifelse(str_detect(me_item, "rn_"), "me_fake_news", "me_real_news")) %>%
+  spread(me_subscale, me_score) %>%
+  group_by(subject) %>%
+  summarize(me_fake_news_accuracy_sum = sum(as.numeric(me_fake_news), na.rm = TRUE),
+            me_real_news_accuracy_sum = sum(as.numeric(me_real_news), na.rm = TRUE),
+            me_n_items = n(),
+            .groups = "drop") %>%
+  mutate(me_fake_news_accuracy_sum = ifelse(me_n_items == master_me_n_items*2, me_fake_news_accuracy_sum, NA),
+         me_real_news_accuracy_sum = ifelse(me_n_items == master_me_n_items*2, me_real_news_accuracy_sum, NA)) %>%
+  select(-me_n_items)
+
+# sharing
+data_me_sharing <- data_individual_differences_temp %>%
+  select(subject, starts_with("fn_"), starts_with("rn_")) %>%
+  select(subject, contains("sharing")) %>%
+  gather(me_item, me_score, contains("n_s")) %>%
+  drop_na() %>%
+  mutate(me_score = case_when((me_score %in% c(1, 3)) ~ 1,
+                              (me_score == 2) ~ 0),
+         me_subscale = ifelse(str_detect(me_item, "rn_"), "me_fake_news", "me_real_news")) %>%
+  spread(me_subscale, me_score) %>%
+  group_by(subject) %>%
+  summarize(me_fake_news_sharing_sum = sum(me_fake_news, na.rm = TRUE),
+            me_real_news_sharing_sum = sum(me_real_news, na.rm = TRUE),
+            me_n_items = n(),
+            .groups = "drop") %>%
+  mutate(me_fake_news_sharing_sum = ifelse(me_n_items == master_me_n_items*2, me_fake_news_sharing_sum, NA),
+         me_real_news_sharing_sum = ifelse(me_n_items == master_me_n_items*2, me_real_news_sharing_sum, NA)) %>%
+  select(-me_n_items)
+
+data_me <- data_me_awareness %>%
+  full_join(data_me_accuracy, by = "subject") %>%
+  full_join(data_me_sharing, by = "subject")
+
 ```
 
 ### OCQ Overclaiming
@@ -648,7 +745,8 @@ data_ocq <- data_individual_differences_temp %>%
   summarize(ocq_overclaiming_sum = sum(ocq_score),
             ocq_n_items = n(),
             .groups = "drop") %>%
-  mutate(ocq_overclaiming_sum = ifelse(ocq_n_items == 30, ocq_overclaiming_sum, NA)) %>%
+  mutate(ocq_overclaiming_sum = ifelse(ocq_n_items == master_ocq_n_items, 
+                                       ocq_overclaiming_sum, NA)) %>%
   select(-ocq_n_items)
 
 ```
@@ -670,7 +768,8 @@ data_ras <- data_individual_differences_temp %>%
   summarize(ras_relgious_affliation_sum = sum(ras_score, na.rm = TRUE),
             ras_n_items = n(),
             .groups = "drop") %>%
-  mutate(ras_relgious_affliation_sum = ifelse(ras_n_items == 8, ras_relgious_affliation_sum, NA)) %>%
+  mutate(ras_relgious_affliation_sum = ifelse(ras_n_items == master_ras_n_items, 
+                                              ras_relgious_affliation_sum, NA)) %>%
   select(-ras_n_items)
 
 ```
@@ -685,79 +784,102 @@ data_rei <- data_individual_differences_temp %>%
   drop_na() %>%
   # reverse score items
   mutate(rei_score = ifelse(rei_item %in% c("q1_rei", "q4_rei", "q6_rei", "q7_rei", "q10_rei", 
-                                            "q13_rei", "q15_rei", "q18_rei", "q19_rei", "q20_rei"), 8-as.numeric(rei_score), as.numeric(rei_score)),
+                                            "q13_rei", "q15_rei", "q18_rei", "q19_rei", "q20_rei"),
+                            8-as.numeric(rei_score), as.numeric(rei_score)),
          rei_subscale = ifelse(rei_item %in% c("q1_rei", "q2_rei", "q6_rei", "q7_rei", "q10_rei", 
-                                           "q11_rei", "q13_rei", "q15_rei", "q19_rei", "q20_rei"), "rei_rational_scale", "rei_experiential_scale")) %>%
+                                               "q11_rei", "q13_rei", "q15_rei", "q19_rei", "q20_rei"),
+                               "rei_rational_scale", "rei_experiential_scale")) %>%
   spread(rei_subscale, rei_score) %>%
   group_by(subject) %>%
   summarize(rei_rational_sum = sum(rei_rational_scale, na.rm = TRUE),
             rei_experiential_sum = sum(rei_experiential_scale, na.rm = TRUE),
             rei_n_items = n(),
             .groups = "drop") %>%
-  mutate(rei_rational_sum = ifelse(rei_n_items == 20, rei_rational_sum, NA),
-         rei_experiential_sum = ifelse(rei_n_items == 20, rei_experiential_sum, NA)) %>%
+  mutate(rei_rational_sum = ifelse(rei_n_items == master_rei_n_items, 
+                                   rei_rational_sum, NA),
+         rei_experiential_sum = ifelse(rei_n_items == master_rei_n_items, 
+                                       rei_experiential_sum, NA)) %>%
   select(-rei_n_items)
 
 ```
 
-### Media endoresement
+### Combine individual differences
 
 ```{r}
 
-# awareness
-data_me_awareness <- data_individual_differences_temp %>%
-  select(subject, starts_with("fn_"), starts_with("rn_")) %>%
-  select(subject, contains("awareness")) %>%
-  gather(me_item, me_score, contains("n_s")) %>%
-  drop_na() %>%
-  mutate(me_score = case_when((me_score %in% c(2, 3)) ~ 0,
-                              (me_score == 1) ~ 1),
-         me_subscale = ifelse(str_detect(me_item, "rn_"), "me_fake_news", "me_real_news")) %>%
-  spread(me_subscale, me_score) %>%
-  group_by(subject) %>%
-  summarize(me_fake_news_awareness_sum = sum(me_fake_news, na.rm = TRUE),
-            me_real_news_awareness_sum = sum(me_real_news, na.rm = TRUE),
-            me_n_items = n(),
-            .groups = "drop") %>%
-  mutate(me_fake_news_awareness_sum = ifelse(me_n_items == 12, me_fake_news_awareness_sum, NA),
-         me_real_news_awareness_sum = ifelse(me_n_items == 12, me_real_news_awareness_sum, NA)) %>%
-  select(-me_n_items)
+pomp <- function(raw_sum_score, n_items, min_item_score, max_item_score, digits = 3) {
+  round( 
+    ( raw_sum_score - (n_items * min_item_score) ) / ( (n_items * max_item_score) - (n_items * min_item_score)),
+    digits
+  )
+}
 
-# accuracy
-data_me_accuracy <- data_individual_differences_temp %>%
-  select(subject, starts_with("fn_"), starts_with("rn_")) %>%
-  select(subject, contains("accuracy")) %>%
-  gather(me_item, me_score, contains("n_s")) %>%
-  drop_na() %>%
-  mutate(me_subscale = ifelse(str_detect(me_item, "rn_"), "me_fake_news", "me_real_news")) %>%
-  spread(me_subscale, me_score) %>%
-  group_by(subject) %>%
-  summarize(me_fake_news_accuracy_sum = sum(as.numeric(me_fake_news), na.rm = TRUE),
-            me_real_news_accuracy_sum = sum(as.numeric(me_real_news), na.rm = TRUE),
-            me_n_items = n(),
-            .groups = "drop") %>%
-  mutate(me_fake_news_accuracy_sum = ifelse(me_n_items == 12, me_fake_news_accuracy_sum, NA),
-         me_real_news_accuracy_sum = ifelse(me_n_items == 12, me_real_news_accuracy_sum, NA)) %>%
-  select(-me_n_items)
-
-# sharing
-data_me_sharing <- data_individual_differences_temp %>%
-  select(subject, starts_with("fn_"), starts_with("rn_")) %>%
-  select(subject, contains("sharing")) %>%
-  gather(me_item, me_score, contains("n_s")) %>%
-  drop_na() %>%
-  mutate(me_score = case_when((me_score %in% c(1, 3)) ~ 1,
-                              (me_score == 2) ~ 0),
-         me_subscale = ifelse(str_detect(me_item, "rn_"), "me_fake_news", "me_real_news")) %>%
-  spread(me_subscale, me_score) %>%
-  group_by(subject) %>%
-  summarize(me_fake_news_sharing_sum = sum(me_fake_news, na.rm = TRUE),
-            me_real_news_sharing_sum = sum(me_real_news, na.rm = TRUE),
-            me_n_items = n(),
-            .groups = "drop") %>%
-  mutate(me_fake_news_sharing_sum = ifelse(me_n_items == 12, me_fake_news_sharing_sum, NA),
-         me_real_news_sharing_sum = ifelse(me_n_items == 12, me_real_news_sharing_sum, NA)) %>%
-  select(-me_n_items)
+data_individual_differences <- data_aot %>%
+  full_join(data_bcti, by = "subject") %>%
+  full_join(data_crt, by = "subject") %>%
+  full_join(data_me, by = "subject") %>%
+  full_join(data_ocq, by = "subject") %>%
+  full_join(data_ras, by = "subject") %>%
+  full_join(data_rei, by = "subject") %>%
+  
+  # calculate POMP score (percent of maximum possible)
+  mutate(aot_actively_openminded_thinking_pomp = pomp(aot_actively_openminded_thinking_sum,
+                                                      master_aot_n_items,
+                                                      aot_min_item,
+                                                      aot_max_item),
+         bcti_belief_in_conspiracy_pomp        = pomp(bcti_belief_in_conspiracy_sum, 
+                                                      master_bcti_n_items, 
+                                                      bcti_min_item,
+                                                      bcti_max_item),
+         crt_analytic_thinking_pomp            = pomp(crt_analytic_thinking_sum,
+                                                      master_crt_n_items, 
+                                                      crt_min_item, 
+                                                      crt_max_item),
+         ocq_overclaiming_pomp                 = pomp(ocq_overclaiming_sum,
+                                                      master_ocq_n_items, 
+                                                      ocq_min_item,
+                                                      ocq_max_item),
+         me_fake_news_awareness_pomp           = pomp(me_fake_news_awareness_sum,
+                                                      master_me_n_items, 
+                                                      me_awareness_min_item,
+                                                      me_awareness_max_item),
+         me_real_news_awareness_pomp           = pomp(me_real_news_awareness_sum,
+                                                      master_me_n_items, 
+                                                      me_awareness_min_item,
+                                                      me_awareness_max_item),
+         me_fake_news_accuracy_pomp            = pomp(me_fake_news_accuracy_sum,
+                                                      master_me_n_items, 
+                                                      me_accuracy_min_item,
+                                                      me_accuracy_max_item),
+         me_real_news_accuracy_pomp            = pomp(me_real_news_accuracy_sum,
+                                                      master_me_n_items, 
+                                                      me_accuracy_min_item,
+                                                      me_accuracy_max_item),
+         me_fake_news_sharing_pomp             = pomp(me_fake_news_sharing_sum,
+                                                      master_me_n_items, 
+                                                      me_sharing_min_item,
+                                                      me_sharing_max_item),
+         me_real_news_sharing_pomp             = pomp(me_real_news_sharing_sum, 
+                                                      master_me_n_items, 
+                                                      me_sharing_min_item,
+                                                      me_sharing_max_item),
+         ocq_overclaiming_pomp                 = pomp(ocq_overclaiming_sum,
+                                                      master_ocq_n_items, 
+                                                      ocq_min_item,
+                                                      ocq_max_item),
+         ras_relgious_affliation_pomp          = pomp(ras_relgious_affliation_sum, 
+                                                      master_ras_n_items, 
+                                                      ras_min_item, 
+                                                      ras_max_item),
+         rei_rational_pomp                     = pomp(rei_rational_sum, 
+                                                      master_rei_n_items, 
+                                                      rei_min_item,
+                                                      rei_max_item),
+         rei_experiential_pomp                 = pomp(rei_experiential_sum, 
+                                                      master_rei_n_items, 
+                                                      rei_min_item,
+                                                      rei_max_item)) %>%
+  select(subject, contains("pomp"))
 
 ```
 
@@ -773,15 +895,8 @@ data_participant_level <- data_conditions_and_demographics %>%
   full_join(data_self_reported_evaluations_mean_scores, by = "subject") %>%
   full_join(data_detection, by = "subject") %>% 
   full_join(data_exploratory_questions, by = "subject") %>%
-  full_join(data_aot, by = "subject") %>%
-  full_join(data_bcti, by = "subject") %>%
-  full_join(data_crt, by = "subject") %>%
-  full_join(data_ocq, by = "subject") %>%
-  full_join(data_ras, by = "subject") %>%
-  full_join(data_rei, by = "subject") %>%
-  full_join(data_me_awareness, by = "subject") %>%
-  full_join(data_me_accuracy, by = "subject") %>%
-  full_join(data_me_sharing, by = "subject") %>%
+  full_join(data_individual_differences, by = "subject") %>%
+  full_join(data_me, by = "subject") %>%
   arrange(experiment, experiment_condition) %>%
   
   # recode IAT and self reported evaluations for stimulus identity 
@@ -819,19 +934,19 @@ data_participant_level <- data_conditions_and_demographics %>%
          hypothesis_awareness, 
          influence_awareness, 
          issues_with_study, 
-         aot_actively_openminded_thinking_sum, 
-         bcti_belief_in_conspiracy_sum, 
-         crt_analytic_thinking_sum, 
-         ocq_overclaiming_sum, 
-         ras_relgious_affliation_sum, 
-         rei_rational_sum, 
-         rei_experiential_sum, 
-         me_fake_news_awareness_sum, 
-         me_real_news_awareness_sum, 
-         me_fake_news_accuracy_sum, 
-         me_real_news_accuracy_sum, 
-         me_fake_news_sharing_sum, 
-         me_real_news_sharing_sum,
+         aot_actively_openminded_thinking_pomp, 
+         bcti_belief_in_conspiracy_pomp, 
+         crt_analytic_thinking_pomp, 
+         ocq_overclaiming_pomp, 
+         ras_relgious_affliation_pomp, 
+         rei_rational_pomp, 
+         rei_experiential_pomp, 
+         me_fake_news_awareness_pomp, 
+         me_real_news_awareness_pomp, 
+         me_fake_news_accuracy_pomp, 
+         me_real_news_accuracy_pomp, 
+         me_fake_news_sharing_pomp, 
+         me_real_news_sharing_pomp,
          
          # additional demographics
          education, 

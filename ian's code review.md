@@ -18,7 +18,9 @@ exp 1 "Five Things you Didn't Know About Me !" video has two versions, which is 
 
 sean to check corrispondence with preregistrations
 
-add POMP scores to all individual differences 
+sean to check POMP function implementation
+
+sean to check scale n items, min and max scores. especially aot_min_item
 
 change 5 to drop vars and add note saying so.
 
