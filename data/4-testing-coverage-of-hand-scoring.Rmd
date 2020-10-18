@@ -1,0 +1,35 @@
+---
+title: "Testing coverage"
+author: "Ian Hussey"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes 
+    toc_float: yes
+---
+
+```{r}
+
+data_participant_level_with_hand_scoring <- read_csv("processed/5_data_participant_level_with_hand_scoring.csv")
+
+```
+
+
+```{r}
+
+data_participant_level_with_hand_scoring %>%
+  count(experiment)
+
+```
+
+- Why do 28 have missing data for all but subject code (i.e., even experiment is missing)?
+  - Inspection of data_participant_level vs data_participant_level_with_hand_scoring suggests these 28 appeared in hand scoring but not the original data_participant_level. are they typos, duplicates, or?
+
+
+
+
+
+
