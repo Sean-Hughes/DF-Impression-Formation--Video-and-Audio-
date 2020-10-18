@@ -26,27 +26,19 @@ make sure updated design files etc are brought into ians branch
 
 add intentions (exp 6 only?)
 
-tidy up - add bayesian meta
+tidy up - add bayesian meta  
 
-design  
-
-sean to check corrispondence with preregistrations
+check corrispondence with preregistrations [sean]
 
 ## Processing
 
-### Sean's tasks
+Integrate second rater's scoring into hand scoring.
 
-check corrispondence with preregistrations
+- add agreement stats
 
-check scale n items, min and max scores. especially aot_min_item
+Address issues in 4-testing-coverage-of-hand-scoring.Rmd
 
-### Ian's tasks
+check corrispondence with preregistrations [sean]
 
-change 5 to drop vars and add note saying so.
-
-why is deepfake_concept_check_recoded empty?
-
-check hand scoring coverage after exclusions 
-
-why are hypothesis_awareness and influence_awareness in 3_data_participant_level binary rather than open ended responses? they havne't been hand scored yet.
+check scale n items, min and max scores. especially aot_min_item [sean]
 

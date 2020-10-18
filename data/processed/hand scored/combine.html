@@ -11,7 +11,7 @@
 
 <meta name="author" content="Ian Hussey" />
 
-<meta name="date" content="2020-10-07" />
+<meta name="date" content="2020-10-18" />
 
 <title>Combined hand scored data files</title>
 
@@ -1680,7 +1680,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Combined hand scored data files</h1>
 <h4 class="author">Ian Hussey</h4>
-<h4 class="date">07 October 2020</h4>
+<h4 class="date">18 October 2020</h4>
 
 </div>
 
@@ -1688,77 +1688,30 @@ div.tocify {
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2"></a><span class="kw">library</span>(readxl)</span>
 <span id="cb1-3"><a href="#cb1-3"></a></span>
-<span id="cb1-4"><a href="#cb1-4"></a>data_hs_<span class="dv">1</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_hand_scored 1.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a>data_hs_<span class="dv">4</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_hand_scored 4.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
 <span id="cb1-5"><a href="#cb1-5"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
-<span id="cb1-6"><a href="#cb1-6"></a>         <span class="co">#experiment, </span></span>
-<span id="cb1-7"><a href="#cb1-7"></a>         <span class="co">#hypothesis_awareness, </span></span>
-<span id="cb1-8"><a href="#cb1-8"></a>         hypothesis_awareness_recoded, </span>
-<span id="cb1-9"><a href="#cb1-9"></a>         <span class="co">#influence_awareness, </span></span>
-<span id="cb1-10"><a href="#cb1-10"></a>         influence_awareness_recoded)</span>
-<span id="cb1-11"><a href="#cb1-11"></a></span>
-<span id="cb1-12"><a href="#cb1-12"></a>data_hs_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_hand_scored 2.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb1-13"><a href="#cb1-13"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
-<span id="cb1-14"><a href="#cb1-14"></a>         <span class="co">#experiment, </span></span>
-<span id="cb1-15"><a href="#cb1-15"></a>         <span class="co">#hypothesis_awareness, </span></span>
-<span id="cb1-16"><a href="#cb1-16"></a>         hypothesis_awareness_recoded, </span>
-<span id="cb1-17"><a href="#cb1-17"></a>         <span class="co">#influence_awareness, </span></span>
-<span id="cb1-18"><a href="#cb1-18"></a>         influence_awareness_recoded)</span>
-<span id="cb1-19"><a href="#cb1-19"></a></span>
-<span id="cb1-20"><a href="#cb1-20"></a>data_hs_<span class="dv">3</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_hand_scored 3.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb1-21"><a href="#cb1-21"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
-<span id="cb1-22"><a href="#cb1-22"></a>         <span class="co">#experiment, </span></span>
-<span id="cb1-23"><a href="#cb1-23"></a>         <span class="co">#hypothesis_awareness, </span></span>
-<span id="cb1-24"><a href="#cb1-24"></a>         hypothesis_awareness_recoded, </span>
-<span id="cb1-25"><a href="#cb1-25"></a>         <span class="co">#influence_awareness, </span></span>
-<span id="cb1-26"><a href="#cb1-26"></a>         influence_awareness_recoded)</span>
-<span id="cb1-27"><a href="#cb1-27"></a></span>
-<span id="cb1-28"><a href="#cb1-28"></a>data_hs_<span class="dv">4</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_hand_scored 4.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb1-29"><a href="#cb1-29"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
-<span id="cb1-30"><a href="#cb1-30"></a>         <span class="co">#experiment, </span></span>
-<span id="cb1-31"><a href="#cb1-31"></a>         <span class="co">#hypothesis_awareness, </span></span>
-<span id="cb1-32"><a href="#cb1-32"></a>         hypothesis_awareness_recoded, </span>
-<span id="cb1-33"><a href="#cb1-33"></a>         <span class="co">#influence_awareness, </span></span>
-<span id="cb1-34"><a href="#cb1-34"></a>         influence_awareness_recoded,</span>
-<span id="cb1-35"><a href="#cb1-35"></a>         <span class="dt">recognised_manipulation =</span> recognised_audio_manipulation,</span>
-<span id="cb1-36"><a href="#cb1-36"></a>         <span class="co">#deepfake_check, </span></span>
-<span id="cb1-37"><a href="#cb1-37"></a>         deepfake_check_recoded)</span>
-<span id="cb1-38"><a href="#cb1-38"></a></span>
-<span id="cb1-39"><a href="#cb1-39"></a>data_hs_<span class="dv">5</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_hand_scored 5.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb1-40"><a href="#cb1-40"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
-<span id="cb1-41"><a href="#cb1-41"></a>         <span class="co">#experiment, </span></span>
-<span id="cb1-42"><a href="#cb1-42"></a>         <span class="co">#hypothesis_awareness, </span></span>
-<span id="cb1-43"><a href="#cb1-43"></a>         hypothesis_awareness_recoded, </span>
-<span id="cb1-44"><a href="#cb1-44"></a>         <span class="co">#influence_awareness, </span></span>
-<span id="cb1-45"><a href="#cb1-45"></a>         influence_awareness_recoded,</span>
-<span id="cb1-46"><a href="#cb1-46"></a>         <span class="dt">recognised_manipulation =</span> recognised_video_manipulation, </span>
-<span id="cb1-47"><a href="#cb1-47"></a>         <span class="co">#deepfake_check = deepfake_video_check, </span></span>
-<span id="cb1-48"><a href="#cb1-48"></a>         <span class="dt">deepfake_check_recoded =</span> deepfake_video_check_recoded, </span>
-<span id="cb1-49"><a href="#cb1-49"></a>         <span class="co">#deepfake_concept_check,</span></span>
-<span id="cb1-50"><a href="#cb1-50"></a>         deepfake_concept_check_recoded)</span>
-<span id="cb1-51"><a href="#cb1-51"></a></span>
-<span id="cb1-52"><a href="#cb1-52"></a>data_hs_<span class="dv">6</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_hand_scored 6.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb1-53"><a href="#cb1-53"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
-<span id="cb1-54"><a href="#cb1-54"></a>         <span class="co">##experiment, </span></span>
-<span id="cb1-55"><a href="#cb1-55"></a>         <span class="co">#hypothesis_awareness, </span></span>
-<span id="cb1-56"><a href="#cb1-56"></a>         hypothesis_awareness_recoded, </span>
-<span id="cb1-57"><a href="#cb1-57"></a>         <span class="co">#influence_awareness, </span></span>
-<span id="cb1-58"><a href="#cb1-58"></a>         influence_awareness_recoded,</span>
-<span id="cb1-59"><a href="#cb1-59"></a>         <span class="dt">recognised_manipulation =</span> recognised_audio_manipulation, </span>
-<span id="cb1-60"><a href="#cb1-60"></a>         <span class="co">#deepfake_check = deepfake_audio_check, </span></span>
-<span id="cb1-61"><a href="#cb1-61"></a>         <span class="dt">deepfake_check_recoded =</span> deepfake_audio_check_recoded, </span>
-<span id="cb1-62"><a href="#cb1-62"></a>         <span class="co">#deepfake_concept_check, </span></span>
-<span id="cb1-63"><a href="#cb1-63"></a>         deepfake_concept_check_recoded)</span>
-<span id="cb1-64"><a href="#cb1-64"></a></span>
-<span id="cb1-65"><a href="#cb1-65"></a>data_hand_scored_combined &lt;-<span class="st"> </span></span>
-<span id="cb1-66"><a href="#cb1-66"></a><span class="st">  </span><span class="kw">bind_rows</span>(data_hs_<span class="dv">1</span>,</span>
-<span id="cb1-67"><a href="#cb1-67"></a>            data_hs_<span class="dv">2</span>,</span>
-<span id="cb1-68"><a href="#cb1-68"></a>            data_hs_<span class="dv">3</span>,</span>
-<span id="cb1-69"><a href="#cb1-69"></a>            data_hs_<span class="dv">4</span>,</span>
-<span id="cb1-70"><a href="#cb1-70"></a>            data_hs_<span class="dv">5</span>,</span>
-<span id="cb1-71"><a href="#cb1-71"></a>            data_hs_<span class="dv">6</span>) <span class="op">%&gt;%</span></span>
-<span id="cb1-72"><a href="#cb1-72"></a><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">is.na</span>(subject))</span>
-<span id="cb1-73"><a href="#cb1-73"></a></span>
-<span id="cb1-74"><a href="#cb1-74"></a><span class="kw">write_csv</span>(data_hand_scored_combined, <span class="st">&quot;../4_data_hand_scored.csv&quot;</span>)</span></code></pre></div>
+<span id="cb1-6"><a href="#cb1-6"></a>         <span class="dt">recognised_manipulation =</span> recognised_audio_manipulation,</span>
+<span id="cb1-7"><a href="#cb1-7"></a>         deepfake_check_recoded)</span>
+<span id="cb1-8"><a href="#cb1-8"></a></span>
+<span id="cb1-9"><a href="#cb1-9"></a>data_hs_<span class="dv">5</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_hand_scored 5.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
+<span id="cb1-11"><a href="#cb1-11"></a>         <span class="dt">recognised_manipulation =</span> recognised_video_manipulation, </span>
+<span id="cb1-12"><a href="#cb1-12"></a>         <span class="dt">deepfake_check_recoded =</span> deepfake_video_check_recoded, </span>
+<span id="cb1-13"><a href="#cb1-13"></a>         deepfake_concept_check_recoded)</span>
+<span id="cb1-14"><a href="#cb1-14"></a></span>
+<span id="cb1-15"><a href="#cb1-15"></a>data_hs_<span class="dv">6</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_hand_scored 6.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb1-16"><a href="#cb1-16"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
+<span id="cb1-17"><a href="#cb1-17"></a>         <span class="dt">recognised_manipulation =</span> recognised_audio_manipulation, </span>
+<span id="cb1-18"><a href="#cb1-18"></a>         <span class="dt">deepfake_check_recoded =</span> deepfake_audio_check_recoded, </span>
+<span id="cb1-19"><a href="#cb1-19"></a>         deepfake_concept_check_recoded)</span>
+<span id="cb1-20"><a href="#cb1-20"></a></span>
+<span id="cb1-21"><a href="#cb1-21"></a>data_hand_scored_combined &lt;-<span class="st"> </span></span>
+<span id="cb1-22"><a href="#cb1-22"></a><span class="st">  </span><span class="kw">bind_rows</span>(data_hs_<span class="dv">4</span>,</span>
+<span id="cb1-23"><a href="#cb1-23"></a>            data_hs_<span class="dv">5</span>,</span>
+<span id="cb1-24"><a href="#cb1-24"></a>            data_hs_<span class="dv">6</span>) <span class="op">%&gt;%</span></span>
+<span id="cb1-25"><a href="#cb1-25"></a><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">is.na</span>(subject))</span>
+<span id="cb1-26"><a href="#cb1-26"></a></span>
+<span id="cb1-27"><a href="#cb1-27"></a><span class="kw">write_csv</span>(data_hand_scored_combined, <span class="st">&quot;../4_data_hand_scored.csv&quot;</span>)</span></code></pre></div>
 
 
 

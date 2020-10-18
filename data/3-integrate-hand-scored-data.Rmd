@@ -36,18 +36,13 @@ data_participant_level <- read_csv("processed/3_data_participant_level.csv")
 
 # hand scored data
 data_hand_scored <- read_csv("processed/4_data_hand_scored.csv") %>%
-  mutate(hypothesis_awareness_recoded = case_when(hypothesis_awareness_recoded == "Yes" ~ TRUE,
-                                                  hypothesis_awareness_recoded == "No" ~ FALSE),
-         influence_awareness_recoded = case_when(influence_awareness_recoded == "Yes" ~ TRUE,
-                                                 influence_awareness_recoded == "No" ~ FALSE),
-         deepfake_detected = case_when(deepfake_check_recoded == "Yes" ~ TRUE,
+  mutate(deepfake_detected = case_when(deepfake_check_recoded == "Yes" ~ TRUE,
                                        deepfake_check_recoded == "No" ~ FALSE),
          manipulation_detected = case_when(recognised_manipulation == "Yes" ~ TRUE,
                                            recognised_manipulation == "No" ~ FALSE),
          deepfake_concept_check = case_when(deepfake_concept_check_recoded == "Yes" ~ TRUE,
                                             deepfake_concept_check_recoded == "No" ~ FALSE)) %>%
-  select(subject, hypothesis_awareness_recoded, influence_awareness_recoded,
-         deepfake_detected, manipulation_detected, deepfake_concept_check)
+  select(subject, deepfake_detected, manipulation_detected, deepfake_concept_check)
 
 # data_hand_scored %>%
 #   distinct(deepfake_detected, manipulation_detected, deepfake_concept_check)
@@ -74,8 +69,8 @@ data_participant_level_with_hand_scoring <- data_participant_level %>%
          diagnosticity,
          demand, 
          reactance, 
-         hypothesis_awareness = hypothesis_awareness_recoded,
-         influence_awareness = influence_awareness_recoded, 
+         hypothesis_awareness,
+         influence_awareness, 
          aot_actively_openminded_thinking_pomp, 
          bcti_belief_in_conspiracy_pomp, 
          crt_analytic_thinking_pomp, 
