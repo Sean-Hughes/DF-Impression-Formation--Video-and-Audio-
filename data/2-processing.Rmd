@@ -534,20 +534,20 @@ data_exploratory_questions <- data_trial_level %>%
   group_by(subject) %>%
   summarise_all(~ first(na.omit(.))) %>%
   ungroup() %>%
-  mutate(diagnosticity_question = case_when(grepl("Not", diagnosticity_question) ~ 0,
-                                            grepl("Slight", diagnosticity_question) ~ 1,
-                                            grepl("Moderate", diagnosticity_question) ~ 2,
-                                            grepl("Strong", diagnosticity_question) ~ 3),
-         demand = case_when(grepl("No", demand) ~ 0,
-                            grepl("I", demand) ~ 0,
-                            grepl("Demand", demand) ~ 1),
-         reactance = case_when(grepl("No", reactance) ~ 0,
-                               grepl("I", reactance) ~ 0,
-                               grepl("React", reactance) ~ 1),
-         hypothesis_awareness = case_when(grepl("Yes", hypothesis_awareness) ~ 1,
-                                          grepl("No", hypothesis_awareness) ~ 0),
-         influence_awareness = case_when(grepl("Yes", influence_awareness) ~ 1,
-                                         grepl("No", influence_awareness) ~ 0))
+  mutate(diagnosticity = case_when(grepl("Not", diagnosticity_question) ~ 0,
+                                   grepl("Slight", diagnosticity_question) ~ 1,
+                                   grepl("Moderate", diagnosticity_question) ~ 2,
+                                   grepl("Strong", diagnosticity_question) ~ 3),
+         demand = case_when(grepl("No", demand) ~ FALSE,
+                            grepl("I", demand) ~ FALSE,
+                            grepl("Demand", demand) ~ TRUE),
+         reactance = case_when(grepl("No", reactance) ~ FALSE,
+                               grepl("I", reactance) ~ FALSE,
+                               grepl("React", reactance) ~ TRUE),
+         hypothesis_awareness = case_when(grepl("Yes", hypothesis_awareness) ~ TRUE,
+                                          grepl("No", hypothesis_awareness) ~ FALSE),
+         influence_awareness = case_when(grepl("Yes", influence_awareness) ~ TRUE,
+                                         grepl("No", influence_awareness) ~ FALSE))
 
 ```
 
@@ -807,20 +807,20 @@ data_rei <- data_individual_differences_temp %>%
 
 ```{r}
 
-pomp <- function(raw_sum_score, n_items, min_item_score, max_item_score, digits = 3) {
+pomp <- function(raw_sum_score, n_items, min_item_score, max_item_score, digits = 0) {
   round( 
-    ( raw_sum_score - (n_items * min_item_score) ) / ( (n_items * max_item_score) - (n_items * min_item_score)),
+    (raw_sum_score-(n_items*min_item_score))/((n_items*max_item_score)-(n_items*min_item_score))*100,
     digits
   )
 }
 
 data_individual_differences <- data_aot %>%
   full_join(data_bcti, by = "subject") %>%
-  full_join(data_crt, by = "subject") %>%
-  full_join(data_me, by = "subject") %>%
-  full_join(data_ocq, by = "subject") %>%
-  full_join(data_ras, by = "subject") %>%
-  full_join(data_rei, by = "subject") %>%
+  full_join(data_crt,  by = "subject") %>%
+  full_join(data_me,   by = "subject") %>%
+  full_join(data_ocq,  by = "subject") %>%
+  full_join(data_ras,  by = "subject") %>%
+  full_join(data_rei,  by = "subject") %>%
   
   # calculate POMP score (percent of maximum possible)
   mutate(aot_actively_openminded_thinking_pomp = pomp(aot_actively_openminded_thinking_sum,
@@ -928,7 +928,7 @@ data_participant_level <- data_conditions_and_demographics %>%
          memory_of_video_content, 
          
          # exploratory measures
-         diagnosticity_question, 
+         diagnosticity, 
          demand, 
          reactance, 
          hypothesis_awareness, 
@@ -979,13 +979,7 @@ data_detection_responses.csv contains just the open ended responses to the detec
 
 ```{r}
 
-# all participant level data
 write_csv(data_participant_level, "processed/3_data_participant_level.csv")
-
-# # just the open ended memory responses for hand scoring
-# data_participant_level %>%
-#   select(subject, memory_of_video_content) %>%
-#   write_csv("processed/4_data_participant_level_detection_responses.csv")
 
 ```
 
