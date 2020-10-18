@@ -1,0 +1,116 @@
+---
+title: "Data postprocessing"
+subtitle: "Integrate hand-scored data into final dataset"
+author: "Sean Hughes & Ian Hussey"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes 
+    toc_float: yes
+---
+
+Note that open ended text responses are dropped by this script, to produce a data file that contains only the data needed for analyses. Text responses can still be found in "3_data_participant_level.csv".
+
+```{r include=FALSE}
+knitr::opts_chunk$set(message=FALSE,
+                      warning=FALSE)
+```
+
+# Dependencies
+
+```{r}
+
+library(tidyverse)
+
+```
+
+# Get data, join, and write to disk
+
+```{r}
+
+# processed data
+data_participant_level <- read_csv("processed/3_data_participant_level.csv")
+
+# hand scored data
+data_hand_scored <- read_csv("processed/4_data_hand_scored.csv") %>%
+  mutate(deepfake_detected = case_when(deepfake_check_recoded == "Yes" ~ TRUE,
+                                       deepfake_check_recoded == "No" ~ FALSE),
+         manipulation_detected = case_when(recognised_manipulation == "Yes" ~ TRUE,
+                                           recognised_manipulation == "No" ~ FALSE),
+         deepfake_concept_check = case_when(deepfake_concept_check_recoded == "Yes" ~ TRUE,
+                                            deepfake_concept_check_recoded == "No" ~ FALSE)) %>%
+  select(subject, deepfake_detected, manipulation_detected, deepfake_concept_check)
+
+# data_hand_scored %>%
+#   distinct(deepfake_detected, manipulation_detected, deepfake_concept_check)
+
+# join
+data_participant_level_with_hand_scoring <- data_participant_level %>%
+  full_join(data_hand_scored, by = "subject") %>%
+  # drop open ended text responses now that they've been coded for analysis
+  select(subject,                                                    
+         experiment, 
+         intervention_medium, 
+         source_valence,
+         experiment_condition,
+         exclude_subject,
+         age, 
+         gender, 
+         IAT_D2, 
+         IAT_D2_recoded_for_stimulus_identity, 
+         mean_self_reported_evaluation, 
+         mean_self_reported_evaluation_recoded_for_stimulus_identity, 
+         deepfake_detected, 
+
+         # exploratory measures
+         diagnosticity,
+         demand, 
+         reactance, 
+         hypothesis_awareness,
+         influence_awareness, 
+         aot_actively_openminded_thinking_pomp, 
+         bcti_belief_in_conspiracy_pomp, 
+         crt_analytic_thinking_pomp, 
+         ocq_overclaiming_pomp, 
+         ras_relgious_affliation_pomp, 
+         rei_rational_pomp, 
+         rei_experiential_pomp, 
+         me_fake_news_awareness_pomp, 
+         me_real_news_awareness_pomp, 
+         me_fake_news_accuracy_pomp, 
+         me_real_news_accuracy_pomp, 
+         me_fake_news_sharing_pomp, 
+         me_real_news_sharing_pomp,
+         manipulation_detected, 
+         deepfake_concept_check,
+         
+         # additional demographics
+         education, 
+         employment, 
+         education_recoded, 
+         income, 
+         income_recoded, 
+         political_ideology_identity, 
+         political_ideology_social_issues, 
+         political_ideology_economic_issues, 
+         religious_affiliation_general, 
+         religious_affiliation_general_recoded, 
+         
+         # component exclusion variables
+         passed_iat_performance, 
+         complete_iat_data, 
+         complete_selfreport_data, 
+         
+         # methods variables
+         task_order, 
+         iat_block_order)
+
+# write to disk
+write_csv(data_participant_level_with_hand_scoring, "processed/5_data_participant_level_with_hand_scoring.csv")
+  
+```
+
+
