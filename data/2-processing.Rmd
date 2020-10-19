@@ -33,6 +33,10 @@ library(IATscores)
 
 data_preprocessed <- read_rds("processed/1_data_preprocessed.rds")
 
+x <- data_preprocessed %>%
+  filter(!is.na(intentions_q1) | !is.na(intentions_q2) | !is.na(intentions_q3)) %>%
+  select(subject, experiment, intentions_q1, intentions_q2, intentions_q3, sender)
+
 ```
 
 # Trial-level data 
@@ -47,6 +51,7 @@ data_trial_level <- data_preprocessed %>%
          task = case_when(task == "stimulus" ~ "iat",
                           task == "demographics_1" ~ "demographics",
                           task == "demographics_2" ~ "demographics",
+                          str_detect(task, "deepfake_check") ~ "deepfake_check",
                           TRUE ~ task)) %>%
   
   # retain only rows with useful information used to score the tasks
@@ -55,6 +60,8 @@ data_trial_level <- data_preprocessed %>%
                      "ratings_good_bad",
                      "ratings_like_dislike",
                      "ratings_negative_positive",
+                     "deepfake_check",
+                     "behavioral_intentions",
                      "memory questions",
                      "exploratory questions",
                      "actively_openminded_thinking",
@@ -65,8 +72,6 @@ data_trial_level <- data_preprocessed %>%
                      "rei (cognitive preference)",
                      "media_trials",
                      "memory questions",
-                     "deepfake_check",
-                     "deepfake_check_genuine_audio",
                      "news_evaluation_task",
                      "issues")) %>%
   
@@ -215,6 +220,11 @@ data_trial_level <- data_preprocessed %>%
          latency,
          blockcode,
          praccrit,
+         
+         # intentions
+         intentions_q1, 
+         intentions_q2, 
+         intentions_q3,
 
          # intervention
          memory_of_video_content,
@@ -522,7 +532,7 @@ data_completeness_self_reported_evaluations <- data_trial_level_self_reported_ev
   count(subject) %>%
   mutate(complete_selfreport_data = case_when(n == 3 ~ "complete", 
                                               n > 3 ~ "excess", 
-                                              n < 3 ~"partial")) %>%
+                                              n < 3 ~ "partial")) %>%
   select(-n)
 
 # print
@@ -540,6 +550,35 @@ data_completeness_self_reported_evaluations %>%
 data_self_reported_evaluations_mean_scores <- data_trial_level_self_reported_evaluations %>%
   group_by(subject) %>%
   summarize(mean_self_reported_evaluation = round(mean(ratings_response), 2), .groups = "drop") 
+
+```
+
+## Behavioural intentions
+
+```{r}
+
+data_behavioural_intentions <- data_trial_level %>%
+  select(subject, 
+         intentions_q1, 
+         intentions_q2, 
+         intentions_q3) %>%
+  drop_na() %>%
+  gather(intentions_item, intentions_response, c("intentions_q1", "intentions_q2", "intentions_q3")) %>%
+  # rescore from 1-to-5 to -2-to-+2 to make inversion easier
+  mutate(intentions_response = intentions_response - 3) %>%  
+  group_by(subject) %>%
+  summarize(n = n(),
+            mean_intentions = round(mean(intentions_response), 2), .groups = "drop") %>%
+  mutate(completeness_intentions = case_when(n == 3 ~ "complete", 
+                                             n > 3 ~ "excess", 
+                                             n < 3 ~ "partial")) %>%
+  select(-n)
+
+# print
+data_behavioural_intentions %>%
+  count(completeness_intentions) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 
 ```
 
@@ -951,8 +990,9 @@ data_participant_level <- data_conditions_and_demographics %>%
   full_join(data_iat_D2_scores,                          by = "subject") %>% 
   full_join(data_completeness_self_reported_evaluations, by = "subject") %>%
   full_join(data_self_reported_evaluations_mean_scores,  by = "subject") %>%
-  full_join(data_induction,                              by = "subject") %>% 
+  full_join(data_behavioural_intentions,                 by = "subject") %>% 
   full_join(data_detection,                              by = "subject") %>% 
+  full_join(data_induction,                              by = "subject") %>% 
   full_join(data_exploratory_questions,                  by = "subject") %>%
   full_join(data_individual_differences,                 by = "subject") %>%
   full_join(data_me,                                     by = "subject") %>%
@@ -964,7 +1004,10 @@ data_participant_level <- data_conditions_and_demographics %>%
                                                                               mean_self_reported_evaluation),
          IAT_D2_recoded_for_stimulus_identity = ifelse(source_valence == "negative", 
                                                              IAT_D2*-1, 
-                                                             IAT_D2)) %>%
+                                                             IAT_D2),
+         mean_intentions_recoded_for_stimulus_identity = ifelse(source_valence == "negative", 
+                                                                mean_intentions*-1, 
+                                                                mean_intentions)) %>%
   
   # compound exclusions
   mutate(exclude_subject = ifelse(complete_iat_data == "complete" &
@@ -985,6 +1028,8 @@ data_participant_level <- data_conditions_and_demographics %>%
          IAT_D2_recoded_for_stimulus_identity,
          mean_self_reported_evaluation, 
          mean_self_reported_evaluation_recoded_for_stimulus_identity,
+         mean_intentions,
+         mean_intentions_recoded_for_stimulus_identity,
          deepfake_check,
          deepfake_concept_check,
          
@@ -1052,7 +1097,7 @@ write_csv(data_participant_level, "processed/3_data_participant_level.csv")
 
 # subset of columns for hand scoring
 data_participant_level %>%
-  select(subject, deepfake_check, deepfake_concept_check) %>%
+  select(subject, experiment, deepfake_check, deepfake_concept_check) %>%
   filter(!is.na(deepfake_check) | !is.na(deepfake_concept_check)) %>%
   write_csv("processed/hand scoring/data_participant_level_for_hand_scoring.csv")
 

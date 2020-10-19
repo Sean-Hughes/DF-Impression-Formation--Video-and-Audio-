@@ -42,4 +42,3 @@ check corrispondence with preregistrations [sean]
 
 check scale n items, min and max scores. especially aot_min_item [sean]
 
-intentions_q1	intentions_q2	intentions_q3
