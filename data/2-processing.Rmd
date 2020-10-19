@@ -65,6 +65,8 @@ data_trial_level <- data_preprocessed %>%
                      "rei (cognitive preference)",
                      "media_trials",
                      "memory questions",
+                     "deepfake_check",
+                     "deepfake_check_genuine_audio",
                      "news_evaluation_task",
                      "issues")) %>%
   
@@ -189,6 +191,10 @@ data_trial_level <- data_preprocessed %>%
          # demographics
          age,
          gender,
+         gender_self_describe,
+         ethnicity,
+         ethnicity_self_describe,
+         location,
          education,
          employment,
          income,
@@ -209,9 +215,16 @@ data_trial_level <- data_preprocessed %>%
          latency,
          blockcode,
          praccrit,
+
+         # intervention
+         memory_of_video_content,
+         memory_of_audio_content,
          
          # detection
-         memory_of_video_content,
+         deepfake_check,
+         deepfake_video_check,
+         deepfake_audio_check,
+         deepfake_concept_check,
          
          # individual differences
          ends_with("_aot_e"),
@@ -263,6 +276,10 @@ data_conditions_and_demographics <- data_trial_level %>%
          experiment_condition,
          age, 
          gender,
+         gender_self_describe,
+         ethnicity,
+         ethnicity_self_describe,
+         location,
          education, 
          employment, 
          income, 
@@ -338,6 +355,26 @@ data_conditions_and_demographics <- data_trial_level %>%
                      grepl("Sikh", religious_affiliation_general) ~ "Religious")
          
   )
+
+```
+
+## Induction video
+
+Participants were asked to describe what they saw in the video. Nothing was done with these responses but notionally they could be inspected or hand coded.
+
+```{r}
+
+data_induction_video <- data_trial_level %>% 
+  select(subject, 
+         memory_of_video_content) %>% 
+  drop_na()
+
+data_induction_audio <- data_trial_level %>% 
+  select(subject, 
+         memory_of_audio_content) %>% 
+  drop_na()
+
+data_induction <- bind_rows(data_induction_video, data_induction_audio)
 
 ```
 
@@ -512,10 +549,31 @@ raw responses to be hand coded
 
 ```{r}
 
-data_detection <- data_trial_level %>% 
+data_detection_1 <- data_trial_level %>%
   select(subject, 
-         memory_of_video_content) %>% 
+         deepfake_check) %>%
   drop_na()
+
+data_detection_2 <- data_trial_level %>%
+  select(subject, 
+         deepfake_check = deepfake_video_check) %>%
+  drop_na()
+         
+data_detection_3 <- data_trial_level %>%
+  select(subject, 
+         deepfake_check = deepfake_audio_check) %>%
+  drop_na()
+
+data_detection_4 <- data_trial_level %>%
+  select(subject, 
+         deepfake_concept_check) %>%
+  drop_na()
+
+data_detection <- 
+  bind_rows(data_detection_1,
+            data_detection_2,
+            data_detection_3) %>%
+  full_join(data_detection_4, by = "subject")
 
 ```
 
@@ -888,15 +946,16 @@ data_individual_differences <- data_aot %>%
 ```{r}
 
 data_participant_level <- data_conditions_and_demographics %>% 
-  full_join(data_completeness_iat, by = "subject") %>% 
-  full_join(data_performance_iat, by = "subject") %>%
-  full_join(data_iat_D2_scores, by = "subject") %>% 
+  full_join(data_completeness_iat,                       by = "subject") %>% 
+  full_join(data_performance_iat,                        by = "subject") %>%
+  full_join(data_iat_D2_scores,                          by = "subject") %>% 
   full_join(data_completeness_self_reported_evaluations, by = "subject") %>%
-  full_join(data_self_reported_evaluations_mean_scores, by = "subject") %>%
-  full_join(data_detection, by = "subject") %>% 
-  full_join(data_exploratory_questions, by = "subject") %>%
-  full_join(data_individual_differences, by = "subject") %>%
-  full_join(data_me, by = "subject") %>%
+  full_join(data_self_reported_evaluations_mean_scores,  by = "subject") %>%
+  full_join(data_induction,                              by = "subject") %>% 
+  full_join(data_detection,                              by = "subject") %>% 
+  full_join(data_exploratory_questions,                  by = "subject") %>%
+  full_join(data_individual_differences,                 by = "subject") %>%
+  full_join(data_me,                                     by = "subject") %>%
   arrange(experiment, experiment_condition) %>%
   
   # recode IAT and self reported evaluations for stimulus identity 
@@ -921,11 +980,17 @@ data_participant_level <- data_conditions_and_demographics %>%
          exclude_subject,
          age, 
          gender,
+         gender_self_describe,
          IAT_D2, 
          IAT_D2_recoded_for_stimulus_identity,
          mean_self_reported_evaluation, 
          mean_self_reported_evaluation_recoded_for_stimulus_identity,
+         deepfake_check,
+         deepfake_concept_check,
+         
+         # intervention description
          memory_of_video_content, 
+         memory_of_audio_content,
          
          # exploratory measures
          diagnosticity, 
@@ -949,6 +1014,9 @@ data_participant_level <- data_conditions_and_demographics %>%
          me_real_news_sharing_pomp,
          
          # additional demographics
+         ethnicity,
+         ethnicity_self_describe,
+         location,
          education, 
          employment, 
          education_recoded, 
@@ -979,7 +1047,14 @@ data_detection_responses.csv contains just the open ended responses to the detec
 
 ```{r}
 
+# full data file
 write_csv(data_participant_level, "processed/3_data_participant_level.csv")
+
+# subset of columns for hand scoring
+data_participant_level %>%
+  select(subject, deepfake_check, deepfake_concept_check) %>%
+  filter(!is.na(deepfake_check) | !is.na(deepfake_concept_check)) %>%
+  write_csv("processed/hand scoring/data_participant_level_for_hand_scoring.csv")
 
 ```
 
