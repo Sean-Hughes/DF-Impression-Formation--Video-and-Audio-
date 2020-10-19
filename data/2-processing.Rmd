@@ -265,8 +265,8 @@ data_trial_level.csv contains participant level data in tidy format.
 
 ```{r}
 
-write_rds(data_trial_level, "processed/2_data_trial_level.rds", compress = "gz")
-# data_trial_level <- read_rds("processed/2_data_trial_level.rds")
+write_rds(data_trial_level, "processed/2.1_data_trial_level.rds", compress = "gz")
+# data_trial_level <- read_rds("processed/2.1_data_trial_level.rds")
 
 ```
 
@@ -1093,13 +1093,13 @@ data_detection_responses.csv contains just the open ended responses to the detec
 ```{r}
 
 # full data file
-write_csv(data_participant_level, "processed/3_data_participant_level.csv")
+write_csv(data_participant_level, "processed/2.2_data_participant_level.csv")
 
 # subset of columns for hand scoring
 data_participant_level %>%
   select(subject, experiment, deepfake_check, deepfake_concept_check) %>%
   filter(!is.na(deepfake_check) | !is.na(deepfake_concept_check)) %>%
-  write_csv("processed/data_participant_level_for_hand_scoring.csv")
+  write_csv("processed/2.3_data_participant_level_for_hand_scoring.csv")
 
 ```
 
