@@ -36,12 +36,6 @@ data_participant_level <- read_csv("processed/3_data_participant_level.csv")
 
 # hand scored data
 data_hand_scored <- read_csv("processed/4_data_hand_scored.csv") %>%
-  mutate(deepfake_detected = case_when(deepfake_check_recoded == "Yes" ~ TRUE,
-                                       deepfake_check_recoded == "No" ~ FALSE),
-         manipulation_detected = case_when(recognised_manipulation == "Yes" ~ TRUE,
-                                           recognised_manipulation == "No" ~ FALSE),
-         deepfake_concept_check = case_when(deepfake_concept_check_recoded == "Yes" ~ TRUE,
-                                            deepfake_concept_check_recoded == "No" ~ FALSE)) %>%
   select(subject, deepfake_detected, manipulation_detected, deepfake_concept_check)
 
 # data_hand_scored %>%

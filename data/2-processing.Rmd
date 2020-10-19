@@ -1099,7 +1099,7 @@ write_csv(data_participant_level, "processed/3_data_participant_level.csv")
 data_participant_level %>%
   select(subject, experiment, deepfake_check, deepfake_concept_check) %>%
   filter(!is.na(deepfake_check) | !is.na(deepfake_concept_check)) %>%
-  write_csv("processed/hand scoring/data_participant_level_for_hand_scoring.csv")
+  write_csv("processed/data_participant_level_for_hand_scoring.csv")
 
 ```
 

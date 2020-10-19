@@ -20,21 +20,21 @@ exp 1 "Five Things you Didn't Know About Me !" video has two versions. which one
 
 # To do
 
-make sure updated design files etc are brought into ians branch
-
 ## Analyses
 
-add intentions (exp 6 only?)
+add intentions
+
+add agreement stats
 
 tidy up - add bayesian meta  
 
 check corrispondence with preregistrations [sean]
 
+replace old jasp analyses with R implementations - mostly because the data is now likely slighly different 
+
 ## Processing
 
 Integrate second rater's scoring into hand scoring.
-
-- add agreement stats
 
 Address issues in 4-testing-coverage-of-hand-scoring.Rmd
 

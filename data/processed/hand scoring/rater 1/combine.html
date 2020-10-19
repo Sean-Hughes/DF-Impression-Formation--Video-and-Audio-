@@ -11,7 +11,7 @@
 
 <meta name="author" content="Ian Hussey" />
 
-<meta name="date" content="2020-10-18" />
+<meta name="date" content="2020-10-19" />
 
 <title>Combined hand scored data files</title>
 
@@ -1680,7 +1680,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Combined hand scored data files</h1>
 <h4 class="author">Ian Hussey</h4>
-<h4 class="date">18 October 2020</h4>
+<h4 class="date">19 October 2020</h4>
 
 </div>
 
@@ -1688,18 +1688,18 @@ div.tocify {
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2"></a><span class="kw">library</span>(readxl)</span>
 <span id="cb1-3"><a href="#cb1-3"></a></span>
-<span id="cb1-4"><a href="#cb1-4"></a>data_hs_<span class="dv">4</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_hand_scored 4.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a>data_hs_<span class="dv">4</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_for_hand_scoring_exp_4.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
 <span id="cb1-5"><a href="#cb1-5"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
 <span id="cb1-6"><a href="#cb1-6"></a>         <span class="dt">recognised_manipulation =</span> recognised_audio_manipulation,</span>
 <span id="cb1-7"><a href="#cb1-7"></a>         deepfake_check_recoded)</span>
 <span id="cb1-8"><a href="#cb1-8"></a></span>
-<span id="cb1-9"><a href="#cb1-9"></a>data_hs_<span class="dv">5</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_hand_scored 5.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a>data_hs_<span class="dv">5</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_for_hand_scoring_exp_5.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
 <span id="cb1-10"><a href="#cb1-10"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
 <span id="cb1-11"><a href="#cb1-11"></a>         <span class="dt">recognised_manipulation =</span> recognised_video_manipulation, </span>
 <span id="cb1-12"><a href="#cb1-12"></a>         <span class="dt">deepfake_check_recoded =</span> deepfake_video_check_recoded, </span>
 <span id="cb1-13"><a href="#cb1-13"></a>         deepfake_concept_check_recoded)</span>
 <span id="cb1-14"><a href="#cb1-14"></a></span>
-<span id="cb1-15"><a href="#cb1-15"></a>data_hs_<span class="dv">6</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_hand_scored 6.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb1-15"><a href="#cb1-15"></a>data_hs_<span class="dv">6</span> &lt;-<span class="st"> </span><span class="kw">read_excel</span>(<span class="st">&quot;data_for_hand_scoring_exp_6.xlsx&quot;</span>) <span class="op">%&gt;%</span></span>
 <span id="cb1-16"><a href="#cb1-16"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
 <span id="cb1-17"><a href="#cb1-17"></a>         <span class="dt">recognised_manipulation =</span> recognised_audio_manipulation, </span>
 <span id="cb1-18"><a href="#cb1-18"></a>         <span class="dt">deepfake_check_recoded =</span> deepfake_audio_check_recoded, </span>
@@ -1709,9 +1709,25 @@ div.tocify {
 <span id="cb1-22"><a href="#cb1-22"></a><span class="st">  </span><span class="kw">bind_rows</span>(data_hs_<span class="dv">4</span>,</span>
 <span id="cb1-23"><a href="#cb1-23"></a>            data_hs_<span class="dv">5</span>,</span>
 <span id="cb1-24"><a href="#cb1-24"></a>            data_hs_<span class="dv">6</span>) <span class="op">%&gt;%</span></span>
-<span id="cb1-25"><a href="#cb1-25"></a><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">is.na</span>(subject))</span>
-<span id="cb1-26"><a href="#cb1-26"></a></span>
-<span id="cb1-27"><a href="#cb1-27"></a><span class="kw">write_csv</span>(data_hand_scored_combined, <span class="st">&quot;../4_data_hand_scored.csv&quot;</span>)</span></code></pre></div>
+<span id="cb1-25"><a href="#cb1-25"></a><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">is.na</span>(subject)) <span class="op">%&gt;%</span></span>
+<span id="cb1-26"><a href="#cb1-26"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">deepfake_detected =</span> <span class="kw">case_when</span>(deepfake_check_recoded <span class="op">==</span><span class="st"> &quot;Yes&quot;</span> <span class="op">~</span><span class="st"> </span><span class="ot">TRUE</span>,</span>
+<span id="cb1-27"><a href="#cb1-27"></a>                                       deepfake_check_recoded <span class="op">==</span><span class="st"> &quot;No&quot;</span> <span class="op">~</span><span class="st"> </span><span class="ot">FALSE</span>),</span>
+<span id="cb1-28"><a href="#cb1-28"></a>         <span class="dt">manipulation_detected =</span> <span class="kw">case_when</span>(recognised_manipulation <span class="op">==</span><span class="st"> &quot;Yes&quot;</span> <span class="op">~</span><span class="st"> </span><span class="ot">TRUE</span>,</span>
+<span id="cb1-29"><a href="#cb1-29"></a>                                           recognised_manipulation <span class="op">==</span><span class="st"> &quot;No&quot;</span> <span class="op">~</span><span class="st"> </span><span class="ot">FALSE</span>),</span>
+<span id="cb1-30"><a href="#cb1-30"></a>         <span class="dt">deepfake_concept_check =</span> <span class="kw">case_when</span>(deepfake_concept_check_recoded <span class="op">==</span><span class="st"> &quot;Yes&quot;</span> <span class="op">~</span><span class="st"> </span><span class="ot">TRUE</span>,</span>
+<span id="cb1-31"><a href="#cb1-31"></a>                                            deepfake_concept_check_recoded <span class="op">==</span><span class="st"> &quot;No&quot;</span> <span class="op">~</span><span class="st"> </span><span class="ot">FALSE</span>)) <span class="op">%&gt;%</span></span>
+<span id="cb1-32"><a href="#cb1-32"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
+<span id="cb1-33"><a href="#cb1-33"></a>         deepfake_detected,</span>
+<span id="cb1-34"><a href="#cb1-34"></a>         manipulation_detected,</span>
+<span id="cb1-35"><a href="#cb1-35"></a>         deepfake_concept_check)</span>
+<span id="cb1-36"><a href="#cb1-36"></a></span>
+<span id="cb1-37"><a href="#cb1-37"></a><span class="co"># data_hand_scored_combined %&gt;%</span></span>
+<span id="cb1-38"><a href="#cb1-38"></a><span class="co">#   count(deepfake_detected,</span></span>
+<span id="cb1-39"><a href="#cb1-39"></a><span class="co">#         manipulation_detected,</span></span>
+<span id="cb1-40"><a href="#cb1-40"></a><span class="co">#         deepfake_concept_check) %&gt;%</span></span>
+<span id="cb1-41"><a href="#cb1-41"></a><span class="co">#   arrange(desc(n))</span></span>
+<span id="cb1-42"><a href="#cb1-42"></a></span>
+<span id="cb1-43"><a href="#cb1-43"></a><span class="kw">write_csv</span>(data_hand_scored_combined, <span class="st">&quot;data_hand_scored_rater_1.csv&quot;</span>)</span></code></pre></div>
 
 
 

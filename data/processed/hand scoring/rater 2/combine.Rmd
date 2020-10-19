@@ -1,0 +1,48 @@
+---
+title: "Combined hand scored data files"
+author: "Ian Hussey"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes 
+    toc_float: yes
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(message=FALSE,
+                      warning=FALSE)
+```
+
+```{r}
+
+library(tidyverse)
+
+data_hs_4 <- read_excel("data for hand scoring experiment 4.csv") %>%
+  select(subject, 
+         deepfake_detected = deepfake_check_recoded,	
+         manipulation_detected = recognised_manipulation)
+
+data_hs_5 <- read_excel("data for hand scoring experiment 5.csv") %>%
+  select(subject, 
+         deepfake_detected = deepfake_check_recoded,	
+         manipulation_detected = recognised_manipulation,
+         deepfake_concept_check = deepfake_concept_check_recoded)
+
+data_hs_6 <- read_excel("data for hand scoring experiment 6.csv") %>%
+  select(subject, 
+         deepfake_detected = deepfake_check_recoded,	
+         manipulation_detected = recognised_manipulation,
+         deepfake_concept_check = deepfake_concept_check_recoded)
+
+data_hand_scored_combined <- 
+  bind_rows(data_hs_4,
+            data_hs_5,
+            data_hs_6) %>%
+  filter(!is.na(subject)) 
+
+write_csv(data_hand_scored_combined, "data_hand_scored_rater_2.csv")
+
+```

@@ -42,8 +42,24 @@ data_hand_scored_combined <-
   bind_rows(data_hs_4,
             data_hs_5,
             data_hs_6) %>%
-  filter(!is.na(subject))
+  filter(!is.na(subject)) %>%
+  mutate(deepfake_detected = case_when(deepfake_check_recoded == "Yes" ~ TRUE,
+                                       deepfake_check_recoded == "No" ~ FALSE),
+         manipulation_detected = case_when(recognised_manipulation == "Yes" ~ TRUE,
+                                           recognised_manipulation == "No" ~ FALSE),
+         deepfake_concept_check = case_when(deepfake_concept_check_recoded == "Yes" ~ TRUE,
+                                            deepfake_concept_check_recoded == "No" ~ FALSE)) %>%
+  select(subject, 
+         deepfake_detected,
+         manipulation_detected,
+         deepfake_concept_check)
 
-write_csv(data_hand_scored_combined, "../../4_data_hand_scored.csv")
+# data_hand_scored_combined %>%
+#   count(deepfake_detected,
+#         manipulation_detected,
+#         deepfake_concept_check) %>%
+#   arrange(desc(n))
+
+write_csv(data_hand_scored_combined, "data_hand_scored_rater_1.csv")
 
 ```
