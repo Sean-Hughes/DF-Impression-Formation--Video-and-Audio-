@@ -1,4 +1,4 @@
-subject,experiment,deepfake_check,deepfake_concept_check,deepfake_concept_check,recognised_video_manipulation,deepfake_concept_check_recoded
+subject,experiment,deepfake_check,deepfake_concept_check,deepfake_check_recoded,recognised_manipulation,deepfake_concept_check_recoded
 033aae4e-d13c-4203-88d0-286a17ffd630,4,"No, I thought it was a real person speaking.",NA,,,
 0348a2aa-6bce-4132-8cc2-6793accdadcd,4,"It didn't sound entirely like a person as the accent constantly changed, which I found suspicious.",NA,,,
 042d3853-30a5-44f0-a4b4-4aaa2c38d060,4,I realised it was a voice simulation.,NA,,,
