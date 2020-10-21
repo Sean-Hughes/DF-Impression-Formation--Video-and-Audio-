@@ -30,6 +30,8 @@ replace old jasp analyses with R implementations - mostly because the data is no
 
 ## Processing
 
+remove DVs with rescoring for stimulus valence from processing?
+
 Integrate second rater's scoring into hand scoring - in 4. integrate Rmd file.
 
 Address issues in 5-testing-coverage-of-hand-scoring.Rmd
