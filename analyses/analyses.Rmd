@@ -182,7 +182,7 @@ comparison_string_sr <-
            filter(Parameter == "percent_comparison") %>% 
            pull(CI_95_upper) %>% 
            round(1),
-         "]) as effective as genine content in changing implicit attitudes")
+         "]) as effective as genine content in changing self-reported evaluations")
 
 noninferiority_sr <- 
   ifelse(estimates_sr %>% filter(Parameter == "effect_genuine") %>% pull(CI_95_lower) <
@@ -198,9 +198,9 @@ estimates_sr %>%
 
 ```
 
-`r comparison_string_sr`
-
 `r noninferiority_sr`
+
+`r comparison_string_sr`
 
 ## Implicit
 
@@ -298,9 +298,109 @@ estimates_imp %>%
 
 ```
 
+`r noninferiority_imp`
+
 `r comparison_string_imp`
 
-`r noninferiority_imp`
+## Behavioural intentions
+
+```{r}
+
+fit_intentions <- 
+  brm(formula = IAT_D2 ~ source_valence * experiment_condition, # no random effect for experiment as only exp 6 assessed intentions
+      data    = data_after_exclusions, 
+      file    = "models/fit_intentions",
+      prior   = prior(normal(0, 10)),
+      iter    = 6000,
+      warmup  = 3000,
+      control = list(adapt_delta = 0.95),
+      chains  = 4,
+      cores   = parallel::detectCores())
+
+# # inspect convergence
+# fit_intentions
+
+#plot_model(fit_intentions)
+plot_model(fit_intentions, type = "pred", terms = c("source_valence", "experiment_condition"))
+
+# percent moderation
+draws_intentions <- 
+  bind_cols(
+    select(spread_draws(fit_intentions, b_source_valencepositive), b_source_valencepositive),
+    select(spread_draws(fit_intentions, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
+    select(spread_draws(fit_intentions, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
+  ) %>%
+  rename(main_valence = b_source_valencepositive,
+         main_experiment_condition = b_experiment_conditiondeepfaked,
+         interaction = `b_source_valencepositive:experiment_conditiondeepfaked`) %>%
+  mutate(effect_genuine = main_valence,
+         effect_deepfaked = main_valence + main_experiment_condition + interaction,
+         #percent_moderation = (main_experiment_condition + interaction)/main_valence *100,  # alt method, same result
+         percent_comparison = (effect_deepfaked/effect_genuine)*100)
+
+# results
+estimates_intentions <- 
+  map_estimate(draws_intentions) %>%
+  mutate(pomp_MAP_Estimate = ifelse(Parameter == "percent_comparison", NA, (((MAP_Estimate+2)/4) - .50)*100)) %>%
+  full_join(bayestestR::hdi(draws_intentions, ci = .95) %>%
+              rename(CI_95_lower = CI_low,
+                     CI_95_upper = CI_high) %>%
+              mutate(pomp_CI_95_lower = ifelse(Parameter == "percent_comparison", NA, (((CI_95_lower+2)/4) - .50)*100),
+                     pomp_CI_95_upper = ifelse(Parameter == "percent_comparison", NA, (((CI_95_upper+2)/4) - .50)*100)) %>%
+              as_tibble(),
+            by = "Parameter") %>%
+  full_join(bayestestR::hdi(draws_intentions, ci = .90) %>%
+              as_tibble() %>%
+              rename(CI_90_lower = CI_low,
+                     CI_90_upper = CI_high),
+            by = "Parameter") %>%
+  full_join(draws_intentions %>%
+              select(-percent_comparison) %>%
+              gather(Parameter, value) %>%
+              group_by(Parameter) %>%
+              summarize(pd = mean(value > 0)) %>%
+              mutate(p = pd_to_p(pd, direction = "one-sided")) %>%
+              ungroup() %>%
+              select(Parameter, p),
+            by = "Parameter") %>%
+  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, 
+         CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p) 
+
+comparison_string_intentions <- 
+  paste0("Deepfakes are ",
+         estimates_intentions %>% 
+           filter(Parameter == "percent_comparison") %>% 
+           pull(MAP_Estimate) %>% 
+           round(1),
+         "% (95% CI [",
+         estimates_intentions %>% 
+           filter(Parameter == "percent_comparison") %>% 
+           pull(CI_95_lower) %>% 
+           round(1),
+         ", ",
+         estimates_intentions %>% 
+           filter(Parameter == "percent_comparison") %>% 
+           pull(CI_95_upper) %>% 
+           round(1),
+         "]) as effective as genine content in changing behavioural intentions")
+
+noninferiority_intentions <- 
+  ifelse(estimates_intentions %>% filter(Parameter == "effect_genuine") %>% pull(CI_95_lower) <
+           estimates_intentions %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_90_lower),
+         "Deepfakes were found to be non-inferior to genuine content",
+         "Deepfakes were not found to be non-inferior to genuine content")
+
+estimates_intentions %>%
+  mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
+  mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+`r noninferiority_intentions`
+
+`r comparison_string_intentions`
 
 # Detection
 
@@ -439,14 +539,20 @@ fit_classification_bootstraps %>%
 
 Subset who received deepfaked videos but also detected them
 
+```{r}
+
+data_detectors_subset <- data_after_exclusions %>%
+  filter(experiment_condition == "deepfaked" & deepfake_detected == TRUE)
+
+```
+
 ## Self-reported evaluations
 
 ```{r}
 
-fit_selfreport_deepfaked_detected <- data_after_exclusions %>%
-  filter(experiment_condition == "deepfaked" & deepfake_detected == TRUE) %>%
+fit_selfreport_deepfaked_detected <- 
   brm(formula = mean_self_reported_evaluation ~ source_valence + (1 | experiment),
-      data    = ., 
+      data    = data_detectors_subset, 
       file    = "models/fit_selfreport_deepfaked_detected",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
@@ -498,10 +604,8 @@ estimates_sr_deepfaked_detected %>%
 ```{r}
 
 fit_implicit_deepfaked_detected <- 
-  data_after_exclusions %>%
-  filter(experiment_condition == "deepfaked" & deepfake_detected == TRUE) %>%
   brm(formula = IAT_D2 ~ source_valence + (1 | experiment),
-      data    = ., 
+      data    = data_detectors_subset, 
       file    = "models/fit_implicit_deepfaked_detected",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
@@ -543,6 +647,59 @@ estimates_imp_deepfaked_detected <-
   mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1)
 
 estimates_imp_deepfaked_detected %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+## Behavioural intentions
+
+```{r}
+
+fit_intentions_deepfaked_detected <- 
+  brm(formula = IAT_D2 ~ source_valence, # no random effect for experiment as only exp 6 assessed intentions
+      data    = data_detectors_subset, 
+      file    = "models/fit_intentions_deepfaked_detected",
+      prior   = prior(normal(0, 10)),
+      iter    = 6000,
+      warmup  = 3000,
+      control = list(adapt_delta = 0.95),
+      chains  = 4,
+      cores   = parallel::detectCores())
+
+# # inspect convergence
+# fit_intentions_deepfaked_detected
+
+#plot_model(fit_intentions_deepfaked_detected)
+plot_model(fit_intentions_deepfaked_detected, type = "pred", terms = "source_valence")
+
+draws_intentions_deepfaked_detected <- 
+  select(spread_draws(fit_intentions_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
+  rename(effect_deepfake_detected = b_source_valencepositive) 
+
+estimates_intentions_deepfaked_detected <- 
+  map_estimate(draws_intentions_deepfaked_detected) %>%
+  mutate(pomp_MAP_Estimate = ifelse(Parameter == "percent_comparison", NA, (((MAP_Estimate+3)/6) - .50)*100)) %>%
+  full_join(bayestestR::hdi(draws_intentions_deepfaked_detected, ci = .95) %>%
+              rename(CI_95_lower = CI_low,
+                     CI_95_upper = CI_high) %>%
+              mutate(pomp_CI_95_lower = ifelse(Parameter == "percent_comparison", NA, (((CI_95_lower+3)/6) - .50)*100),
+                     pomp_CI_95_upper = ifelse(Parameter == "percent_comparison", NA, (((CI_95_upper+3)/6) - .50)*100)) %>%
+              as_tibble(),
+            by = "Parameter") %>%
+  full_join(draws_intentions_deepfaked_detected %>%
+              gather(Parameter, value) %>%
+              group_by(Parameter) %>%
+              summarize(pd = mean(value > 0)) %>%
+              mutate(p = pd_to_p(pd, direction = "one-sided")) %>%
+              ungroup() %>%
+              select(Parameter, p),
+            by = "Parameter") %>%
+  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p) %>%
+  mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper"), round, digits = 2) %>%
+  mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1)
+
+estimates_intentions_deepfaked_detected %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 
