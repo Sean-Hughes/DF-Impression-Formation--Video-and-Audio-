@@ -22,26 +22,17 @@ exp 1 "Five Things you Didn't Know About Me !" video has two versions. which one
 
 ## Analyses
 
-add intentions
-
 check corrispondence with preregistrations [sean]
 
 replace old jasp analyses with R implementations - mostly because the data is now likely slighly different 
 
 ## Processing
 
-remove DVs with rescoring for stimulus valence from processing?
-
 Integrate second rater's scoring into hand scoring - in 4. integrate Rmd file.
 
 Address issues in 5-testing-coverage-of-hand-scoring.Rmd
 
-check corrispondence with preregistrations [sean]
-
 check scale n items, min and max scores. especially aot_min_item [sean]
 
-Hand scoring: after ryan and ciaran return their hand scored data and integration code is written:
 
-- see if sean's hand scoring is missing any cases
-- delete "hand scoring" folder and individual files.
 
