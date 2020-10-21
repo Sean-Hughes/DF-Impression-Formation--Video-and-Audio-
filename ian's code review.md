@@ -24,10 +24,6 @@ exp 1 "Five Things you Didn't Know About Me !" video has two versions. which one
 
 add intentions
 
-add agreement stats
-
-tidy up - add bayesian meta  
-
 check corrispondence with preregistrations [sean]
 
 replace old jasp analyses with R implementations - mostly because the data is now likely slighly different 
