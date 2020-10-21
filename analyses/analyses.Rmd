@@ -106,10 +106,10 @@ data_after_exclusions %>%
 
 ```{r}
 
-fit_sr <- 
+fit_selfreport <- 
   brm(formula = mean_self_reported_evaluation ~ source_valence * experiment_condition + (1 | experiment),
       data    = data_after_exclusions, 
-      file    = "models/fit_sr",
+      file    = "models/fit_selfreport",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -118,17 +118,17 @@ fit_sr <-
       cores   = parallel::detectCores())
 
 # # inspect convergence
-# fit_sr
+# fit_selfreport
 
-#plot_model(fit_sr)
-plot_model(fit_sr, type = "pred", terms = c("source_valence", "experiment_condition"))
+#plot_model(fit_selfreport)
+plot_model(fit_selfreport, type = "pred", terms = c("source_valence", "experiment_condition"))
 
 # percent moderation
 draws_sr <- 
   bind_cols(
-    select(spread_draws(fit_sr, b_source_valencepositive), b_source_valencepositive),
-    select(spread_draws(fit_sr, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
-    select(spread_draws(fit_sr, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
+    select(spread_draws(fit_selfreport, b_source_valencepositive), b_source_valencepositive),
+    select(spread_draws(fit_selfreport, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
+    select(spread_draws(fit_selfreport, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
   ) %>%
   rename(main_valence = b_source_valencepositive,
          main_experiment_condition = b_experiment_conditiondeepfaked,
@@ -206,10 +206,10 @@ estimates_sr %>%
 
 ```{r}
 
-fit_imp <- 
+fit_implicit <- 
   brm(formula = IAT_D2 ~ source_valence * experiment_condition + (1 | experiment),
       data    = data_after_exclusions, 
-      file    = "models/fit_imp",
+      file    = "models/fit_implicit",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -218,17 +218,17 @@ fit_imp <-
       cores   = parallel::detectCores())
 
 # # inspect convergence
-# fit_imp
+# fit_implicit
 
-#plot_model(fit_imp)
-plot_model(fit_imp, type = "pred", terms = c("source_valence", "experiment_condition"))
+#plot_model(fit_implicit)
+plot_model(fit_implicit, type = "pred", terms = c("source_valence", "experiment_condition"))
 
 # percent moderation
 draws_imp <- 
   bind_cols(
-    select(spread_draws(fit_imp, b_source_valencepositive), b_source_valencepositive),
-    select(spread_draws(fit_imp, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
-    select(spread_draws(fit_imp, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
+    select(spread_draws(fit_implicit, b_source_valencepositive), b_source_valencepositive),
+    select(spread_draws(fit_implicit, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
+    select(spread_draws(fit_implicit, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
   ) %>%
   rename(main_valence = b_source_valencepositive,
          main_experiment_condition = b_experiment_conditiondeepfaked,
@@ -356,9 +356,9 @@ aka informedness aka "the probability of an informed decision (as opposed to a r
 
 ```{r}
 
-if(file.exists("models/classification_bootstraps")){
+if(file.exists("models/fit_classification_bootstraps.rds")){
   
-  results_bootstraps <- read_rds("results_bootstraps.rds")
+  fit_classification_bootstraps <- read_rds("fit_classification_bootstraps.rds")
   
 } else {
   
@@ -414,16 +414,16 @@ if(file.exists("models/classification_bootstraps")){
   }
   
   # apply to each bootstrap
-  results_bootstraps <- boots %>% 
+  fit_classification_bootstraps <- boots %>% 
     mutate(categorization_stats = map(splits, bootstrap_categorization_stats)) %>%
     select(-splits) %>% 
     unnest(categorization_stats)
   
-  write_rds(results_bootstraps, "models/results_bootstraps.rds")
+  write_rds(fit_classification_bootstraps, "models/fit_classification_bootstraps.rds")
   
 }
 
-results_bootstraps %>% 
+fit_classification_bootstraps %>% 
   group_by(variable) %>%
   summarize(median = quantile(value, 0.500),
             ci_lower = quantile(value, 0.025),
@@ -443,11 +443,11 @@ Subset who received deepfaked videos but also detected them
 
 ```{r}
 
-fit_sr_deepfaked_detected <- data_after_exclusions %>%
+fit_selfreport_deepfaked_detected <- data_after_exclusions %>%
   filter(experiment_condition == "deepfaked" & deepfake_detected == TRUE) %>%
   brm(formula = mean_self_reported_evaluation ~ source_valence + (1 | experiment),
       data    = ., 
-      file    = "models/fit_sr_deepfaked_detected",
+      file    = "models/fit_selfreport_deepfaked_detected",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -456,13 +456,13 @@ fit_sr_deepfaked_detected <- data_after_exclusions %>%
       cores   = parallel::detectCores())
 
 # # inspect convergence
-# fit_sr_deepfaked_detected
+# fit_selfreport_deepfaked_detected
 
-#plot_model(fit_sr_deepfaked_detected)
-plot_model(fit_sr_deepfaked_detected, type = "pred", terms = "source_valence")
+#plot_model(fit_selfreport_deepfaked_detected)
+plot_model(fit_selfreport_deepfaked_detected, type = "pred", terms = "source_valence")
 
 draws_sr_deepfaked_detected <- 
-  select(spread_draws(fit_sr_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
+  select(spread_draws(fit_selfreport_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
   rename(effect_deepfake_detected = b_source_valencepositive) 
 
 estimates_sr_deepfaked_detected <- 
@@ -497,12 +497,12 @@ estimates_sr_deepfaked_detected %>%
 
 ```{r}
 
-fit_imp_deepfaked_detected <- 
+fit_implicit_deepfaked_detected <- 
   data_after_exclusions %>%
   filter(experiment_condition == "deepfaked" & deepfake_detected == TRUE) %>%
   brm(formula = IAT_D2 ~ source_valence + (1 | experiment),
       data    = ., 
-      file    = "models/fit_imp_deepfaked_detected",
+      file    = "models/fit_implicit_deepfaked_detected",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -511,13 +511,13 @@ fit_imp_deepfaked_detected <-
       cores   = parallel::detectCores())
 
 # # inspect convergence
-# fit_imp_deepfaked_detected
+# fit_implicit_deepfaked_detected
 
-#plot_model(fit_imp_deepfaked_detected)
-plot_model(fit_imp_deepfaked_detected, type = "pred", terms = "source_valence")
+#plot_model(fit_implicit_deepfaked_detected)
+plot_model(fit_implicit_deepfaked_detected, type = "pred", terms = "source_valence")
 
 draws_imp_deepfaked_detected <- 
-  select(spread_draws(fit_imp_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
+  select(spread_draws(fit_implicit_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
   rename(effect_deepfake_detected = b_source_valencepositive) 
 
 estimates_imp_deepfaked_detected <- 
