@@ -33,15 +33,13 @@ library(IATscores)
 
 data_preprocessed <- read_rds("processed/1_data_preprocessed.rds")
 
-x <- data_preprocessed %>%
-  filter(!is.na(intentions_q1) | !is.na(intentions_q2) | !is.na(intentions_q3)) %>%
-  select(subject, experiment, intentions_q1, intentions_q2, intentions_q3, sender)
-
 ```
 
 # Trial-level data 
 
 Bring data into 'tidy' format, apply IAT block labeling corrections, drop rows and columns that aren't used to score the tasks, etc.
+
+NB no attempt to remove duplicate participants is made at this stage - that is done below in the participant level data where exclusions are made based on completeness.
 
 ```{r}
 
@@ -86,7 +84,7 @@ data_trial_level <- data_preprocessed %>%
          ratings_response = case_when(!is.na(pos_neg) ~ pos_neg,
                                       !is.na(good_bad) ~ good_bad,
                                       !is.na(like_dislike) ~ like_dislike)) %>%
-
+  
   
   # wrangle methods variables
   mutate(condition_number = case_when(str_detect(condition, "C1") ~ 1, 
@@ -123,7 +121,7 @@ data_trial_level <- data_preprocessed %>%
   
   # create block and trial columns. Do so by renaming values from the 'sender_id' column to terms that the IAT scoring package will work with when applied later (e.g., block 1,2,3,4,5,6,7)
   separate(sender_id, into = c("temp_1", "temp_2", "temp_3", "block", "trial"), sep = "_", remove = FALSE) %>%
-
+  
   # recode trial numbers so that they begin at 1 and run to 16 or 32
   mutate(block = as.numeric(block),
          trial = ifelse(!is.na(trial), as.numeric(trial) + 1, trial)) %>%
@@ -138,7 +136,7 @@ data_trial_level <- data_preprocessed %>%
   # _11_0_0  = block 5 (Chris Bob)
   # _13_0_0  = block 6 (Chris Bad Bob Good)
   # _15_0_0  = block 7 (Chris Bad Bob Good)
-  
+
   # for participants in Conditions 5-8 the 'sender_id' variable corresponds to the following block order:
   
   # _3_0_0   = block 5 (Chris Bob)
@@ -148,29 +146,29 @@ data_trial_level <- data_preprocessed %>%
   # _11_0_0  = block 1 (Bob Chris)
   # _13_0_0  = block 3 (Bob Bad Chris Good)
   # _15_0_0  = block 4 (Bob Bad Chris Good)
-
+  
   # update block numbering so that it is correct following the above
   mutate(block = ifelse(condition_number %in% c(1, 2, 3, 4), 
-                                case_when(block == 3 ~ 1,
-                                          block == 5 ~ 2,
-                                          block == 7 ~ 3,
-                                          block == 9 ~ 4,
-                                          block == 11 ~ 5,
-                                          block == 13 ~ 6,
-                                          block == 15 ~ 7), 
-                                ifelse(condition_number %in% c(5, 6, 7, 8), 
-                                       case_when(block == 3 ~ 5,
-                                                 block == 5 ~ 2,
-                                                 block == 7 ~ 6,
-                                                 block == 9 ~ 7,
-                                                 block == 11 ~ 1,
-                                                 block == 13 ~ 3,
-                                                 block == 15 ~ 4), 
-                                       NA))) %>%
+                        case_when(block == 3 ~ 1,
+                                  block == 5 ~ 2,
+                                  block == 7 ~ 3,
+                                  block == 9 ~ 4,
+                                  block == 11 ~ 5,
+                                  block == 13 ~ 6,
+                                  block == 15 ~ 7), 
+                        ifelse(condition_number %in% c(5, 6, 7, 8), 
+                               case_when(block == 3 ~ 5,
+                                         block == 5 ~ 2,
+                                         block == 7 ~ 6,
+                                         block == 9 ~ 7,
+                                         block == 11 ~ 1,
+                                         block == 13 ~ 3,
+                                         block == 15 ~ 4), 
+                               NA))) %>%
   
   #  retain only the practice and critical test blocks that are used for scoring the task (i.e., block_number = 3, 4, 6, 7)
   filter((task == "iat" & block %in% c(3, 4, 6, 7)) |
-            task != "iat") %>%
+           task != "iat") %>%
   
   # label block types in the way the IATScores package will later need to D score the IAT data. 
   # compatible vs incompatible refers to congruence with learning in training phase
@@ -178,7 +176,7 @@ data_trial_level <- data_preprocessed %>%
                             ifelse(block %in% c(6, 7), "pair2", NA)),
          praccrit = ifelse(block %in% c(3, 6), "prac", 
                            ifelse(block %in% c(4, 7), "crit", NA))) %>%
-
+  
   
   # select variables needed for data processing and analysis
   select(subject,
@@ -207,7 +205,7 @@ data_trial_level <- data_preprocessed %>%
          political_ideology_social_issues,
          political_ideology_economic_issues,
          religious_affiliation_general,
-
+         
          # self reported evaluations
          ratings_item,
          ratings_response,
@@ -225,7 +223,7 @@ data_trial_level <- data_preprocessed %>%
          intentions_q1, 
          intentions_q2, 
          intentions_q3,
-
+         
          # intervention
          memory_of_video_content,
          memory_of_audio_content,
@@ -245,7 +243,7 @@ data_trial_level <- data_preprocessed %>%
          ends_with("_rei"),
          starts_with("fn_"), 
          starts_with("rn_"),
-
+         
          # exploratory questions
          diagnosticity_question,
          demand,
@@ -253,7 +251,7 @@ data_trial_level <- data_preprocessed %>%
          hypothesis_awareness,
          influence_awareness,
          issues_with_study) %>%
-
+  
   # guess appropriate data types
   type_convert()
 
@@ -311,6 +309,7 @@ data_conditions_and_demographics <- data_trial_level %>%
                      grepl("Masters", education) ~ 6,
                      grepl("Doctoral degree", education) ~ 7,
                      grepl("Professional degree", education) ~ 7),
+         # employment_recoded was mentioned in prereg but the groupings dont make a huge amount of sense to me, so I haven't included in processing.
          # employment_recoded = 
          #   case_when(grepl("full time", employment) ~ "Currently Employed",
          #             grepl("part-time", employment) ~ "Currently Employed",
@@ -414,14 +413,14 @@ data_trial_level_iat <- data_trial_level %>%
 
 data_completeness_iat <- data_trial_level_iat %>%
   count(subject) %>%
-  mutate(complete_iat_data = case_when(n == 128 ~ "complete", 
-                                       n > 128 ~ "excess", 
-                                       n < 128 ~"partial")) %>%
+  mutate(complete_iat = case_when(n == 128 ~ "complete", 
+                                  n > 128 ~ "excess", 
+                                  n < 128 ~"partial")) %>%
   select(-n)
 
 # print
 data_completeness_iat %>%
-  count(complete_iat_data) %>%
+  count(complete_iat) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 
@@ -530,14 +529,14 @@ data_trial_level_self_reported_evaluations <- data_trial_level %>%
 
 data_completeness_self_reported_evaluations <- data_trial_level_self_reported_evaluations %>%
   count(subject) %>%
-  mutate(complete_selfreport_data = case_when(n == 3 ~ "complete", 
-                                              n > 3 ~ "excess", 
-                                              n < 3 ~ "partial")) %>%
+  mutate(complete_selfreport = case_when(n == 3 ~ "complete", 
+                                         n > 3 ~ "excess", 
+                                         n < 3 ~ "partial")) %>%
   select(-n)
 
 # print
 data_completeness_self_reported_evaluations %>%
-  count(complete_selfreport_data) %>%
+  count(complete_selfreport) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 
@@ -569,14 +568,14 @@ data_behavioural_intentions <- data_trial_level %>%
   group_by(subject) %>%
   summarize(n = n(),
             mean_intentions = round(mean(intentions_response), 2), .groups = "drop") %>%
-  mutate(completeness_intentions = case_when(n == 3 ~ "complete", 
-                                             n > 3 ~ "excess", 
-                                             n < 3 ~ "partial")) %>%
+  mutate(complete_intentions = case_when(n == 3 ~ "complete", 
+                                         n > 3 ~ "excess", 
+                                         n < 3 ~ "partial")) %>%
   select(-n)
 
 # print
 data_behavioural_intentions %>%
-  count(completeness_intentions) %>%
+  count(complete_intentions) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 
@@ -597,7 +596,7 @@ data_detection_2 <- data_trial_level %>%
   select(subject, 
          deepfake_check = deepfake_video_check) %>%
   drop_na()
-         
+
 data_detection_3 <- data_trial_level %>%
   select(subject, 
          deepfake_check = deepfake_audio_check) %>%
@@ -761,7 +760,7 @@ data_crt <- data_individual_differences_temp %>%
   mutate(crt_analytic_thinking_sum = ifelse(crt_n_items == master_crt_n_items, 
                                             crt_analytic_thinking_sum, NA)) %>%
   select(-crt_n_items)
-  
+
 ```
 
 ### ME Media endoresement
@@ -1003,17 +1002,21 @@ data_participant_level <- data_conditions_and_demographics %>%
                                                                               mean_self_reported_evaluation*-1, 
                                                                               mean_self_reported_evaluation),
          IAT_D2_recoded_for_stimulus_identity = ifelse(source_valence == "negative", 
-                                                             IAT_D2*-1, 
-                                                             IAT_D2),
+                                                       IAT_D2*-1, 
+                                                       IAT_D2),
          mean_intentions_recoded_for_stimulus_identity = ifelse(source_valence == "negative", 
                                                                 mean_intentions*-1, 
                                                                 mean_intentions)) %>%
   
   # compound exclusions
-  mutate(exclude_subject = ifelse(complete_iat_data == "complete" &
-                                    complete_selfreport_data == "complete" & 
+  mutate(exclude_subject = ifelse(complete_iat == "complete" &
+                                    complete_selfreport == "complete" & 
+                                    (complete_intentions == "complete" | is.na(complete_intentions)) & # measure not used in all studies, so NA also acceptable
                                     passed_iat_performance == TRUE, FALSE, TRUE),
          exclude_subject = ifelse(is.na(exclude_subject), TRUE, exclude_subject)) %>%
+  
+  # retain only distinct rows, remove duplications
+  distinct() %>%
   
   select(subject, 
          experiment, 
@@ -1023,13 +1026,9 @@ data_participant_level <- data_conditions_and_demographics %>%
          exclude_subject,
          age, 
          gender,
-         gender_self_describe,
          IAT_D2, 
-         IAT_D2_recoded_for_stimulus_identity,
          mean_self_reported_evaluation, 
-         mean_self_reported_evaluation_recoded_for_stimulus_identity,
          mean_intentions,
-         mean_intentions_recoded_for_stimulus_identity,
          deepfake_check,
          deepfake_concept_check,
          
@@ -1058,7 +1057,13 @@ data_participant_level <- data_conditions_and_demographics %>%
          me_fake_news_sharing_pomp, 
          me_real_news_sharing_pomp,
          
+         # recoded DVs - mentioned in preregistrations but not used in my (more appropriate) reworked analyses. 
+         IAT_D2_recoded_for_stimulus_identity,
+         mean_self_reported_evaluation_recoded_for_stimulus_identity,
+         mean_intentions_recoded_for_stimulus_identity,
+         
          # additional demographics
+         gender_self_describe,
          ethnicity,
          ethnicity_self_describe,
          location,
@@ -1075,8 +1080,9 @@ data_participant_level <- data_conditions_and_demographics %>%
          
          # component exclusion variables
          passed_iat_performance, 
-         complete_iat_data, 
-         complete_selfreport_data,
+         complete_iat, 
+         complete_selfreport,
+         complete_intentions,
          
          # methods variables
          task_order, 
@@ -1097,8 +1103,11 @@ write_csv(data_participant_level, "processed/2.2_data_participant_level.csv")
 
 # subset of columns for hand scoring
 data_participant_level %>%
-  select(subject, experiment, deepfake_check, deepfake_concept_check) %>%
+  # exclude participants who did not provide responses on either question (or were not delivered the question, in earlier experiments) 
   filter(!is.na(deepfake_check) | !is.na(deepfake_concept_check)) %>%
+  # exclude participants with partial or excess data who met exclusion criteria
+  filter(exclude_subject == FALSE) %>%
+  select(subject, experiment, deepfake_check, deepfake_concept_check) %>%
   write_csv("processed/2.3_data_participant_level_for_hand_scoring.csv")
 
 ```
