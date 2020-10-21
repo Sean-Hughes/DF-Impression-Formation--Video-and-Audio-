@@ -78,6 +78,7 @@ data_participant_level_with_hand_scoring <- data_participant_level %>%
          exclude_subject,
          age,
          gender,
+         gender_self_describe,
          IAT_D2,
          IAT_D2_recoded_for_stimulus_identity,
          mean_self_reported_evaluation,
@@ -115,6 +116,9 @@ data_participant_level_with_hand_scoring <- data_participant_level %>%
          deepfake_concept_check_rater_2,
          
          # additional demographics
+         ethnicity,
+         ethnicity_self_describe,
+         location,
          education, 
          employment, 
          education_recoded, 
