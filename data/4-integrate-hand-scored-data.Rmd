@@ -12,7 +12,7 @@ output:
     toc_float: yes
 ---
 
-Note that open ended text responses are dropped by this script, to produce a data file that contains only the data needed for analyses. Text responses can still be found in "3_data_participant_level.csv".
+Note that open ended text responses are dropped by this script, to produce a data file that contains only the data needed for analyses. Text responses can still be found in "2.2_data_participant_level.csv".
 
 ```{r include=FALSE}
 knitr::opts_chunk$set(message=FALSE,
@@ -36,61 +36,52 @@ data_participant_level <- read_csv("processed/2.2_data_participant_level.csv")
 
 # hand scored data
 data_hand_scored_rater_1 <- read_csv("processed/3_data_hand_scored_rater_1.csv") %>%
-  select(subject, 
-         deepfake_detected_rater_1 = deepfake_detected, 
-         manipulation_detected_rater_1 = manipulation_detected, 
-         deepfake_concept_check_rater_1 = deepfake_concept_check)
+  dplyr::select(subject, 
+                deepfake_detected_rater_1, 
+                deepfake_concept_check_rater_1)
 
 data_hand_scored_rater_2 <- read_csv("processed/3_data_hand_scored_rater_2.csv") %>%
-  select(subject, 
-         deepfake_detected_rater_2 = deepfake_detected, 
-         manipulation_detected_rater_2 = manipulation_detected, 
-         deepfake_concept_check_rater_2 = deepfake_concept_check)
+  dplyr::select(subject, 
+                deepfake_detected_rater_2, 
+                deepfake_concept_check_rater_2)
 
 # join
 data_participant_level_with_hand_scoring <- data_participant_level %>%
   full_join(data_hand_scored_rater_1, by = "subject") %>%
   full_join(data_hand_scored_rater_2, by = "subject") %>%
   
-  # create single variables between raters. emphasizes sensitivity by using max of the two.
+  # create single variables between raters. 
+  # emphasizes specificity by requiring both raters to score as TRUE, therefore providing a more severe test of learning even in those who were aware.
   mutate(deepfake_detected = 
-           case_when(deepfake_detected_rater_1 == TRUE ~ TRUE, 
-                     deepfake_detected_rater_2 == TRUE ~ TRUE,
+           case_when(deepfake_detected_rater_1 == TRUE & deepfake_detected_rater_2 == TRUE ~ TRUE,
                      is.na(deepfake_detected_rater_1) & is.na(deepfake_detected_rater_2) ~ NA,
                      TRUE ~ FALSE),
-         manipulation_detected = 
-           case_when(manipulation_detected_rater_1 == TRUE ~ TRUE, 
-                     manipulation_detected_rater_2 == TRUE ~ TRUE,
-                     is.na(manipulation_detected_rater_1) & is.na(manipulation_detected_rater_2) ~ NA,
-                     TRUE ~ FALSE),
          deepfake_concept_check = 
-           case_when(deepfake_concept_check_rater_1 == TRUE ~ TRUE, 
-                     deepfake_concept_check_rater_2 == TRUE ~ TRUE,
+           case_when(deepfake_concept_check_rater_1 == TRUE & deepfake_concept_check_rater_2 == TRUE ~ TRUE,
                      is.na(deepfake_concept_check_rater_1) & is.na(deepfake_concept_check_rater_2) ~ NA,
                      TRUE ~ FALSE)) %>%
   
   # drop open ended text responses now that they've been coded for analysis
-  select(subject,
-         experiment,
-         intervention_medium,
-         source_valence,
-         experiment_condition,
+  select(subject, 
+         experiment, 
+         intervention_medium, 
+         source_valence, 
+         experiment_condition, 
          exclude_subject,
-         age,
+         age, 
          gender,
-         gender_self_describe,
-         IAT_D2,
-         IAT_D2_recoded_for_stimulus_identity,
-         mean_self_reported_evaluation,
-         mean_self_reported_evaluation_recoded_for_stimulus_identity,
+         IAT_D2, 
+         mean_self_reported_evaluation, 
+         mean_intentions,
          deepfake_detected,
-
+         
          # exploratory measures
-         diagnosticity,
+         diagnosticity, 
          demand, 
          reactance, 
-         hypothesis_awareness,
+         hypothesis_awareness, 
          influence_awareness, 
+         issues_with_study, 
          aot_actively_openminded_thinking_pomp, 
          bcti_belief_in_conspiracy_pomp, 
          crt_analytic_thinking_pomp, 
@@ -104,18 +95,21 @@ data_participant_level_with_hand_scoring <- data_participant_level %>%
          me_real_news_accuracy_pomp, 
          me_fake_news_sharing_pomp, 
          me_real_news_sharing_pomp,
-         manipulation_detected,
-         deepfake_concept_check,
+         
+         # recoded DVs - mentioned in preregistrations but not used in my (more appropriate) reworked analyses. 
+         IAT_D2_recoded_for_stimulus_identity,
+         mean_self_reported_evaluation_recoded_for_stimulus_identity,
+         mean_intentions_recoded_for_stimulus_identity,
          
          # individual raters
+         deepfake_concept_check,
          deepfake_detected_rater_1,
          deepfake_detected_rater_2,
-         manipulation_detected_rater_1, 
-         manipulation_detected_rater_2, 
          deepfake_concept_check_rater_1,
          deepfake_concept_check_rater_2,
          
          # additional demographics
+         gender_self_describe,
          ethnicity,
          ethnicity_self_describe,
          location,
@@ -128,37 +122,17 @@ data_participant_level_with_hand_scoring <- data_participant_level %>%
          political_ideology_social_issues, 
          political_ideology_economic_issues, 
          religious_affiliation_general, 
-         religious_affiliation_general_recoded, 
+         religious_affiliation_general_recoded,
          
          # component exclusion variables
          passed_iat_performance, 
-         complete_iat_data, 
-         complete_selfreport_data, 
+         complete_iat, 
+         complete_selfreport,
+         complete_intentions,
          
          # methods variables
          task_order, 
          iat_block_order)
-
-```
-
-# Examine inter-rater agreement
-
-```{r}
-
-data_participant_level_with_hand_scoring %>%
-  count(deepfake_detected,
-        deepfake_detected_rater_1,
-        deepfake_detected_rater_2)
-
-data_participant_level_with_hand_scoring %>%
-  count(manipulation_detected, 
-        manipulation_detected_rater_1,
-        manipulation_detected_rater_2)
-
-data_participant_level_with_hand_scoring %>%
-  count(deepfake_concept_check,
-        deepfake_concept_check_rater_1,
-        deepfake_concept_check_rater_2)
 
 ```
 
@@ -169,5 +143,6 @@ data_participant_level_with_hand_scoring %>%
 write_csv(data_participant_level_with_hand_scoring, "processed/4_data_participant_level_with_hand_scoring.csv")
   
 ```
+
 
 

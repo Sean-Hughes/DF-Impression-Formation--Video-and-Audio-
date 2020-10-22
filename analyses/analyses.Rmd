@@ -406,7 +406,7 @@ estimates_intentions %>%
 
 ## Inter-rater relibility
 
-deepfake_detected:
+### deepfake_detected:
 
 ```{r}
 
@@ -417,24 +417,19 @@ data_after_exclusions %>%
 
 data_after_exclusions %>%
   summarize(perc_agreement = mean(deepfake_detected_rater_1 == deepfake_detected_rater_2, na.rm = TRUE))
-  
-```
-
-manipulation_detected:
-
-```{r}
 
 data_after_exclusions %>%
-  select(manipulation_detected_rater_1,                               
-         manipulation_detected_rater_2) %>%
-  cohen.kappa(.)
+  count(deepfake_detected,
+        deepfake_detected_rater_1,
+        deepfake_detected_rater_2)
 
 data_after_exclusions %>%
-  summarize(perc_agreement = mean(manipulation_detected_rater_1 == manipulation_detected_rater_2, na.rm = TRUE))
-  
+  count(experiment_condition, 
+        deepfake_detected)
+
 ```
 
-deepfake_concept_check:
+### deepfake_concept_check:
 
 ```{r}
 
@@ -445,6 +440,15 @@ data_after_exclusions %>%
 
 data_after_exclusions %>%
   summarize(perc_agreement = mean(deepfake_concept_check_rater_1 == deepfake_concept_check_rater_2, na.rm = TRUE))
+
+data_after_exclusions %>%
+  count(deepfake_concept_check,
+        deepfake_concept_check_rater_1,
+        deepfake_concept_check_rater_2)
+
+data_after_exclusions %>%
+  count(experiment_condition, 
+        deepfake_concept_check)
   
 ```
 
