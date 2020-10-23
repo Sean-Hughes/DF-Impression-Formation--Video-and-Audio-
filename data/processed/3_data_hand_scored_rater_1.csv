@@ -1,6 +1,6 @@
 subject,experiment,deepfake_check,deepfake_concept_check,deepfake_detected_rater_1,deepfake_concept_check_rater_1
 033aae4e-d13c-4203-88d0-286a17ffd630,4,"No, I thought it was a real person speaking.",NA,FALSE,NA
-0348a2aa-6bce-4132-8cc2-6793accdadcd,4,"It didn't sound entirely like a person as the accent constantly changed, which I found suspicious.",NA,UNCLEAR,NA
+0348a2aa-6bce-4132-8cc2-6793accdadcd,4,"It didn't sound entirely like a person as the accent constantly changed, which I found suspicious.",NA,FALSE,NA
 042d3853-30a5-44f0-a4b4-4aaa2c38d060,4,I realised it was a voice simulation.,NA,TRUE,NA
 04d13d93-6783-47a8-8433-b7b044dd20fe,4,"The face didn't move in the recording so I had no way of telling if they were deepfakes
 ",NA,FALSE,NA
@@ -16,7 +16,7 @@ subject,experiment,deepfake_check,deepfake_concept_check,deepfake_detected_rater
 0d0b2b72-9922-49a6-b6b0-37f21b0c69fb,4,"No
 ",NA,FALSE,NA
 0ef804d9-1835-4060-9929-56010b98bfec,4,"They did feel off to me. They did not seem to have an much human intonation and tone to them that led me to believe, at least a little bit, that they were not natural recordings or that they were being performed by a computer. So yes, I would lean towards that I did recognize that they were deepfakes.",NA,TRUE,NA
-1097f8e0-c396-4fcb-aa79-92669576f6d8,4,"I actually had a feeling that it might not be a real person speaking to me. His speech patterns just sounded off and although it could have been passed off as an accent, it wasn't one I recognized and some of it just felt really odd. It's hard to describe.",NA,UNCLEAR,NA
+1097f8e0-c396-4fcb-aa79-92669576f6d8,4,"I actually had a feeling that it might not be a real person speaking to me. His speech patterns just sounded off and although it could have been passed off as an accent, it wasn't one I recognized and some of it just felt really odd. It's hard to describe.",NA,FALSE,NA
 10f076eb-ac52-4fa3-bd1b-c408c18dde47,4,"not initially as chris had an accent which took a while to place, however as the video went on there were some pronounciations that sounded computer generated so i knew by the end",NA,TRUE,NA
 1168ba3e-9056-410a-857e-bfb8a9875c7b,4,"No, the audio seemed genuiene to me 
 ",NA,FALSE,NA
@@ -24,7 +24,7 @@ subject,experiment,deepfake_check,deepfake_concept_check,deepfake_detected_rater
 14848d11-3c34-42ab-876b-e2a30c7ac0fa,4,I did recognise they were deepfakes,NA,TRUE,NA
 15fcacb2-34c4-4eb7-baad-951e200dadde,4,I thought to myself that it seemed like a computer generated voice. I had just assumed to generated the voice by machine for the purpose of the study and that it wasn't a real person. I didn't realize the study was about that. I get it now.,NA,TRUE,NA
 177bf5a8-e3eb-4bf6-babe-eeb621abeabb,4,"I did think that the audio sounded a little robotic but I just thought it was the recording device. I would not have guessed that it was the computer ""speaking"".",NA,FALSE,NA
-19a7574e-f87c-4f34-a99d-5112ace05971,4,I thought it sounded a bit non-human like. I'd easily have believed it was real though.,NA,UNCLEAR,NA
+19a7574e-f87c-4f34-a99d-5112ace05971,4,I thought it sounded a bit non-human like. I'd easily have believed it was real though.,NA,FALSE,NA
 1b5ac793-403e-49fa-b37e-474bc2408300,4,no,NA,FALSE,NA
 1b74eab2-8cc2-47ac-8183-120325840fe0,4,No I thought it was a real human (although I assumed it was a scripted actor),NA,FALSE,NA
 1bd1b948-a8ba-4faa-bb33-d5f411cf576a,4,"I did think they were computer generated, the accent didnt really make sense, sometimes it was an american accent, but then other words were an irish accent",NA,TRUE,NA
@@ -37,7 +37,7 @@ subject,experiment,deepfake_check,deepfake_concept_check,deepfake_detected_rater
 270d259e-dc3a-471c-a7e8-3e37ac8557ea,4,I did not.  It just sounded like a boring guy talking about how great he is.,NA,FALSE,NA
 29871e00-1098-45b9-adbe-8f67f7a9faa9,4,i did find that chris' voice sometimes sounded robotic,NA,TRUE,NA
 2d9ad768-a491-46ba-ac4f-ab4cbae0172e,4,Yes in seemed more like a computer taling than an actual person.,NA,TRUE,NA
-328bc516-ea67-48f2-aa76-f93c29d72948,4,I suspected that I was not listening to an 'authentic' person speak about themselves - the dislogue was not naturally spoken/delivered,NA,UNCLEAR,NA
+328bc516-ea67-48f2-aa76-f93c29d72948,4,I suspected that I was not listening to an 'authentic' person speak about themselves - the dislogue was not naturally spoken/delivered,NA,FALSE,NA
 33696cd9-9155-4d77-b16c-dec96653450f,4,"No. i had no indication that the voice was not the voice of the man in the pictures, especially that it was not a man at all, but a computer",NA,FALSE,NA
 33c94f52-47c8-4623-999e-4fdf49d0b01b,4,"I wasnt aware of what 'deepfake' was, but I did recognise that the audio sounded computerised",NA,TRUE,NA
 344b9cfa-808e-429c-8c0a-e0df020fc8e2,4,"i thought they were computer-generated, however, i interacted as though he was a real person and felt strong negative emotions against him",NA,TRUE,NA
@@ -66,7 +66,7 @@ subject,experiment,deepfake_check,deepfake_concept_check,deepfake_detected_rater
 611401ac-ec64-4949-874e-5b9377fb8b09,4,No,NA,FALSE,NA
 62ab9744-d481-40ad-bda6-a6fd13d2bc5d,4,I didn't notice!.,NA,FALSE,NA
 64d749d0-cfb5-49ed-b527-48e68d1d44b1,4,i didnt realise but i thought it sounded a wee bit strange,NA,FALSE,NA
-68232b67-8986-4583-bd0c-51d1fc73b0ee,4,"I did recognize that it was not a real human speaking, yes. I'm sure it had some effect on how ""bad"" I thought Chris was.",NA,UNCLEAR,NA
+68232b67-8986-4583-bd0c-51d1fc73b0ee,4,"I did recognize that it was not a real human speaking, yes. I'm sure it had some effect on how ""bad"" I thought Chris was.",NA,FALSE,NA
 68ed1f6b-d82e-471b-8502-ee3ee4bc97ee,4,I recognised that the voiced seemed synthesised as the cadence was not completely natural and sounded slightly robotic,NA,TRUE,NA
 69358537-332e-4e7c-9b34-93620d70f18a,4,I was cautious as to why the video was just a still picture but i didnt recognise that is was deepfake recordings,NA,FALSE,NA
 6964fcaf-a331-42c1-a18d-d6096887a0f2,4,No i didnt realise they were fakes,NA,FALSE,NA
@@ -136,13 +136,13 @@ c8dfc5fd-a208-4a17-9624-209297ec1568,4,not at all,NA,FALSE,NA
 c9ff8085-1a82-4930-9741-3a9d6386f6ca,4,I thought it sounded a little bit computer-y (like a text-to speech voice) but I figured it might have been audio quality messing with the sounds of an actual person's voice.,NA,TRUE,NA
 ca6ed935-e297-46d3-ab8a-be7368720ab5,4,"I could see he wasn't speaking, just a photo, but wouldn't have known it was a deepfake",NA,FALSE,NA
 cd379e4b-6759-4f34-a432-522a66d4642a,4,"No, but the audio sounded scripted. I would not have known if it was a real person or deepfaked.",NA,FALSE,NA
-cdcaed61-2021-4338-90e9-3cc6617ed783,4,"There were some inconsistencies in the video, the sentences being spoken were choppy as though the words had been stitched together. The flow of the speech was not that of a person talking.",NA,UNCLEAR,NA
+cdcaed61-2021-4338-90e9-3cc6617ed783,4,"There were some inconsistencies in the video, the sentences being spoken were choppy as though the words had been stitched together. The flow of the speech was not that of a person talking.",NA,FALSE,NA
 cdf308bc-2ca1-4ff3-bc6d-55ef73610704,4,I had no idea that the audio was deepfaked,NA,FALSE,NA
 ce6dc65a-cef6-4302-8174-417483907a33,4,I would say yes to it being fake but I wouldn't have specifically guessed a deepfake. There was buzzing in the audio that made it sound false/made-up or edited.,NA,FALSE,NA
 ce7524aa-3b52-4036-bdc4-a820e8c01f80,4,The voice sounded computer generated and without seeing the person speaking it was potentially unreal.,NA,TRUE,NA
 cf164bc7-8bf6-4229-abb3-a6fc4e615f5b,4,"I didn't think deepfake about the image but yes the audio sounded very robotic and fake, apart from the accent which was good.",NA,TRUE,NA
 d06f5d16-acf1-4e59-ae16-b88afa4c6012,4,"I had no idea they were deepfakes, however I did notice that the way he pronounced some words were different to what his accent should sound like - for example when he said ""bus"" - the emphasis was on the U, however his accent sounded almost Irish/American so this should have sounded rounder..",NA,FALSE,NA
-d2beb722-92f2-4cba-99ed-aabe87c98145,4,It did seem very monotone,NA,UNCLEAR,NA
+d2beb722-92f2-4cba-99ed-aabe87c98145,4,It did seem very monotone,NA,FALSE,NA
 d314522b-b996-4f70-8415-86d38444964d,4,Yes,NA,TRUE,NA
 d404c52a-3aca-45b9-847f-bc3c49f8f256,4,"I honestly wouldn't have believed that they were deepfakes. I did notice a slight voice similarity to Microsoft Sam at times, but it was very subtle and could be mistaken for audio quality. Scarily, I genuinely believed it to be someone talking into a microphone.",NA,FALSE,NA
 d4b74cc7-262b-4c3f-bcb1-8f94801dd9bc,4,I could tell the audio was somewhat fake but I was not aware that an AI system had fabricated the actual script. I thought it was a text to speech program like Microsoft Sam reading from a brief script.,NA,TRUE,NA
@@ -177,36 +177,36 @@ febe05ac-0e70-4ff9-aceb-da28d3dd28b8,4,No I didn't recognize it was a deepfake.,
 ffd682ad-4725-4397-9b74-c0e6e38bbade,4,It was obvious it was not real.,NA,TRUE,NA
 026e6530-81f9-4d56-a636-71a26f0048eb,5,"I knew there was something a little strange in the editing. The voice didn't seem to quitematch up with the mouth movement and there were changes in the background lighting/colour.
 
-Also, I do apologise about the maths questions. I have dyscalculia.",Yes,UNCLEAR,TRUE
-0814412d-4196-410f-8670-39686f381a20,5,i had a good idea was not from u tube who would want to watch it,yes,UNCLEAR,TRUE
-08e614d8-c38a-46f7-aa8f-a80a83888740,5,I thought there were something wrong with it- his accents keps changing and it looked out of sinc at times.,"Yes, it's very scary!",UNCLEAR,TRUE
-0e0fb094-2106-4c38-aa62-9ad07ba08517,5,I suspected something was a bit off with the video,I was aware but have never watched one (or been aware that I was watching one),UNCLEAR,TRUE
+Also, I do apologise about the maths questions. I have dyscalculia.",Yes,FALSE,TRUE
+0814412d-4196-410f-8670-39686f381a20,5,i had a good idea was not from u tube who would want to watch it,yes,FALSE,TRUE
+08e614d8-c38a-46f7-aa8f-a80a83888740,5,I thought there were something wrong with it- his accents keps changing and it looked out of sinc at times.,"Yes, it's very scary!",FALSE,TRUE
+0e0fb094-2106-4c38-aa62-9ad07ba08517,5,I suspected something was a bit off with the video,I was aware but have never watched one (or been aware that I was watching one),FALSE,TRUE
 101d5a8f-663e-46b9-a438-b92b510b512f,5,"Yes, I noticed the video was strange and usual and had defects, I am a video editor so I noticed straight away that it was strange to have him centre with minimal background and with a 1:1 ratio!",Yes.,TRUE,TRUE
 13ba7a99-11df-4c08-a8ce-7ba416bd986b,5,I did not realise as I did not know what deepfaking was,No,FALSE,FALSE
 1465cfcc-2326-4c65-a2bc-6acc00dbf8de,5,No I thought it was genuine,Yes but I didnt know much about it,FALSE,TRUE
 14a7c459-92bd-4b89-91ec-8447d9246c6a,5,Absolutely Not,I have seen deep fake videos online but mostly of people pretending to be actors. I have never seen anything like the video here today before.,FALSE,TRUE
 1685bcec-4312-411d-aa2d-c56fba18b540,5,Not at all,Had an inkling,FALSE,TRUE
 1abdd127-c334-4745-8ba9-80e348400c50,5,yes i was 99% sure it was fake because when he talked his mouth seemed to be moving very weirdly so i already knew something was wrong.,yes . i read news about it and watched obama say silly things although it wasn't actually him,TRUE,TRUE
-1c6f4339-c4ca-4186-9f4d-d44695e520dc,5,"The second question he answered, the colour of the video changed, colours became faint and quality became grainy, and seemed that the sound of the video didn't match what chris was saying. Out of sync.",Yes,UNCLEAR,TRUE
+1c6f4339-c4ca-4186-9f4d-d44695e520dc,5,"The second question he answered, the colour of the video changed, colours became faint and quality became grainy, and seemed that the sound of the video didn't match what chris was saying. Out of sync.",Yes,FALSE,TRUE
 1faccb01-8af3-4784-a150-c14ed7a9d7dc,5,"there were a couple moments when the audio looked off, but it never crossed my mind that it could have been deepfaked",yes i knew that!,FALSE,TRUE
 244d4223-5715-4fbc-85b9-c166efc511e9,5,I knew it was an actor and what he said was not sure but I didn't know it was computer generated.,yes but didn't know much about it,FALSE,TRUE
 2aa118a2-a45c-4469-91b8-833696b6be74,5,yes,nothing,TRUE,FALSE
-2d9f508c-19dd-4dfc-8230-0ebcd7919079,5,I noticed something strange about his mouth so wondered if it had been altered somehow,no,UNCLEAR,FALSE
-2da91193-de79-4485-821e-037c732613f7,5,Yes because I looked at his profile and he only had one subscriber so I don't know where he could have got all those questions from.,Yes I knew everyone fakes things all the time.,UNCLEAR ,UNCLEAR
-30e896f2-d8ca-4e9b-984b-54fe0ae40b66,5,I realise that he seemed very unnatural and there were no natural glances away form the ccamera that made me feel he wasnt genuine and kind of weirded me out and made me rate him a 1 as I mentioned in earlier parts of the study.,No I didnt know it could be done so well. I knew that videos ould be pieced together but i expected it to be very choppy and noticeable. This was smooth with the exception of one jump cut before the next questions but a lot of youtubers use jumpcuts so i didnt think anything was off.,UNCLEAR,FALSE
-31537963-0c20-4dee-aa8c-1ce69735c99d,5,"Yes because I do not think Chris would say those things publicly, like he woudn't help a pregnant woman or he cheated in his final exam.",I did not know what it was named but I knew Chris answers were not real.,TRUE,UNCLEAR
+2d9f508c-19dd-4dfc-8230-0ebcd7919079,5,I noticed something strange about his mouth so wondered if it had been altered somehow,no,FALSE,FALSE
+2da91193-de79-4485-821e-037c732613f7,5,Yes because I looked at his profile and he only had one subscriber so I don't know where he could have got all those questions from.,Yes I knew everyone fakes things all the time.,FALSE ,FALSE
+30e896f2-d8ca-4e9b-984b-54fe0ae40b66,5,I realise that he seemed very unnatural and there were no natural glances away form the ccamera that made me feel he wasnt genuine and kind of weirded me out and made me rate him a 1 as I mentioned in earlier parts of the study.,No I didnt know it could be done so well. I knew that videos ould be pieced together but i expected it to be very choppy and noticeable. This was smooth with the exception of one jump cut before the next questions but a lot of youtubers use jumpcuts so i didnt think anything was off.,FALSE,FALSE
+31537963-0c20-4dee-aa8c-1ce69735c99d,5,"Yes because I do not think Chris would say those things publicly, like he woudn't help a pregnant woman or he cheated in his final exam.",I did not know what it was named but I knew Chris answers were not real.,TRUE,FALSE
 3bab879e-239a-4a6e-be07-590f3ffdedeb,5,No I did not,I had heard about it but never watched a video that was deepaked,FALSE,TRUE
 3c970dff-5b15-4a2e-b5a3-5af7829a5205,5,No and I believe you are lying about it being deepfaked now as I have never seen form of deepfaking this high in quality,"yes but not to this level, if this video was deepfaked",FALSE,TRUE
 3ddc4102-574e-4cea-a71a-bb6db7ab7145,5,"Yes, I did! I noticed because of the glitches near his mouth and the lipsync that didn't match at some points. There was also a general 'unnaturalness' to his face.","Yes, I did.",TRUE,TRUE
 3ecbd887-df22-4e90-b193-3c02b81269c6,5,not at all,yes,FALSE,TRUE
-3f651a8a-0663-425e-b4c3-fc347c72bd62,5,Somewhat. I thought that the lighting had changed and the mouth seemed a little out of sync. I did not know if this was intentional or just part of the video,I have heard about this before while watching documentaries but haven't really seen many and don't know much about them,UNCLEAR,TRUE
+3f651a8a-0663-425e-b4c3-fc347c72bd62,5,Somewhat. I thought that the lighting had changed and the mouth seemed a little out of sync. I did not know if this was intentional or just part of the video,I have heard about this before while watching documentaries but haven't really seen many and don't know much about them,FALSE,TRUE
 44e4d3f1-66b4-47e6-8f23-9c57d169f1fb,5,no.,no,FALSE,FALSE
 473319a6-0d84-4d59-96fc-8b277b00a000,5,I had absolutely no idea it was deepfaked,I have never heard the tern deepfaked before. I did not know a video faked so much and look so realistic,FALSE,TRUE
 4756e693-8784-48c1-a55f-a0bc828c0aa8,5,"I thought Chris was real, I had no idea that it was deep faked. I couldn't tell his accent though but I didn't think anything of it.",Yes but I only thought it was used on celebrities.,FALSE,TRUE
 49de4bc6-75c1-4baf-a896-0714fae3d580,5,No I did not.,No I did not.,FALSE,FALSE
 51c374d0-b662-41b6-a33a-27a50dab93cf,5,No i did not know that the video was deepfaked.,Before watching the video i did not know that videos could be deepfaked.,FALSE,FALSE
 529920a0-4a95-407a-bf3e-a5617303a63f,5,I thought I may have been watching an actor but I believed the answers were scripted.,No. I have never heard of deepfaked.,FALSE,FALSE
-5539ec75-e07d-432a-b566-6ba4a5acf579,5,"I noticed that some parts of the video looked different (slightly lower qualtity), and it looked at times like the words didn't fit to what his mouth what actually saying.",Yes I've seen some on Youtube before.,UNCLEAR ,TRUE
+5539ec75-e07d-432a-b566-6ba4a5acf579,5,"I noticed that some parts of the video looked different (slightly lower qualtity), and it looked at times like the words didn't fit to what his mouth what actually saying.",Yes I've seen some on Youtube before.,FALSE ,TRUE
 55f9a9aa-7cc3-4adb-86d0-75afe4274c05,5,"When I was watching the video I did not realise it was deepfaked. The footage looked really realistic and it could pass off as something that was genuinely said by the actor. 
 
 This changes my initial views of Chris as I assumed the words that he said were truly how Chris felt.",I had heard of deepfaked videos but I did not think they could look so genuine and realistic.,FALSE,TRUE
@@ -225,10 +225,10 @@ This changes my initial views of Chris as I assumed the words that he said were 
 693fc9bb-f408-447c-bd69-2c0e03a8b478,5,"i suspected that it might have been 'staged', the term 'deepfaked' didn't come to mind.","yes, i've watched series and movies which have addressed issues of 'deepfaked' videos.",FALSE,TRUE
 69459c12-d1a3-4aba-a060-f0db514619b8,5,No. But the sound didnt seem well synchronised to Chris' lips,No,FALSE,FALSE
 697b5248-b59a-4a8f-b46d-a0e30622d805,5,"I had a feeling something was wrong, because the way Chris was moving felt unnatural, but I believed it to be real.","Yes I did, I have tried it once myself with me and my friends.",FALSE,TRUE
-6a4e1b4c-4e4f-4655-8d58-6eb5cda78465,5,honestly I watching video,No thanks,UNCLEAR,FALSE
-6b57f931-31a9-41bb-9882-3a2b23fefe0f,5,Something seemed off about it/him,I din't explicitly know but i had no reason to think it couldn't be done,UNCLEAR,UNCLEAR
+6a4e1b4c-4e4f-4655-8d58-6eb5cda78465,5,honestly I watching video,No thanks,FALSE,FALSE
+6b57f931-31a9-41bb-9882-3a2b23fefe0f,5,Something seemed off about it/him,I din't explicitly know but i had no reason to think it couldn't be done,FALSE,FALSE
 6dbaa0d5-bde8-4cf8-8a66-5da54e097f1a,5,"yes, because most people are not that brutally honest. you could also` tell because when the video ended you couldn't see any other videos chris has posted","no I hadn't, but am not surprised",TRUE,FALSE
-736d6890-043b-4b44-8c45-db0ed28feb52,5,i could tell there was something 'wrong' with his face and that it had in some way been edited but didnt know in what way.,yes,UNCLEAR,TRUE
+736d6890-043b-4b44-8c45-db0ed28feb52,5,i could tell there was something 'wrong' with his face and that it had in some way been edited but didnt know in what way.,yes,FALSE,TRUE
 755c1beb-c30e-4fb3-bfbd-30cc9c53b11a,5,no,"No, I did not realise this",FALSE,FALSE
 7606c368-28f2-4844-a87a-c356c974bfa9,5,"No way, I thought this was an authentic video.","I knew it was possible to create deepfakes, but not to this degree.",FALSE,TRUE
 76543321-69c9-4834-90e8-87fced9e81fb,5,No,Yes,FALSE,TRUE
@@ -256,7 +256,7 @@ aa3507a6-abe7-4fd4-a563-f06aeff21864,5,"I did not realise it was deepfaked, but 
 aec7e7f6-681c-43b0-a21d-32788990eb84,5,no at first i beieved it was taken from a youtube channel and was genuine,no i did not realise this,FALSE,FALSE
 af1eff67-99d3-4185-8449-65699fdcefa6,5,I haven't heard the term deepfaked before but I did suspect some of what Chris was saying wasn't quite genuine.,No I hadn't heard of this before.,FALSE,FALSE
 b27a4cbb-232f-43df-9976-0c3806b887e1,5,no,no,FALSE,TRUE
-b3d0edc1-9116-4a17-a470-9690cb18371b,5,"I had a feeling it may have been as what Chris was saying didn't exactly match the movements his mouth was making, also the clip seemed to cut quite a lot in-between sentences.",I had an inkling but have never seen one.,TRUE,UNCLEAR
+b3d0edc1-9116-4a17-a470-9690cb18371b,5,"I had a feeling it may have been as what Chris was saying didn't exactly match the movements his mouth was making, also the clip seemed to cut quite a lot in-between sentences.",I had an inkling but have never seen one.,TRUE,FALSE
 b4ce2dff-87a7-48d4-bfe1-ec37772510be,5,I did not realise that it had been deepfaked but I do remember thinking that his mouth moved strangely. It felt like an actor speaking. I just presumed it was a video generated by the survey company. I would not have believed that it was a genuine YouTube video.,I did not know that. I wouldn't be the most knowledgeable about internet conspiracy things!,FALSE,FALSE
 b5b6c5e8-064b-4aae-ae05-10a00f0a1c71,5,Truly shocked it was deepfaked however it did occur to me that it seemed ' unnatural' i.e. the question and answer portions did not flow,Yes I have an interest in AI technology,FALSE,TRUE
 b6dada7d-628a-44c3-9aed-d4acd0324154,5,I had no single clue..,I've heard about deepfakes but I never knew they could be this perfect.This had me fooled.,FALSE,TRUE
@@ -274,7 +274,7 @@ d23ed178-0596-4e1d-9429-645778415f27,5,"I noticed something weird with the way h
 d7f9168f-904a-46bb-9056-d0b4fcba82a8,5,No I didn't.,Yes.,FALSE,FALSE
 dc7e3670-aa73-46d0-ad62-1fb5c76e3267,5,"Yes, I realised it was deepfaked, as I stated in previous replies. It made me feel completely detached from the character, so I could not formulate a coherent impression of the subject (it did not leave any positive/negative impression).","Yes, I know that videos can be deepfaked. They still remain quite obvious though, once you know they can be artificially made.",TRUE,TRUE
 df5183e6-f578-4211-943d-d0fb9ac7bcbc,5,no,yes,FALSE,TRUE
-e28df5bd-4689-43e7-a05d-d588ebf285ba,5,Perhaps a little – the background lighting etc kept changing,Yes,UNCLEAR,TRUE
+e28df5bd-4689-43e7-a05d-d588ebf285ba,5,Perhaps a little – the background lighting etc kept changing,Yes,FALSE,TRUE
 e3547be9-d057-43d0-bb66-f634424e5299,5,Not at all!,Yes,FALSE,TRUE
 e55e512a-cc70-4058-b5df-6d2533304366,5,I suspected he was playing a part but didn't know or suspect that it was a computer.,No,FALSE,FALSE
 e6486f11-65ef-49f0-9544-db4a08361f74,5,No I have never heard of the term deepfaked,no,FALSE,FALSE
@@ -296,7 +296,7 @@ ff709103-09d3-4aba-953c-3ff4c177fe0d,5,i did have a feeling as his mouth did loo
 0b321a42-90c9-41de-a60a-787805acb548,5,Not at all!,Did not consider it at all!,FALSE,FALSE
 0cd134dd-b2fb-4502-9bf9-b7c7c1494f4e,5,No,Yes,FALSE,TRUE
 0d460992-6c67-4b15-960a-5b41332db49c,5,No,yes,FALSE,TRUE
-0d5e66d1-ba5c-47fb-b013-f9250c2053eb,5,no i took it that it was for real,not to that extent,FALSE,UNCLEAR
+0d5e66d1-ba5c-47fb-b013-f9250c2053eb,5,no i took it that it was for real,not to that extent,FALSE,FALSE
 113bec26-9c79-4b59-9ffb-fc5808f2e3c4,5,I did not realise it was deepfaked but I did not think it was real - as in I didn't think this was a real person's youtube channel and that he had shared those views like that. I did not know that it had been tampered with though.,Yes I have heard of this before.,FALSE,TRUE
 12e1e68c-7c28-433d-987f-8cd0953cb38d,5,"i have never heard of deepfaking, i thought it was a bit suspicious but figured it was one of the researchers who had no acting background playing a character, so no i had not realised",no,FALSE,FALSE
 15edd7b9-b726-462f-94f2-39ef2d34596e,5,No. I thought it was scripted badly.,"Yes, but I didn't know it was easy to do or cost-effective. I thought the probability of using a scripted video was more likely.",FALSE,TRUE
@@ -343,7 +343,7 @@ ff709103-09d3-4aba-953c-3ff4c177fe0d,5,i did have a feeling as his mouth did loo
 7fae8a65-0716-410f-b4f9-8167696400ea,5,I had a suspicion but I didn't think so.,Yes I knew about fake news and deepfaked.,TRUE,TRUE
 827019f3-9b7b-460e-90d1-ca0c111ead74,5,no,yes,FALSE,TRUE
 8536ef8d-0def-4433-81ae-fc55b08e3a8c,5,"No, although I did think that he was speaking quite slowly and carefully.",No,FALSE,FALSE
-867ac10d-d440-492c-97fb-7db1a8298a9e,5,No i didnt,Possibly,FALSE,UNCLEAR
+867ac10d-d440-492c-97fb-7db1a8298a9e,5,No i didnt,Possibly,FALSE,FALSE
 86ccbc8f-7757-472b-ac5e-9fb25e6ed2b7,5,Well I thought it unlikely that anyone would be that nasty on a public forum because he would get a whole load of nasty comments in his feed.,No,FALSE,FALSE
 87cf38de-9da9-4c04-9b20-768bd53d5a2a,5,"Not at all. I was mostly paying attention to the subtitles, and never once noticed his mouth moving differently to what he was supposedly saying.","Yes, I have seen many before.",FALSE,TRUE
 8a156662-b9c7-4f96-907f-0ff85c331707,5,"Yes and no. 
@@ -360,13 +360,13 @@ However, I wouldn't have said it was deep-faked rather I thought it was bad acti
 918a2945-2db0-4317-9f71-149fd1b67fdc,5,no,yes,FALSE,TRUE
 97615087-39e5-4492-967f-f978dc0fb80b,5,I did not noticed that it was a deepfake. I noticed something off and not genuine about Chris.,Yes.,FALSE,TRUE
 976e1d5c-49c9-4ed2-9b63-fd30afb8c464,5,I had no idea,"No, never heard of it",FALSE,FALSE
-97d42e69-c186-4f7d-9975-afc8ca682850,5,I did not realise that,I wasn't sure,FALSE,UNCLEAR
+97d42e69-c186-4f7d-9975-afc8ca682850,5,I did not realise that,I wasn't sure,FALSE,FALSE
 997ffd6e-83a9-4b71-82c7-294b307d15a4,5,Yes,No.,TRUE,FALSE
-9987aa23-fb64-4cab-af9d-574edbc0a5c1,5,i was suspicious of the tone and to flat facial expressions on the mans face so i wasn't sure if ti was real or not,yes i did i have watched many of them and its a very worrying thing indeed,UNCLEAR,TRUE
+9987aa23-fb64-4cab-af9d-574edbc0a5c1,5,i was suspicious of the tone and to flat facial expressions on the mans face so i wasn't sure if ti was real or not,yes i did i have watched many of them and its a very worrying thing indeed,FALSE,TRUE
 9b5245de-5ded-4506-896a-e8937d20de44,5,No i did not realise it had been deepfaked.,No,FALSE,FALSE
 a35ba413-4668-4add-afcb-4ebf52c7e3c1,5,no,yes,FALSE,TRUE
 a58030d8-c739-494e-beaa-c2835ac03ae4,5,"I did not realise, no, seem like maybe bad acting","yup, but not that well yet, worrying...",FALSE,TRUE
-a70cee7f-f15d-4143-a941-f6a9821ce9c0,5,It seemed highly unlikely that someone would go public and make such damning comments about themselves.,much of what is available online is not true,UNCLEAR,UNCLEAR
+a70cee7f-f15d-4143-a941-f6a9821ce9c0,5,It seemed highly unlikely that someone would go public and make such damning comments about themselves.,much of what is available online is not true,FALSE,FALSE
 a9574099-625a-44b0-b558-3435df0cd607,5,"I did not realised it was deepfaked at all, I believed the video to be true. I did question why he was smiling so much but did not assume anything of that.",I had heard of the concept but had never seen it actually done.,FALSE,TRUE
 ad70bb7d-64a4-4db6-ac76-c5092abddaeb,5,Yes i suspected so,vaguley knew about it just not so much the details of how,TRUE,TRUE
 aff97df7-78d8-41b1-adc9-90d8b03853ef,5,"I didn't realise it had been deepfaked. I did notice that the footage was very strange through, very robotic simple speech patterns and movements, and the editing was very heavily cut.","Yes I did. I was more familiar with face-replacement styles of deepfakes videos, but I was also aware of this kind as well.",FALSE,TRUE
@@ -376,15 +376,15 @@ b68767d1-168d-4214-a7f9-df8eccef14d2,5,I did not realise.,I knew that videos cou
 b73afed0-82fb-4b36-9bb0-0d3eaecf6013,5,"No, but I thought his delivery was very stilted and awkward",Yes,FALSE,TRUE
 ba5a7e5f-b30a-4962-8dff-fa1ee8c4d8bc,5,"I didn't realize that it had been deepfaked, but it did seem like it wasn't a genuine video.  I had assumed that was because it was a video created specifically for this research - he looked like he was reading off a script and was also bad at acting.","I vaguely know about deepfaked videos, but I don't know much about them.",FALSE,TRUE
 bc6a26cd-d193-4559-b639-f594099b6312,5,No,Yes,FALSE,TRUE
-bf16db7e-6feb-41e3-a8d6-ee74337c6e28,5,"I thought it might have been because his face was very blank, but I thought he might just not be great on screen.","yes, but I didn't think about that.",UNCLEAR,TRUE
+bf16db7e-6feb-41e3-a8d6-ee74337c6e28,5,"I thought it might have been because his face was very blank, but I thought he might just not be great on screen.","yes, but I didn't think about that.",FALSE,TRUE
 bfd0320c-2dd2-4df2-b259-6f4361b63f95,5,No,No,FALSE,FALSE
 c03f38ba-e458-4745-b122-9ee1b96f25c6,5,"No, I did not realise. Although I had the suspicion that it was staged","yes, I did",FALSE,TRUE
-c15c83c3-0b30-4eaf-a0c0-4ef738941916,5,"I am suspicious of many things on the internet - so much untruth out there.  I didn't specifically think it was fake, but I didn't specifically think it was true either.",maybe.,UNCLEAR,UNCLEAR
+c15c83c3-0b30-4eaf-a0c0-4ef738941916,5,"I am suspicious of many things on the internet - so much untruth out there.  I didn't specifically think it was fake, but I didn't specifically think it was true either.",maybe.,FALSE,FALSE
 c1cbac1a-6bd8-4471-a0ab-25bcb1309a62,5,I had a feeling that it wasn't completely true because as I was watching there seemed to be a break of a fraction of a second between each subject,Yes I have heard about it,TRUE,TRUE
 c9cee824-9ffc-4364-af8d-075139cc3cc3,5,no i did not,no i thought they were all real,FALSE,FALSE
 c9e54514-2f44-44cb-a277-b31fb71f578c,5,"I thought there was something weird about him, in particular with his teeth and his inflections when he spoke but I did not consider that the video had been deepfaked. I thought perhaps that he was not a native english speaker.",Yes I was aware that videos could be deepfaked.,FALSE,TRUE
 ce692f3d-ec0e-42f6-aaed-17558a58f467,5,I did not know it had been deepfaked.,Yes,FALSE,TRUE
-cf3c5373-ea99-4240-bb0e-85d640c81fc9,5,Yes,Vaguely - I knew videos could be faked but did not know the official term,TRUE,UNCLEAR
+cf3c5373-ea99-4240-bb0e-85d640c81fc9,5,Yes,Vaguely - I knew videos could be faked but did not know the official term,TRUE,FALSE
 d0468727-ad17-4c5e-9879-e96246edaeee,5,No I did not.,"Yes, I have seen several deepfake videos and I am impressed at the speed it is progressing.",FALSE,TRUE
 d47f257b-e0aa-4046-8614-e74ea45602e0,5,"I thought something seemed off.  It was his hair (this seemed to change significantly from the opening to the answered questions) and also his accent... it sort of fluctuated between sounding American, Scottish and Scandinavian.  There was something that just wasn't quire right about it.  That being said, being completely honest I didn't realise it was a deepfake, per se.  But I thought perhaps he may have been acting or putting on different accents.","Yes, I did. I'd heard of it indirectly.  But I'd never seen one directly.",FALSE,TRUE
 d7538610-5598-4ad7-a856-be063a4243c7,5,no,yes,FALSE,TRUE
@@ -399,7 +399,7 @@ dfffa1fe-360f-46ad-948c-b22037ae41d0,5,I had not heard of deepfaking but I very 
 e12bdf81-4856-4a67-b568-3207369417c0,5,No i did not realise it was fake,Yes i did,FALSE,TRUE
 e499383c-a295-42b0-9fb4-7b10551dbdb7,5,"Nope, it was very convincing. That is terrifying.",Yes I did.,FALSE,TRUE
 e53d440f-3737-4370-ad93-5a77ea237540,5,"Hadn't heard of 'deepfaked' before, but felt it had been manipulated.  The shading was different in some clips.",No.,FALSE,FALSE
-e58864b3-4ee5-42cb-842d-96d71cbdcdce,5,I thought it was put together for this project and not a real youtube channel,Absolutely. Fakery is all around even from the regular corporate media.,UNCLEAR,TRUE
+e58864b3-4ee5-42cb-842d-96d71cbdcdce,5,I thought it was put together for this project and not a real youtube channel,Absolutely. Fakery is all around even from the regular corporate media.,FALSE,TRUE
 e8d13413-d08f-4f63-93e4-85564b322d63,5,I had absolutely no idea. This was completely believable.,"I knew it was possible, but I'm not sure I've ever actually seen one.",FALSE,TRUE
 e9c499d7-e25e-41d1-99a9-0c2fce1c8723,5,"I was a little distracted by how emphasised his mouth movements were whilst talking, but thought this was merely an overeager attempt to speak clearly. No, I did not know this video was deepfaked.","Yes, but not this clearly.",FALSE,TRUE
 f006bb16-3a13-4dae-85d9-db911d9e3ffd,5,No,Yes,FALSE,TRUE
@@ -407,18 +407,18 @@ f124c5fd-215a-4720-8197-cd7bb2a272a5,5,"Yes, I felt like some of the things he s
 f417f4eb-63b0-4e58-87b6-c735b38feb18,5,I watched the video closely. I knew the video was fake i.e. it was an actor reading a script I thought. I did not know it was a computer generated.,Yes,FALSE,TRUE
 f8587548-1cdf-42e4-936a-491c08c7bac9,5,No I did not,Yes,FALSE,TRUE
 fb8d3a93-86a9-4ce2-b0d7-352b2eaa6703,5,I had no clue! I couldnt tell the difference.,No i did not.,FALSE,FALSE
-048f994a-c0fb-486b-85f7-b6200f829837,6,I did not think it was a genuine youtube recording,Yes,UNCLEAR,TRUE
-056766ef-9288-4213-bf0c-69e14c37b91a,6,I thought is was a fake. I dont think anyone would admit to been that way.,No I did not know it was deepfaked.,UNCLEAR,UNCLEAR
+048f994a-c0fb-486b-85f7-b6200f829837,6,I did not think it was a genuine youtube recording,Yes,FALSE,TRUE
+056766ef-9288-4213-bf0c-69e14c37b91a,6,I thought is was a fake. I dont think anyone would admit to been that way.,No I did not know it was deepfaked.,FALSE,FALSE
 057c40a7-b640-4465-95ba-15db04f3c0d9,6,"No, I did not know if was deepfaked.  So many people now are quite happy to go on to YouTube and talk about themselves.","No, I would have thought that YouTube would have checked the content and where it came from to make sure that it was a genuine person.",FALSE,FALSE
 0bd20762-d170-4219-9076-60051ae32c2c,6,"I didn't realise it was deepfaked, yet i realised the audio track wasn't entirely normal and it was tampered.",Not at all,FALSE,FALSE
-0e875358-a80a-4043-ad9d-265d1adf5699,6,no,na,FALSE,UNCLEAR
+0e875358-a80a-4043-ad9d-265d1adf5699,6,no,na,FALSE,FALSE
 0ecfef75-84f1-4a89-9a0e-badea93d2ed8,6,yes,yes,TRUE,TRUE
 1342200f-7257-4052-8e32-738d9fda2829,6,i  did not realise although it sounded odd,I wasn't aware,FALSE,FALSE
 17bfdff8-6e38-4d22-89f9-45fb0497ff74,6,No I did not,No I did not,FALSE,FALSE
 189318ac-6c64-48fa-aef0-45bf2da37924,6,I thought it was very likely,I was aware,TRUE,TRUE
-1c40b147-8c16-4f2a-96bc-ba43b0153d57,6,"No, I did not.","Yes, I know it's possible to manipulate both audio and video.",FALSE,UNCLEAR
+1c40b147-8c16-4f2a-96bc-ba43b0153d57,6,"No, I did not.","Yes, I know it's possible to manipulate both audio and video.",FALSE,FALSE
 1cebda0a-b69d-4a64-8409-2865acb9a9f0,6,No I did not,Yes,FALSE,TRUE
-1d8102d9-6a04-4f59-9234-02f1a8a2b40b,6,"I wasn't sure, but the speech did seem ""off"", yes.",Yes,UNCLEAR,TRUE
+1d8102d9-6a04-4f59-9234-02f1a8a2b40b,6,"I wasn't sure, but the speech did seem ""off"", yes.",Yes,FALSE,TRUE
 1db46bb7-92de-4918-80e5-727cd548598b,6,No,Yes,FALSE,TRUE
 1fae02f1-f996-4d62-8758-2dd0f584b60c,6,"It sounded a put mechanistic at timess, i thought maybe the ptich and cadance had been altered",yes,FALSE,TRUE
 22490c09-36ad-4c5e-97e5-24b2d074d889,6,I suspected. There was some artificial quality in the audio - as though it had been overprocessed in recording / production. It sounded not unlike a voice through Autotune. Also there was a small fault in the audio early on.,Yes.,TRUE,TRUE
@@ -426,7 +426,7 @@ fb8d3a93-86a9-4ce2-b0d7-352b2eaa6703,5,I had no clue! I couldnt tell the differe
 2860e801-ce32-442e-bcf8-97716b2e7cbf,6,"Yes, the voice sounded strange.","No, I didn't know this was possible.",TRUE,FALSE
 2bb7a1c6-82e0-44ea-a1ec-1db344081a10,6,I realised that it was a computerised voice but not that the comments were made up,yes,TRUE,TRUE
 2c7ed668-486f-4c42-b54a-0398ff3ced11,6,No i didn't notice that.,Yes.,FALSE,TRUE
-2d4e1896-451e-4989-9443-20f601d5ff6f,6,The audio didn't sound like a human but didnt know why,No,UNCLEAR,FALSE
+2d4e1896-451e-4989-9443-20f601d5ff6f,6,The audio didn't sound like a human but didnt know why,No,FALSE,FALSE
 2f2db74b-3d09-4e83-906c-aa5a495c6049,6,"I knew there was something off about the voice, like it had a normal sounding person talking but parts of it would sound very computer generated.",I knew that video could be deep faked and I suppose in some essence I knew that the same thing could happen to voice but I never really gave it a second thought.,TRUE,TRUE
 2f6bccd6-91cb-4d8a-8e84-f79dd4e9aa1e,6,"Didn't notice, was probably too concentrated on the subtitles to look at his face too much",Yes,FALSE,TRUE
 364f91ea-b13e-4a0f-8b71-830522033032,6,yes,no,TRUE,FALSE
@@ -434,7 +434,7 @@ fb8d3a93-86a9-4ce2-b0d7-352b2eaa6703,5,I had no clue! I couldnt tell the differe
 369e3516-cac9-4edf-ba58-4efe714cb369,6,no,no,FALSE,FALSE
 39cd5c04-4874-4a7e-9b0b-90aa2770e22f,6,"I realized the voice was computer generated somehow. It didn't flow the way human speech flows, although it sounded very realistic. It makes sense that it was chopped up audio.","Yes, I knew.",TRUE,TRUE
 3b2a08ea-f8e3-4919-bd84-ce8c5993942a,6,I was unsure. The audio sounded robotic but I wasnt sure.,"No just pictures/videos, not audio. I assumed people just spoke and used a device to change the sound slightly.",TRUE,FALSE
-3dfa7953-e051-424f-adfd-c416bfb1284a,6,"I honestly thought it was fake so that this would generate feelings, reactions, thoughts etc","Everything, or at least most things can be deep faked these days!",UNCLEAR,UNCLEAR
+3dfa7953-e051-424f-adfd-c416bfb1284a,6,"I honestly thought it was fake so that this would generate feelings, reactions, thoughts etc","Everything, or at least most things can be deep faked these days!",FALSE,FALSE
 4323c0e5-5fb5-436f-b23f-625fbef33855,6,"No, there was something unusual in the voice but I believed that may have been an issue with recording or reading form a script.",I was not aware of the term 'deepfaked'.,FALSE,FALSE
 464a7237-8be0-41fa-8b56-25370cd51d57,6,No,No,FALSE,FALSE
 48c14976-cec0-4a77-b618-99bcdc0a4aaf,6,No i didn't,No i didn't,FALSE,FALSE
@@ -456,7 +456,7 @@ fb8d3a93-86a9-4ce2-b0d7-352b2eaa6703,5,I had no clue! I couldnt tell the differe
 78f84564-4a66-45fa-9bd7-33ec91fc339a,6,"no, but why would anyone create a video that bland?",yes,FALSE,TRUE
 807ff71f-dc31-4d8d-a1ab-188b470126a0,6,No I did not realise the video/audio was deepfaked at all.,No. I was aware the video could be deepfaked by not audio.,FALSE,FALSE
 841c315b-30ae-42ae-b1b9-e38ccf9271e2,6,Yes because the voice sounded slightly robotic in terms of tone and pauses,Yes but hadn't listened to any,TRUE,TRUE
-8636a283-81f9-4b24-bcc0-a2b04ad9a341,6,I had a feeling that it had been made up for the experiment.,Yes,UNCLEAR,TRUE
+8636a283-81f9-4b24-bcc0-a2b04ad9a341,6,I had a feeling that it had been made up for the experiment.,Yes,FALSE,TRUE
 87cf76cb-69f2-48e3-843d-78545caf2f4e,6,no i did not know,no i did not know,FALSE,FALSE
 88fe36f9-a18a-4bc8-990c-0d34efddea6a,6,"No, I had no idea.","Yes, I've heard of it before, but never experienced it outside of studies that I can think of.",FALSE,TRUE
 8bb53a56-f48d-4453-aebf-04fba319dadd,6,no I didn't,Yes I knew the technology existed,FALSE,TRUE
@@ -474,10 +474,10 @@ a7925712-fab9-4ace-aab6-35f67b66ecea,6,"No, I'm surprised it was a fake and didn
 ac43d925-434b-4860-97e1-a8966af87510,6,"No, I did not realise that!","I think that I was aware, but do not know if I have encountered one before",FALSE,TRUE
 af87c022-ece6-4be3-ba86-67433f2a0f62,6,Didn't realise that it was deepfaked at all. It did not sound like an AI generated it and was really well done.,"Yes, I have seen instances of it before,  it is getting too easy these days it seems, along with video that can be quite convincing at times.",FALSE,TRUE
 af913378-9468-4563-8ab7-b85f6c9d07fc,6,"I thought the voice sounded a bit robotic so thought it probably was fake, that along with the fact it was played over an image of Chris rather then a video of him actually saying it led me to conclude it was fake.",no,TRUE,FALSE
-afd2d204-fb8b-4f64-9fcf-bc98b2ec6253,6,"I had a small feeling that the voice was somebody different, also some of the answers seemed very 'scripted', I didn't really know it was computer generated though.","Well I've seen some text to speech programs some are good but most seem very robotic in their speech, this one I couldn't really tell that  it was 'deepfaked'.",FALSE,UNCLEAR
-b1433e2a-9b43-4a02-aa0b-a92885cfb519,6,I assumed that the picture of the person my not have been chris because it was not a video. there was no movment to prove if it was or wasn't chris.,yes. look up Corridor crew on youtube,UNCLEAR,TRUE
+afd2d204-fb8b-4f64-9fcf-bc98b2ec6253,6,"I had a small feeling that the voice was somebody different, also some of the answers seemed very 'scripted', I didn't really know it was computer generated though.","Well I've seen some text to speech programs some are good but most seem very robotic in their speech, this one I couldn't really tell that  it was 'deepfaked'.",FALSE,FALSE
+b1433e2a-9b43-4a02-aa0b-a92885cfb519,6,I assumed that the picture of the person my not have been chris because it was not a video. there was no movment to prove if it was or wasn't chris.,yes. look up Corridor crew on youtube,FALSE,TRUE
 b160aff6-ac0a-4cbe-bf05-20ecb04e0214,6,"I don't understand what deepfaked is
-His accent did sound weird, and the grammar/sentence structure didn't follow normal patterns",I know you can manipulate audio to make it seem like someone is saying something but I've never accounted such a long video before,FALSE,UNCLEAR
+His accent did sound weird, and the grammar/sentence structure didn't follow normal patterns",I know you can manipulate audio to make it seem like someone is saying something but I've never accounted such a long video before,FALSE,FALSE
 b1c2642f-5e03-4ddf-9178-9e3bc677f66e,6,No,Yes,FALSE,TRUE
 b327a7f2-e74b-4232-90d1-21aa77406488,6,yes,yes,TRUE,TRUE
 b43b4bb0-9c07-49d5-9119-387f55e66a7d,6,No,Yes,FALSE,TRUE
@@ -518,7 +518,7 @@ ea7b4ffb-d4db-47de-ba66-c1a4bfdb7193,6,Yes,No,TRUE,FALSE
 ec401810-37fb-40c9-be78-bbc01b720a69,6,"No, I genuinely didn't realise",yes,FALSE,TRUE
 efcbede2-3d36-4167-a9df-1ecf934c3288,6,no i did not realise it had been deepfaked,i didnt know this,FALSE,FALSE
 f1b58526-994a-49bd-a737-2d2ac7967040,6,"Though a synth had been used to neutralize or remove character from the script, that is all",Yes but not to any standard that is any higher than that of analogue days.,TRUE,TRUE
-f443bd8a-73f3-43fe-9693-d3da94512389,6,"There  has  been  little published by academics.2 To my knowledge, there is nothing yet ... Our collective epistemic practices are highly reliant on testimony, the transmission of ... For an especially entertaining example, you can watch “Barack Obama” insult ... Following media attention, Reddit banned the deepfake community.","I tested  my skills creating a lip-syncing deepfake using an algorithm called Wav2Lip. It only takes a bit of time and effort and you can make your own, too.  ... Filed under:  ... lip-sync deepfakes in no time at all, I knew I had to try it for myself. ... All you need is a video of your subject and an audio  clip you want .",UNCLEAR,TRUE
+f443bd8a-73f3-43fe-9693-d3da94512389,6,"There  has  been  little published by academics.2 To my knowledge, there is nothing yet ... Our collective epistemic practices are highly reliant on testimony, the transmission of ... For an especially entertaining example, you can watch “Barack Obama” insult ... Following media attention, Reddit banned the deepfake community.","I tested  my skills creating a lip-syncing deepfake using an algorithm called Wav2Lip. It only takes a bit of time and effort and you can make your own, too.  ... Filed under:  ... lip-sync deepfakes in no time at all, I knew I had to try it for myself. ... All you need is a video of your subject and an audio  clip you want .",FALSE,TRUE
 f82c261e-01fb-490b-adda-20d2d87553c6,6,I did not realise it had been deepfaked.,I was aware that this could happen.,FALSE,TRUE
 f97fef07-23d6-4225-8516-8bc41747b64d,6,No. I thought his delivery was off and he sounded a bit robotic but did not think too much of it.,"Yes, I have seen clips of politicians, musicians, actors etc. with deepfaked audio (and video).",FALSE,TRUE
 fa2ffcfe-2944-46f3-930a-f5cbc2f930d8,6,Yes I thought the end of most sentances sounded computer generated,no,TRUE,FALSE
@@ -547,7 +547,7 @@ ff9b201a-359c-498d-a7b3-30a22785d9a8,6,I didnt realise it was deepfaked but I di
 32cb6390-0233-464b-92d1-f64b06936990,6,"No, at all. I did not realize that it had been deep faked","No, I did not know.",FALSE,FALSE
 3423c371-87ab-4cb2-8284-fd98f2c82235,6,"No I had no idea, that's kind of scary, it sounded pretty natural to me.","Not really, I had heard about deep fakes with people's faces but not this.",FALSE,TRUE
 344308b6-7baf-4fa6-9c0b-16a87645c444,6,No I did not,Yes I have heard of this being done,FALSE,TRUE
-3731b5f8-e7ea-4a75-9966-cbdfc34e48a8,6,It didn't seem to flow like a normal conversation,Yes,UNCLEAR,TRUE
+3731b5f8-e7ea-4a75-9966-cbdfc34e48a8,6,It didn't seem to flow like a normal conversation,Yes,FALSE,TRUE
 39007dc4-8efb-4eca-ac3b-6f2bec9b8549,6,No,Yes,FALSE,TRUE
 3a9e6789-7edb-4f60-8535-1c0dc3b46fec,6,I knew it was fake,no,TRUE,FALSE
 3bde87e6-948d-4e71-915b-2ebcdaa342b6,6,"No, I did not.",Yes.,FALSE,TRUE
@@ -556,16 +556,16 @@ ff9b201a-359c-498d-a7b3-30a22785d9a8,6,I didnt realise it was deepfaked but I di
 423c9faf-8c92-4870-9ba5-4ee334cde1ab,6,No I had no idea.,No.,FALSE,FALSE
 46619ef5-d3a4-4bac-b1b1-93d688bdff31,6,yes i had as chris wasnt moving his lips which suggested he wasnt in the making of the video,yes possibly i knew there was a slight way of doing it,TRUE,TRUE
 467b7a6b-e9be-4e60-8df0-64d9d5620252,6,No because it was just an audio recording.,"No,",FALSE,FALSE
-46960b9e-5c2e-480e-a5c7-8843ca6c3b56,6,"No, I didn;t",To a certain extent.,FALSE,UNCLEAR
+46960b9e-5c2e-480e-a5c7-8843ca6c3b56,6,"No, I didn;t",To a certain extent.,FALSE,FALSE
 47f4e139-b7dc-45ec-92d9-1aaab7fa077f,6,no,no,FALSE,FALSE
 49ae88b5-fab7-4e9f-a66c-fb6824c9d9ec,6,While I felt his tone was very monotone the thought of the audio being deepfaked never came to mind .,I was not aware that the audio clips were deepfaked .,FALSE,FALSE
 4fa975c4-9b18-4ee9-b2ae-0411ab8622e0,6,"No i did not realise, i thought it was a real person doing a voiceover but thought it was odd that the video was a still picture rather than video of someone talking",I wasnt aware that was a thing,FALSE,FALSE
 549ab1e3-5af7-42ec-b4af-7dd853a77580,6,"No, I did not realize it was a deepfake.","Yes, I knew about deep fakes before the study",FALSE,TRUE
 54c5aac5-cf94-41f6-b55c-84ad5f7a2c95,6,"No, I did not.","No, I did not.",FALSE,FALSE
-56b70673-cc87-4a19-a50b-f1ffb28a33be,6,I had a feeling that the video was put on and that it was faked but I still disliked Chris due to what he said. It was the part about the heavily pregnant woman that made me think that this video must have been scripted as I dont think I have ever met someone who would leave a woman in that condition to stand on the bus.,No I didnt at all.,UNCLEAR,FALSE
-5755bbae-9655-49d8-bb5f-903e46632be3,6,"No. I had no idea that this was a 'deepfaked' recording, it appeared to me as if it was genuine speech.","I knew that audio clips could be altered, but I wasn't aware they could be faked as accurately as this one. Usually there is some sort of giveaway such as the tone not sounding natural but in this case there wasn't.",FALSE,UNCLEAR
+56b70673-cc87-4a19-a50b-f1ffb28a33be,6,I had a feeling that the video was put on and that it was faked but I still disliked Chris due to what he said. It was the part about the heavily pregnant woman that made me think that this video must have been scripted as I dont think I have ever met someone who would leave a woman in that condition to stand on the bus.,No I didnt at all.,FALSE,FALSE
+5755bbae-9655-49d8-bb5f-903e46632be3,6,"No. I had no idea that this was a 'deepfaked' recording, it appeared to me as if it was genuine speech.","I knew that audio clips could be altered, but I wasn't aware they could be faked as accurately as this one. Usually there is some sort of giveaway such as the tone not sounding natural but in this case there wasn't.",FALSE,FALSE
 5bf65b69-a864-4430-97be-94f733828dd2,6,no i didn't realise at all,no none what so ever,FALSE,FALSE
-6782ff6d-1dd8-4bc6-a9f1-9d75fd73d401,6,I thought it might have been made up for the purpose of the experiment but id I was listening to it in real life I probably wouldn't have realised,no,UNCLEAR,FALSE
+6782ff6d-1dd8-4bc6-a9f1-9d75fd73d401,6,I thought it might have been made up for the purpose of the experiment but id I was listening to it in real life I probably wouldn't have realised,no,FALSE,FALSE
 678af765-7d5d-489b-8b4c-a3a480e6acfb,6,No,No - what a strange thing,FALSE,FALSE
 68744b64-1456-4149-8958-fa6dce8c70f3,6,No,No - I didn't realise that this was possible!,FALSE,FALSE
 687e9ca8-4fb7-4062-8a8e-fe6aa0996eb3,6,"I thought the audio was genuine, recorded in a room which was full of echoes.",No.,FALSE,FALSE
@@ -577,7 +577,7 @@ ff9b201a-359c-498d-a7b3-30a22785d9a8,6,I didnt realise it was deepfaked but I di
 7be45052-3fc9-4101-89a2-0919ae556e50,6,"No i did not. I did find it hard to place his accent though, which makes sense now.","I have heard about deepfakes, so yes I knew audio could be deepfaked",FALSE,TRUE
 7cac5662-6d61-4bb7-88c7-4c61259278cb,6,no i didnt know it was deepfaked,i didnt know audio clips can be deepfaked,FALSE,FALSE
 7ff2ab2a-7966-49be-af47-ab0c054817f6,6,No,Yes,FALSE,TRUE
-806113c5-5ab3-4f2f-952a-0ff54e874ace,6,No,dunno,FALSE,UNCLEAR
+806113c5-5ab3-4f2f-952a-0ff54e874ace,6,No,dunno,FALSE,FALSE
 809ec560-f8d6-4d35-aae2-63301dc0bca9,6,no,yes,FALSE,TRUE
 8130cbb7-94e9-47e9-bd2e-0a353e85c132,6,no I did not,No I did not,FALSE,FALSE
 82d26872-2d2f-4764-9564-9177ec52b7d6,6,No,Yes,FALSE,TRUE
@@ -594,7 +594,7 @@ a6cb48b9-8f34-4551-b544-f556f19ab464,6,I did wonder - because it seemed too good
 a7ddf701-1ad7-4584-a6ea-0b2d3aa250fa,6,No,No,FALSE,FALSE
 a92eace8-f16a-4868-ac3e-b7d4ac5de6fd,6,no I did not,yes I did,FALSE,TRUE
 abe8e882-f88a-408d-9c2d-23f89dc6b899,6,no I did not,yes I did,FALSE,TRUE
-ad194d75-fd8a-4a2d-963a-b9eaae14ae21,6,"Well, I didn't think it was real.I realised that ""Chris"" was saying things for the purpose of the study",I had never heard of deepfaked before. Its a new expression to me,UNCLEAR,FALSE
+ad194d75-fd8a-4a2d-963a-b9eaae14ae21,6,"Well, I didn't think it was real.I realised that ""Chris"" was saying things for the purpose of the study",I had never heard of deepfaked before. Its a new expression to me,FALSE,FALSE
 ad5644c6-a242-4bf8-b40d-cfc4a05ec15a,6,yes,no,TRUE,FALSE
 af2c7724-155f-477f-a157-3521e0ae3e1f,6,I wasn't certain but yes I did think he sounded very stilted and like a computer-generated voice instead of a real person's voice,no I didn't,TRUE,FALSE
 b14c007c-ddd1-4073-9167-eeca8fd993e7,6,No,No,FALSE,FALSE
@@ -603,14 +603,14 @@ b49c8b9b-4a25-47ea-b97f-64c15fad8f32,6,"No, I had no idea it was a deep fake",I 
 b512deea-4b1a-44cb-a148-09bd24b0b59f,6,"No, I didn't.","No, I have never heard of it before.",FALSE,FALSE
 b5ab5d1d-5c6f-4621-95bd-976c3f264d5b,6,"No, it sounded quite realistic to me",I knew that audio clips could be programmed but I didn't know this was the correct term for it,FALSE,TRUE
 b6c64d90-1bf8-4807-971e-b763f3726c72,6,NOPE,i knew that surveys could not give u information upfront but not deepfaked vids but u learn everyday,FALSE,FALSE
-bef70e47-b770-4648-84cc-86d2427fc29c,6,"Possibly, i did wonder if it was real","No, i thought it would be real",UNCLEAR,FALSE
+bef70e47-b770-4648-84cc-86d2427fc29c,6,"Possibly, i did wonder if it was real","No, i thought it would be real",FALSE,FALSE
 c4f0299e-a514-4f1e-8c65-dd4a9e24eae3,6,No,No,FALSE,FALSE
 c6018b44-1873-4fdb-917c-465300bb335c,6,No,Yes,FALSE,TRUE
 c96bc549-4ceb-43cd-9b94-7a6cab49a81b,6,"When listening to the audio, I did not think that the audio was deepfaked.","Before taking part in this study, I was aware the audio clips could be deepfaked.",FALSE,TRUE
-cbb15046-9c7d-4b09-8e4f-19e17940dccf,6,"I thought perhaps it wasn't a real clip. The information he told us about himself was very specific and wouldn't be an interesting channel to subscribe to, but the things he said would be good for memory recall questions.",Yes.,UNCLEAR,TRUE
+cbb15046-9c7d-4b09-8e4f-19e17940dccf,6,"I thought perhaps it wasn't a real clip. The information he told us about himself was very specific and wouldn't be an interesting channel to subscribe to, but the things he said would be good for memory recall questions.",Yes.,FALSE,TRUE
 cfc49502-e7a5-4084-8949-300d5616494d,6,no,no,FALSE,FALSE
 d16d4c07-9f5e-4d5c-8c2b-1c91a811958e,6,"Not at all, it sounded real.",No I didn't.,FALSE,FALSE
-d2f93304-bf68-40c1-a5c8-fe6334167ae8,6,"yes i realized it was not a real utube clip, but a set up situation",yes for research reasons i knew a video would be fake,UNCLEAR,UNCLEAR
+d2f93304-bf68-40c1-a5c8-fe6334167ae8,6,"yes i realized it was not a real utube clip, but a set up situation",yes for research reasons i knew a video would be fake,FALSE,FALSE
 d555c873-c1c7-4d42-98c0-d035bfe4e474,6,"No I did not realise, I thought for the purpose of the study we were to take as given that Chris was a youtuber and that was a video by him.",Yes,FALSE,TRUE
 d8f9be17-dc1e-4988-bd42-c1b8bf53e088,6,"I didn't realize it had been deepfaked, but I thought it was probably not a genuine youtube video (like I thought that probably it was one of the researchers). I also had a little trouble placing the accent, which I am normally pretty good at, but I'm not sure if that's because of the way it was faked or because I haven't encountered that particular accent very often.",Yep,FALSE,TRUE
 d93a604c-4253-4895-af89-75a06c004f43,6,Not at all and that's a little scary.,"Yes, but not to this extent.",FALSE,TRUE
