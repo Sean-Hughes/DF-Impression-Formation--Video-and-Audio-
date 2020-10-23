@@ -25,6 +25,7 @@ library(tidyverse)
 library(knitr)
 library(kableExtra)
 library(brms)
+library(parallel)
 library(tidybayes)
 library(bayestestR)
 library(sjPlot)
@@ -33,7 +34,9 @@ library(rsample)
 library(broom)
 library(purrr)
 
-options(knitr.kable.NA = "-")
+options(knitr.kable.NA = " - ",
+        bootstrap_options = c("striped", "hover", "condensed"), 
+        full_width = FALSE)
 
 # set seed for bootstrapping reproducibility
 set.seed(42)
@@ -48,7 +51,7 @@ dir.create("models")
 ```{r}
 
 # full data
-data_processed <- read_csv("../data/processed/4_data_participant_level_with_hand_scoring.csv") %>%
+data_processed <- read.csv("../data/processed/4_data_participant_level_with_hand_scoring.csv") %>%
   # set factor levels for t test comparisons
   mutate(source_valence = fct_relevel(source_valence,
                                       "negative",
@@ -74,7 +77,7 @@ data_processed %>%
             excluded_percent = (excluded_n / n) *100) %>%
   mutate_if(is.numeric, round, digits = 1) %>%
   kable(align = "c") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+  kable_styling()
 
 data_after_exclusions %>%
   group_by(experiment) %>%
@@ -83,13 +86,13 @@ data_after_exclusions %>%
             age_sd = sd(age, na.rm = TRUE)) %>%
   mutate_if(is.numeric, round, digits = 1) %>%
   kable(align = "c") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+  kable_styling()
 
 data_after_exclusions %>%
   count(experiment, gender) %>%
   spread(gender, n) %>%
   kable(knitr.kable.NA = "/", align = "c") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+  kable_styling()
 
 ```
 
@@ -106,12 +109,13 @@ fit_selfreport <-
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
-      control = list(adapt_delta = 0.95),
+      control = list(adapt_delta = 0.99),  # to avoid divergent transitions
       chains  = 4,
       cores   = parallel::detectCores())
 
 # # inspect convergence
 # fit_selfreport
+# plot(fit_selfreport, ask = FALSE)
 
 #plot_model(fit_selfreport)
 plot_model(fit_selfreport, type = "pred", terms = c("source_valence", "experiment_condition"))
@@ -187,7 +191,7 @@ estimates_sr %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
   mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1) %>%
   kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+  kable_styling()
 
 ```
 
@@ -206,12 +210,13 @@ fit_implicit <-
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
-      control = list(adapt_delta = 0.95),
+      control = list(adapt_delta = 0.99),  # to avoid divergent transitions
       chains  = 4,
       cores   = parallel::detectCores())
 
 # # inspect convergence
 # fit_implicit
+# plot(fit_implicit, ask = FALSE)
 
 #plot_model(fit_implicit)
 plot_model(fit_implicit, type = "pred", terms = c("source_valence", "experiment_condition"))
@@ -287,7 +292,7 @@ estimates_imp %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
   mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1) %>%
   kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+  kable_styling()
 
 ```
 
@@ -306,12 +311,13 @@ fit_intentions <-
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
-      control = list(adapt_delta = 0.95),
+      control = list(adapt_delta = 0.99),  # to avoid divergent transitions
       chains  = 4,
       cores   = parallel::detectCores())
 
 # # inspect convergence
 # fit_intentions
+# plot(fit_intentions, ask = FALSE)
 
 #plot_model(fit_intentions)
 plot_model(fit_intentions, type = "pred", terms = c("source_valence", "experiment_condition"))
@@ -387,7 +393,7 @@ estimates_intentions %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
   mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1) %>%
   kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+  kable_styling()
 
 ```
 
@@ -399,29 +405,39 @@ estimates_intentions %>%
 
 ## Inter-rater relibility
 
-deepfake_detected:
-
 ```{r}
 
 data_after_exclusions %>%
   count(deepfake_detected,
         deepfake_detected_rater_1,
-        deepfake_detected_rater_2)
+        deepfake_detected_rater_2) %>%
+  kable() %>%
+  kable_styling()
+
+data_after_exclusions %>%
+  summarize(percent_agreement = round(mean(deepfake_detected_rater_1 == deepfake_detected_rater_2, na.rm = TRUE)*100, 1)) %>%
+  kable() %>%
+  kable_styling()
 
 data_after_exclusions %>%
   select(deepfake_detected_rater_1,                                   
          deepfake_detected_rater_2) %>%
-  cohen.kappa(.)
-
-data_after_exclusions %>%
-  summarize(perc_agreement = mean(deepfake_detected_rater_1 == deepfake_detected_rater_2, na.rm = TRUE))
+  as.data.frame() %>%  # kappa function won't take tibbles
+  psych::cohen.kappa(.)
 
 data_after_exclusions %>%
   count(experiment_condition,
         deepfake_detected) %>%
-  drop_na()
+  drop_na() %>%
+  kable() %>%
+  kable_styling()
 
 ```
+
+Interpreation of Kappa (Altman 1999, Landis JR, 1977):
+
+- 0.61 - 0.80	Substantial
+- 0.81 - 1.00	Almost perfect
 
 ## Can people accurately detect deepfakes?
 
@@ -433,7 +449,7 @@ aka informedness aka "the probability of an informed decision (as opposed to a r
 
 if(file.exists("models/fit_classification_bootstraps.rds")){
 
-  fit_classification_bootstraps <- read_rds("fit_classification_bootstraps.rds")
+  fit_classification_bootstraps <- read_rds("models/fit_classification_bootstraps.rds")
 
 } else {
 
@@ -506,7 +522,7 @@ fit_classification_bootstraps %>%
             .groups = "drop") %>%
   mutate_if(is.numeric, round, digits = 2) %>%
   kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+  kable_styling()
 
 ```
 
@@ -532,19 +548,20 @@ fit_selfreport_deepfaked_detected <-
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
-      control = list(adapt_delta = 0.95),
+      control = list(adapt_delta = 0.99),  # to avoid divergent transitions
       chains  = 4,
       cores   = parallel::detectCores())
 
 # # inspect convergence
 # fit_selfreport_deepfaked_detected
+# plot(fit_selfreport_deepfaked_detected, ask = FALSE)
 
 #plot_model(fit_selfreport_deepfaked_detected)
 plot_model(fit_selfreport_deepfaked_detected, type = "pred", terms = "source_valence")
 
 draws_sr_deepfaked_detected <-
   select(spread_draws(fit_selfreport_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
-  rename(effect_deepfake_detected = b_source_valencepositive)
+  rename(effect_deepfaked_detected = b_source_valencepositive)
 
 estimates_sr_deepfaked_detected <-
   map_estimate(draws_sr_deepfaked_detected) %>%
@@ -556,6 +573,11 @@ estimates_sr_deepfaked_detected <-
                      pomp_CI_95_upper = ifelse(Parameter == "percent_comparison", NA, (((CI_95_upper+3)/6) - .50)*100)) %>%
               as_tibble(),
             by = "Parameter") %>%
+  full_join(bayestestR::hdi(draws_sr_deepfaked_detected, ci = .90) %>%
+              as_tibble() %>%
+              rename(CI_90_lower = CI_low,
+                     CI_90_upper = CI_high),
+            by = "Parameter") %>%
   full_join(draws_sr_deepfaked_detected %>%
               gather(Parameter, value) %>%
               group_by(Parameter) %>%
@@ -564,15 +586,29 @@ estimates_sr_deepfaked_detected <-
               ungroup() %>%
               select(Parameter, p),
             by = "Parameter") %>%
-  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p) %>%
-  mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper"), round, digits = 2) %>%
-  mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1)
+  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, 
+         CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p) 
 
-estimates_sr_deepfaked_detected %>%
+noninferiority_sr_deepfaked_detected <-
+  ifelse(estimates_sr %>% 
+           filter(Parameter == "effect_genuine") %>% 
+           pull(CI_95_lower) <
+           estimates_sr_deepfaked_detected %>% 
+           filter(Parameter == "effect_deepfaked_detected") %>% 
+           pull(CI_90_lower),
+         "Deepfakes were found to be non-inferior to genuine content",
+         "Deepfakes were not found to be non-inferior to genuine content")
+
+bind_rows(filter(estimates_sr, Parameter %in% c("effect_deepfaked")),
+          estimates_sr_deepfaked_detected) %>%
+  mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
+  mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1) %>%
   kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+  kable_styling()
 
 ```
+
+`r noninferiority_sr_deepfaked_detected`
 
 ## Implicit
 
@@ -585,19 +621,20 @@ fit_implicit_deepfaked_detected <-
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
-      control = list(adapt_delta = 0.95),
+      control = list(adapt_delta = 0.99),  # to avoid divergent transitions
       chains  = 4,
       cores   = parallel::detectCores())
 
 # # inspect convergence
 # fit_implicit_deepfaked_detected
+# plot(fit_implicit_deepfaked_detected, ask = FALSE)
 
 #plot_model(fit_implicit_deepfaked_detected)
 plot_model(fit_implicit_deepfaked_detected, type = "pred", terms = "source_valence")
 
 draws_imp_deepfaked_detected <-
   select(spread_draws(fit_implicit_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
-  rename(effect_deepfake_detected = b_source_valencepositive)
+  rename(effect_deepfaked_detected = b_source_valencepositive)
 
 estimates_imp_deepfaked_detected <-
   map_estimate(draws_imp_deepfaked_detected) %>%
@@ -609,6 +646,11 @@ estimates_imp_deepfaked_detected <-
                      pomp_CI_95_upper = ifelse(Parameter == "percent_comparison", NA, (((CI_95_upper+3)/6) - .50)*100)) %>%
               as_tibble(),
             by = "Parameter") %>%
+  full_join(bayestestR::hdi(draws_imp_deepfaked_detected, ci = .90) %>%
+              as_tibble() %>%
+              rename(CI_90_lower = CI_low,
+                     CI_90_upper = CI_high),
+            by = "Parameter") %>%
   full_join(draws_imp_deepfaked_detected %>%
               gather(Parameter, value) %>%
               group_by(Parameter) %>%
@@ -617,15 +659,29 @@ estimates_imp_deepfaked_detected <-
               ungroup() %>%
               select(Parameter, p),
             by = "Parameter") %>%
-  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p) %>%
-  mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper"), round, digits = 2) %>%
-  mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1)
+  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, 
+         CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p) 
 
-estimates_imp_deepfaked_detected %>%
+noninferiority_imp_deepfaked_detected <-
+  ifelse(estimates_imp %>% 
+           filter(Parameter == "effect_genuine") %>% 
+           pull(CI_95_lower) <
+           estimates_imp_deepfaked_detected %>% 
+           filter(Parameter == "effect_deepfaked_detected") %>% 
+           pull(CI_90_lower),
+         "Deepfakes were found to be non-inferior to genuine content",
+         "Deepfakes were not found to be non-inferior to genuine content")
+
+bind_rows(filter(estimates_imp, Parameter %in% c("effect_deepfaked")),
+          estimates_imp_deepfaked_detected) %>%
+  mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
+  mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1) %>%
   kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+  kable_styling()
 
 ```
+
+`r noninferiority_imp_deepfaked_detected`
 
 ## Behavioural intentions
 
@@ -638,19 +694,20 @@ fit_intentions_deepfaked_detected <-
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
-      control = list(adapt_delta = 0.95),
+      control = list(adapt_delta = 0.99),  # to avoid divergent transitions
       chains  = 4,
       cores   = parallel::detectCores())
 
 # # inspect convergence
 # fit_intentions_deepfaked_detected
+# plot(fit_intentions_deepfaked_detected, ask = FALSE)
 
 #plot_model(fit_intentions_deepfaked_detected)
 plot_model(fit_intentions_deepfaked_detected, type = "pred", terms = "source_valence")
 
 draws_intentions_deepfaked_detected <-
   select(spread_draws(fit_intentions_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
-  rename(effect_deepfake_detected = b_source_valencepositive)
+  rename(effect_deepfaked_detected = b_source_valencepositive)
 
 estimates_intentions_deepfaked_detected <-
   map_estimate(draws_intentions_deepfaked_detected) %>%
@@ -662,6 +719,11 @@ estimates_intentions_deepfaked_detected <-
                      pomp_CI_95_upper = ifelse(Parameter == "percent_comparison", NA, (((CI_95_upper+3)/6) - .50)*100)) %>%
               as_tibble(),
             by = "Parameter") %>%
+  full_join(bayestestR::hdi(draws_intentions_deepfaked_detected, ci = .90) %>%
+              as_tibble() %>%
+              rename(CI_90_lower = CI_low,
+                     CI_90_upper = CI_high),
+            by = "Parameter") %>%
   full_join(draws_intentions_deepfaked_detected %>%
               gather(Parameter, value) %>%
               group_by(Parameter) %>%
@@ -670,12 +732,28 @@ estimates_intentions_deepfaked_detected <-
               ungroup() %>%
               select(Parameter, p),
             by = "Parameter") %>%
-  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p) %>%
-  mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper"), round, digits = 2) %>%
-  mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1)
+  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, 
+         CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p)
 
-estimates_intentions_deepfaked_detected %>%
+noninferiority_intentions_deepfaked_detected <-
+  ifelse(estimates_intentions %>% 
+           filter(Parameter == "effect_genuine") %>% 
+           pull(CI_95_lower) <
+           estimates_intentions_deepfaked_detected %>% 
+           filter(Parameter == "effect_deepfaked_detected") %>% 
+           pull(CI_90_lower),
+         "Deepfakes were found to be non-inferior to genuine content",
+         "Deepfakes were not found to be non-inferior to genuine content")
+
+bind_rows(filter(estimates_intentions, Parameter %in% c("effect_deepfaked")),
+          estimates_intentions_deepfaked_detected) %>%
+  mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
+  mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1) %>%
   kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+  kable_styling()
 
 ```
+
+`r noninferiority_intentions_deepfaked_detected`
+
+

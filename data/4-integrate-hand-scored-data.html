@@ -1693,108 +1693,109 @@ div.tocify {
 </div>
 <div id="get-data-and-join" class="section level1">
 <h1>Get data and join</h1>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="co"># processed data</span></span>
-<span id="cb2-2"><a href="#cb2-2"></a>data_participant_level &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;processed/2.2_data_participant_level.csv&quot;</span>)</span>
-<span id="cb2-3"><a href="#cb2-3"></a></span>
-<span id="cb2-4"><a href="#cb2-4"></a><span class="co"># hand scored data</span></span>
-<span id="cb2-5"><a href="#cb2-5"></a>data_hand_scored_rater_<span class="dv">1</span> &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;processed/3_data_hand_scored_rater_1.csv&quot;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb2-6"><a href="#cb2-6"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(subject, </span>
-<span id="cb2-7"><a href="#cb2-7"></a>                deepfake_detected_rater_<span class="dv">1</span>, </span>
-<span id="cb2-8"><a href="#cb2-8"></a>                deepfake_concept_check_rater_<span class="dv">1</span>)</span>
-<span id="cb2-9"><a href="#cb2-9"></a></span>
-<span id="cb2-10"><a href="#cb2-10"></a>data_hand_scored_rater_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;processed/3_data_hand_scored_rater_2.csv&quot;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb2-11"><a href="#cb2-11"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(subject, </span>
-<span id="cb2-12"><a href="#cb2-12"></a>                deepfake_detected_rater_<span class="dv">2</span>, </span>
-<span id="cb2-13"><a href="#cb2-13"></a>                deepfake_concept_check_rater_<span class="dv">2</span>)</span>
-<span id="cb2-14"><a href="#cb2-14"></a></span>
-<span id="cb2-15"><a href="#cb2-15"></a><span class="co"># join</span></span>
-<span id="cb2-16"><a href="#cb2-16"></a>data_participant_level_with_hand_scoring &lt;-<span class="st"> </span>data_participant_level <span class="op">%&gt;%</span></span>
-<span id="cb2-17"><a href="#cb2-17"></a><span class="st">  </span><span class="kw">full_join</span>(data_hand_scored_rater_<span class="dv">1</span>, <span class="dt">by =</span> <span class="st">&quot;subject&quot;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb2-18"><a href="#cb2-18"></a><span class="st">  </span><span class="kw">full_join</span>(data_hand_scored_rater_<span class="dv">2</span>, <span class="dt">by =</span> <span class="st">&quot;subject&quot;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb2-19"><a href="#cb2-19"></a><span class="st">  </span></span>
-<span id="cb2-20"><a href="#cb2-20"></a><span class="st">  </span><span class="co"># create single variables between raters. </span></span>
-<span id="cb2-21"><a href="#cb2-21"></a><span class="st">  </span><span class="co"># emphasizes specificity by requiring both raters to score as TRUE, therefore providing a more severe test of learning even in those who were aware.</span></span>
-<span id="cb2-22"><a href="#cb2-22"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">deepfake_detected =</span> </span>
-<span id="cb2-23"><a href="#cb2-23"></a>           <span class="kw">case_when</span>(deepfake_detected_rater_<span class="dv">1</span> <span class="op">==</span><span class="st"> </span><span class="ot">TRUE</span> <span class="op">&amp;</span><span class="st"> </span>deepfake_detected_rater_<span class="dv">2</span> <span class="op">==</span><span class="st"> </span><span class="ot">TRUE</span> <span class="op">~</span><span class="st"> </span><span class="ot">TRUE</span>,</span>
-<span id="cb2-24"><a href="#cb2-24"></a>                     <span class="kw">is.na</span>(deepfake_detected_rater_<span class="dv">1</span>) <span class="op">&amp;</span><span class="st"> </span><span class="kw">is.na</span>(deepfake_detected_rater_<span class="dv">2</span>) <span class="op">~</span><span class="st"> </span><span class="ot">NA</span>,</span>
-<span id="cb2-25"><a href="#cb2-25"></a>                     <span class="ot">TRUE</span> <span class="op">~</span><span class="st"> </span><span class="ot">FALSE</span>),</span>
-<span id="cb2-26"><a href="#cb2-26"></a>         <span class="dt">deepfake_concept_check =</span> </span>
-<span id="cb2-27"><a href="#cb2-27"></a>           <span class="kw">case_when</span>(deepfake_concept_check_rater_<span class="dv">1</span> <span class="op">==</span><span class="st"> </span><span class="ot">TRUE</span> <span class="op">&amp;</span><span class="st"> </span>deepfake_concept_check_rater_<span class="dv">2</span> <span class="op">==</span><span class="st"> </span><span class="ot">TRUE</span> <span class="op">~</span><span class="st"> </span><span class="ot">TRUE</span>,</span>
-<span id="cb2-28"><a href="#cb2-28"></a>                     <span class="kw">is.na</span>(deepfake_concept_check_rater_<span class="dv">1</span>) <span class="op">&amp;</span><span class="st"> </span><span class="kw">is.na</span>(deepfake_concept_check_rater_<span class="dv">2</span>) <span class="op">~</span><span class="st"> </span><span class="ot">NA</span>,</span>
-<span id="cb2-29"><a href="#cb2-29"></a>                     <span class="ot">TRUE</span> <span class="op">~</span><span class="st"> </span><span class="ot">FALSE</span>)) <span class="op">%&gt;%</span></span>
-<span id="cb2-30"><a href="#cb2-30"></a><span class="st">  </span></span>
-<span id="cb2-31"><a href="#cb2-31"></a><span class="st">  </span><span class="co"># drop open ended text responses now that they&#39;ve been coded for analysis</span></span>
-<span id="cb2-32"><a href="#cb2-32"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
-<span id="cb2-33"><a href="#cb2-33"></a>         experiment, </span>
-<span id="cb2-34"><a href="#cb2-34"></a>         intervention_medium, </span>
-<span id="cb2-35"><a href="#cb2-35"></a>         source_valence, </span>
-<span id="cb2-36"><a href="#cb2-36"></a>         experiment_condition, </span>
-<span id="cb2-37"><a href="#cb2-37"></a>         exclude_subject,</span>
-<span id="cb2-38"><a href="#cb2-38"></a>         age, </span>
-<span id="cb2-39"><a href="#cb2-39"></a>         gender,</span>
-<span id="cb2-40"><a href="#cb2-40"></a>         IAT_D2, </span>
-<span id="cb2-41"><a href="#cb2-41"></a>         mean_self_reported_evaluation, </span>
-<span id="cb2-42"><a href="#cb2-42"></a>         mean_intentions,</span>
-<span id="cb2-43"><a href="#cb2-43"></a>         deepfake_detected,</span>
-<span id="cb2-44"><a href="#cb2-44"></a>         </span>
-<span id="cb2-45"><a href="#cb2-45"></a>         <span class="co"># exploratory measures</span></span>
-<span id="cb2-46"><a href="#cb2-46"></a>         diagnosticity, </span>
-<span id="cb2-47"><a href="#cb2-47"></a>         demand, </span>
-<span id="cb2-48"><a href="#cb2-48"></a>         reactance, </span>
-<span id="cb2-49"><a href="#cb2-49"></a>         hypothesis_awareness, </span>
-<span id="cb2-50"><a href="#cb2-50"></a>         influence_awareness, </span>
-<span id="cb2-51"><a href="#cb2-51"></a>         issues_with_study, </span>
-<span id="cb2-52"><a href="#cb2-52"></a>         aot_actively_openminded_thinking_pomp, </span>
-<span id="cb2-53"><a href="#cb2-53"></a>         bcti_belief_in_conspiracy_pomp, </span>
-<span id="cb2-54"><a href="#cb2-54"></a>         crt_analytic_thinking_pomp, </span>
-<span id="cb2-55"><a href="#cb2-55"></a>         ocq_overclaiming_pomp, </span>
-<span id="cb2-56"><a href="#cb2-56"></a>         ras_relgious_affliation_pomp, </span>
-<span id="cb2-57"><a href="#cb2-57"></a>         rei_rational_pomp, </span>
-<span id="cb2-58"><a href="#cb2-58"></a>         rei_experiential_pomp, </span>
-<span id="cb2-59"><a href="#cb2-59"></a>         me_fake_news_awareness_pomp, </span>
-<span id="cb2-60"><a href="#cb2-60"></a>         me_real_news_awareness_pomp, </span>
-<span id="cb2-61"><a href="#cb2-61"></a>         me_fake_news_accuracy_pomp, </span>
-<span id="cb2-62"><a href="#cb2-62"></a>         me_real_news_accuracy_pomp, </span>
-<span id="cb2-63"><a href="#cb2-63"></a>         me_fake_news_sharing_pomp, </span>
-<span id="cb2-64"><a href="#cb2-64"></a>         me_real_news_sharing_pomp,</span>
-<span id="cb2-65"><a href="#cb2-65"></a>         </span>
-<span id="cb2-66"><a href="#cb2-66"></a>         <span class="co"># recoded DVs - mentioned in preregistrations but not used in my (more appropriate) reworked analyses. </span></span>
-<span id="cb2-67"><a href="#cb2-67"></a>         IAT_D2_recoded_for_stimulus_identity,</span>
-<span id="cb2-68"><a href="#cb2-68"></a>         mean_self_reported_evaluation_recoded_for_stimulus_identity,</span>
-<span id="cb2-69"><a href="#cb2-69"></a>         mean_intentions_recoded_for_stimulus_identity,</span>
-<span id="cb2-70"><a href="#cb2-70"></a>         </span>
-<span id="cb2-71"><a href="#cb2-71"></a>         <span class="co"># individual raters</span></span>
-<span id="cb2-72"><a href="#cb2-72"></a>         deepfake_concept_check,</span>
-<span id="cb2-73"><a href="#cb2-73"></a>         deepfake_detected_rater_<span class="dv">1</span>,</span>
-<span id="cb2-74"><a href="#cb2-74"></a>         deepfake_detected_rater_<span class="dv">2</span>,</span>
-<span id="cb2-75"><a href="#cb2-75"></a>         deepfake_concept_check_rater_<span class="dv">1</span>,</span>
-<span id="cb2-76"><a href="#cb2-76"></a>         deepfake_concept_check_rater_<span class="dv">2</span>,</span>
-<span id="cb2-77"><a href="#cb2-77"></a>         </span>
-<span id="cb2-78"><a href="#cb2-78"></a>         <span class="co"># additional demographics</span></span>
-<span id="cb2-79"><a href="#cb2-79"></a>         gender_self_describe,</span>
-<span id="cb2-80"><a href="#cb2-80"></a>         ethnicity,</span>
-<span id="cb2-81"><a href="#cb2-81"></a>         ethnicity_self_describe,</span>
-<span id="cb2-82"><a href="#cb2-82"></a>         location,</span>
-<span id="cb2-83"><a href="#cb2-83"></a>         education, </span>
-<span id="cb2-84"><a href="#cb2-84"></a>         employment, </span>
-<span id="cb2-85"><a href="#cb2-85"></a>         education_recoded, </span>
-<span id="cb2-86"><a href="#cb2-86"></a>         income, </span>
-<span id="cb2-87"><a href="#cb2-87"></a>         income_recoded, </span>
-<span id="cb2-88"><a href="#cb2-88"></a>         political_ideology_identity, </span>
-<span id="cb2-89"><a href="#cb2-89"></a>         political_ideology_social_issues, </span>
-<span id="cb2-90"><a href="#cb2-90"></a>         political_ideology_economic_issues, </span>
-<span id="cb2-91"><a href="#cb2-91"></a>         religious_affiliation_general, </span>
-<span id="cb2-92"><a href="#cb2-92"></a>         religious_affiliation_general_recoded,</span>
-<span id="cb2-93"><a href="#cb2-93"></a>         </span>
-<span id="cb2-94"><a href="#cb2-94"></a>         <span class="co"># component exclusion variables</span></span>
-<span id="cb2-95"><a href="#cb2-95"></a>         passed_iat_performance, </span>
-<span id="cb2-96"><a href="#cb2-96"></a>         complete_iat, </span>
-<span id="cb2-97"><a href="#cb2-97"></a>         complete_selfreport,</span>
-<span id="cb2-98"><a href="#cb2-98"></a>         complete_intentions,</span>
-<span id="cb2-99"><a href="#cb2-99"></a>         </span>
-<span id="cb2-100"><a href="#cb2-100"></a>         <span class="co"># methods variables</span></span>
-<span id="cb2-101"><a href="#cb2-101"></a>         task_order, </span>
-<span id="cb2-102"><a href="#cb2-102"></a>         iat_block_order)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="co"># read in processed data</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="co"># because read_csv uses just the first 1000 rows to guess data types, mean_intentions incorrectly parses as logical. so, col types have to be manually specified for all columns.</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a>data_participant_level &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;processed/2.2_data_participant_level.csv&quot;</span>)</span>
+<span id="cb2-4"><a href="#cb2-4"></a></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="co"># hand scored data</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a>data_hand_scored_rater_<span class="dv">1</span> &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;processed/3_data_hand_scored_rater_1.csv&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(subject, </span>
+<span id="cb2-8"><a href="#cb2-8"></a>                deepfake_detected_rater_<span class="dv">1</span>, </span>
+<span id="cb2-9"><a href="#cb2-9"></a>                deepfake_concept_check_rater_<span class="dv">1</span>)</span>
+<span id="cb2-10"><a href="#cb2-10"></a></span>
+<span id="cb2-11"><a href="#cb2-11"></a>data_hand_scored_rater_<span class="dv">2</span> &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;processed/3_data_hand_scored_rater_2.csv&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb2-12"><a href="#cb2-12"></a><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(subject, </span>
+<span id="cb2-13"><a href="#cb2-13"></a>                deepfake_detected_rater_<span class="dv">2</span>, </span>
+<span id="cb2-14"><a href="#cb2-14"></a>                deepfake_concept_check_rater_<span class="dv">2</span>)</span>
+<span id="cb2-15"><a href="#cb2-15"></a></span>
+<span id="cb2-16"><a href="#cb2-16"></a><span class="co"># join</span></span>
+<span id="cb2-17"><a href="#cb2-17"></a>data_participant_level_with_hand_scoring &lt;-<span class="st"> </span>data_participant_level <span class="op">%&gt;%</span></span>
+<span id="cb2-18"><a href="#cb2-18"></a><span class="st">  </span><span class="kw">full_join</span>(data_hand_scored_rater_<span class="dv">1</span>, <span class="dt">by =</span> <span class="st">&quot;subject&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb2-19"><a href="#cb2-19"></a><span class="st">  </span><span class="kw">full_join</span>(data_hand_scored_rater_<span class="dv">2</span>, <span class="dt">by =</span> <span class="st">&quot;subject&quot;</span>) <span class="op">%&gt;%</span></span>
+<span id="cb2-20"><a href="#cb2-20"></a><span class="st">  </span></span>
+<span id="cb2-21"><a href="#cb2-21"></a><span class="st">  </span><span class="co"># create single variables between raters. </span></span>
+<span id="cb2-22"><a href="#cb2-22"></a><span class="st">  </span><span class="co"># emphasizes specificity by requiring both raters to score as TRUE, therefore providing a more severe test of learning even in those who were aware.</span></span>
+<span id="cb2-23"><a href="#cb2-23"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">deepfake_detected =</span> </span>
+<span id="cb2-24"><a href="#cb2-24"></a>           <span class="kw">case_when</span>(deepfake_detected_rater_<span class="dv">1</span> <span class="op">==</span><span class="st"> </span><span class="ot">TRUE</span> <span class="op">&amp;</span><span class="st"> </span>deepfake_detected_rater_<span class="dv">2</span> <span class="op">==</span><span class="st"> </span><span class="ot">TRUE</span> <span class="op">~</span><span class="st"> </span><span class="ot">TRUE</span>,</span>
+<span id="cb2-25"><a href="#cb2-25"></a>                     <span class="kw">is.na</span>(deepfake_detected_rater_<span class="dv">1</span>) <span class="op">&amp;</span><span class="st"> </span><span class="kw">is.na</span>(deepfake_detected_rater_<span class="dv">2</span>) <span class="op">~</span><span class="st"> </span><span class="ot">NA</span>,</span>
+<span id="cb2-26"><a href="#cb2-26"></a>                     <span class="ot">TRUE</span> <span class="op">~</span><span class="st"> </span><span class="ot">FALSE</span>),</span>
+<span id="cb2-27"><a href="#cb2-27"></a>         <span class="dt">deepfake_concept_check =</span> </span>
+<span id="cb2-28"><a href="#cb2-28"></a>           <span class="kw">case_when</span>(deepfake_concept_check_rater_<span class="dv">1</span> <span class="op">==</span><span class="st"> </span><span class="ot">TRUE</span> <span class="op">&amp;</span><span class="st"> </span>deepfake_concept_check_rater_<span class="dv">2</span> <span class="op">==</span><span class="st"> </span><span class="ot">TRUE</span> <span class="op">~</span><span class="st"> </span><span class="ot">TRUE</span>,</span>
+<span id="cb2-29"><a href="#cb2-29"></a>                     <span class="kw">is.na</span>(deepfake_concept_check_rater_<span class="dv">1</span>) <span class="op">&amp;</span><span class="st"> </span><span class="kw">is.na</span>(deepfake_concept_check_rater_<span class="dv">2</span>) <span class="op">~</span><span class="st"> </span><span class="ot">NA</span>,</span>
+<span id="cb2-30"><a href="#cb2-30"></a>                     <span class="ot">TRUE</span> <span class="op">~</span><span class="st"> </span><span class="ot">FALSE</span>)) <span class="op">%&gt;%</span></span>
+<span id="cb2-31"><a href="#cb2-31"></a><span class="st">  </span></span>
+<span id="cb2-32"><a href="#cb2-32"></a><span class="st">  </span><span class="co"># drop open ended text responses now that they&#39;ve been coded for analysis</span></span>
+<span id="cb2-33"><a href="#cb2-33"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
+<span id="cb2-34"><a href="#cb2-34"></a>         experiment, </span>
+<span id="cb2-35"><a href="#cb2-35"></a>         intervention_medium, </span>
+<span id="cb2-36"><a href="#cb2-36"></a>         source_valence, </span>
+<span id="cb2-37"><a href="#cb2-37"></a>         experiment_condition, </span>
+<span id="cb2-38"><a href="#cb2-38"></a>         exclude_subject,</span>
+<span id="cb2-39"><a href="#cb2-39"></a>         age, </span>
+<span id="cb2-40"><a href="#cb2-40"></a>         gender,</span>
+<span id="cb2-41"><a href="#cb2-41"></a>         IAT_D2, </span>
+<span id="cb2-42"><a href="#cb2-42"></a>         mean_self_reported_evaluation, </span>
+<span id="cb2-43"><a href="#cb2-43"></a>         mean_intentions,</span>
+<span id="cb2-44"><a href="#cb2-44"></a>         deepfake_detected,</span>
+<span id="cb2-45"><a href="#cb2-45"></a>         </span>
+<span id="cb2-46"><a href="#cb2-46"></a>         <span class="co"># exploratory measures</span></span>
+<span id="cb2-47"><a href="#cb2-47"></a>         diagnosticity, </span>
+<span id="cb2-48"><a href="#cb2-48"></a>         demand, </span>
+<span id="cb2-49"><a href="#cb2-49"></a>         reactance, </span>
+<span id="cb2-50"><a href="#cb2-50"></a>         hypothesis_awareness, </span>
+<span id="cb2-51"><a href="#cb2-51"></a>         influence_awareness, </span>
+<span id="cb2-52"><a href="#cb2-52"></a>         issues_with_study, </span>
+<span id="cb2-53"><a href="#cb2-53"></a>         aot_actively_openminded_thinking_pomp, </span>
+<span id="cb2-54"><a href="#cb2-54"></a>         bcti_belief_in_conspiracy_pomp, </span>
+<span id="cb2-55"><a href="#cb2-55"></a>         crt_analytic_thinking_pomp, </span>
+<span id="cb2-56"><a href="#cb2-56"></a>         ocq_overclaiming_pomp, </span>
+<span id="cb2-57"><a href="#cb2-57"></a>         ras_relgious_affliation_pomp, </span>
+<span id="cb2-58"><a href="#cb2-58"></a>         rei_rational_pomp, </span>
+<span id="cb2-59"><a href="#cb2-59"></a>         rei_experiential_pomp, </span>
+<span id="cb2-60"><a href="#cb2-60"></a>         me_fake_news_awareness_pomp, </span>
+<span id="cb2-61"><a href="#cb2-61"></a>         me_real_news_awareness_pomp, </span>
+<span id="cb2-62"><a href="#cb2-62"></a>         me_fake_news_accuracy_pomp, </span>
+<span id="cb2-63"><a href="#cb2-63"></a>         me_real_news_accuracy_pomp, </span>
+<span id="cb2-64"><a href="#cb2-64"></a>         me_fake_news_sharing_pomp, </span>
+<span id="cb2-65"><a href="#cb2-65"></a>         me_real_news_sharing_pomp,</span>
+<span id="cb2-66"><a href="#cb2-66"></a>         </span>
+<span id="cb2-67"><a href="#cb2-67"></a>         <span class="co"># recoded DVs - mentioned in preregistrations but not used in my (more appropriate) reworked analyses. </span></span>
+<span id="cb2-68"><a href="#cb2-68"></a>         IAT_D2_recoded_for_stimulus_identity,</span>
+<span id="cb2-69"><a href="#cb2-69"></a>         mean_self_reported_evaluation_recoded_for_stimulus_identity,</span>
+<span id="cb2-70"><a href="#cb2-70"></a>         mean_intentions_recoded_for_stimulus_identity,</span>
+<span id="cb2-71"><a href="#cb2-71"></a>         </span>
+<span id="cb2-72"><a href="#cb2-72"></a>         <span class="co"># individual raters</span></span>
+<span id="cb2-73"><a href="#cb2-73"></a>         deepfake_concept_check,</span>
+<span id="cb2-74"><a href="#cb2-74"></a>         deepfake_detected_rater_<span class="dv">1</span>,</span>
+<span id="cb2-75"><a href="#cb2-75"></a>         deepfake_detected_rater_<span class="dv">2</span>,</span>
+<span id="cb2-76"><a href="#cb2-76"></a>         deepfake_concept_check_rater_<span class="dv">1</span>,</span>
+<span id="cb2-77"><a href="#cb2-77"></a>         deepfake_concept_check_rater_<span class="dv">2</span>,</span>
+<span id="cb2-78"><a href="#cb2-78"></a>         </span>
+<span id="cb2-79"><a href="#cb2-79"></a>         <span class="co"># additional demographics</span></span>
+<span id="cb2-80"><a href="#cb2-80"></a>         gender_self_describe,</span>
+<span id="cb2-81"><a href="#cb2-81"></a>         ethnicity,</span>
+<span id="cb2-82"><a href="#cb2-82"></a>         ethnicity_self_describe,</span>
+<span id="cb2-83"><a href="#cb2-83"></a>         location,</span>
+<span id="cb2-84"><a href="#cb2-84"></a>         education, </span>
+<span id="cb2-85"><a href="#cb2-85"></a>         employment, </span>
+<span id="cb2-86"><a href="#cb2-86"></a>         education_recoded, </span>
+<span id="cb2-87"><a href="#cb2-87"></a>         income, </span>
+<span id="cb2-88"><a href="#cb2-88"></a>         income_recoded, </span>
+<span id="cb2-89"><a href="#cb2-89"></a>         political_ideology_identity, </span>
+<span id="cb2-90"><a href="#cb2-90"></a>         political_ideology_social_issues, </span>
+<span id="cb2-91"><a href="#cb2-91"></a>         political_ideology_economic_issues, </span>
+<span id="cb2-92"><a href="#cb2-92"></a>         religious_affiliation_general, </span>
+<span id="cb2-93"><a href="#cb2-93"></a>         religious_affiliation_general_recoded,</span>
+<span id="cb2-94"><a href="#cb2-94"></a>         </span>
+<span id="cb2-95"><a href="#cb2-95"></a>         <span class="co"># component exclusion variables</span></span>
+<span id="cb2-96"><a href="#cb2-96"></a>         passed_iat_performance, </span>
+<span id="cb2-97"><a href="#cb2-97"></a>         complete_iat, </span>
+<span id="cb2-98"><a href="#cb2-98"></a>         complete_selfreport,</span>
+<span id="cb2-99"><a href="#cb2-99"></a>         complete_intentions,</span>
+<span id="cb2-100"><a href="#cb2-100"></a>         </span>
+<span id="cb2-101"><a href="#cb2-101"></a>         <span class="co"># methods variables</span></span>
+<span id="cb2-102"><a href="#cb2-102"></a>         task_order, </span>
+<span id="cb2-103"><a href="#cb2-103"></a>         iat_block_order)</span></code></pre></div>
 </div>
 <div id="write-to-disk" class="section level1">
 <h1>Write to disk</h1>

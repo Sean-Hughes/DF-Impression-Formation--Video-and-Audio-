@@ -31,8 +31,9 @@ library(tidyverse)
 
 ```{r}
 
-# processed data
-data_participant_level <- read_csv("processed/2.2_data_participant_level.csv")
+# read in processed data
+# because read_csv uses just the first 1000 rows to guess data types, mean_intentions incorrectly parses as logical. so, col types have to be manually specified for all columns.
+data_participant_level <- read.csv("processed/2.2_data_participant_level.csv")
 
 # hand scored data
 data_hand_scored_rater_1 <- read_csv("processed/3_data_hand_scored_rater_1.csv") %>%
