@@ -60,7 +60,7 @@ data_processed <- read_csv("../data/processed/4_data_participant_level_with_hand
 # apply exclusions
 data_after_exclusions <- data_processed %>%
   filter(exclude_subject == FALSE)
-  
+
 ```
 
 # Demographics
@@ -99,9 +99,9 @@ data_after_exclusions %>%
 
 ```{r}
 
-fit_selfreport <- 
+fit_selfreport <-
   brm(formula = mean_self_reported_evaluation ~ source_valence * experiment_condition + (1 | experiment),
-      data    = data_after_exclusions, 
+      data    = data_after_exclusions,
       file    = "models/fit_selfreport",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
@@ -117,7 +117,7 @@ fit_selfreport <-
 plot_model(fit_selfreport, type = "pred", terms = c("source_valence", "experiment_condition"))
 
 # percent moderation
-draws_sr <- 
+draws_sr <-
   bind_cols(
     select(spread_draws(fit_selfreport, b_source_valencepositive), b_source_valencepositive),
     select(spread_draws(fit_selfreport, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
@@ -132,7 +132,7 @@ draws_sr <-
          percent_comparison = (effect_deepfaked/effect_genuine)*100)
 
 # results
-estimates_sr <- 
+estimates_sr <-
   map_estimate(draws_sr) %>%
   mutate(pomp_MAP_Estimate = ifelse(Parameter == "percent_comparison", NA, (((MAP_Estimate+3)/6) - .50)*100)) %>%
   full_join(bayestestR::hdi(draws_sr, ci = .95) %>%
@@ -156,28 +156,28 @@ estimates_sr <-
               ungroup() %>%
               select(Parameter, p),
             by = "Parameter") %>%
-  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, 
+  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper,
          CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p)
 
-comparison_string_sr <- 
+comparison_string_sr <-
   paste0("Deepfakes are ",
-         estimates_sr %>% 
-           filter(Parameter == "percent_comparison") %>% 
-           pull(MAP_Estimate) %>% 
+         estimates_sr %>%
+           filter(Parameter == "percent_comparison") %>%
+           pull(MAP_Estimate) %>%
            round(1),
          "% (95% CI [",
-         estimates_sr %>% 
-           filter(Parameter == "percent_comparison") %>% 
-           pull(CI_95_lower) %>% 
+         estimates_sr %>%
+           filter(Parameter == "percent_comparison") %>%
+           pull(CI_95_lower) %>%
            round(1),
          ", ",
          estimates_sr %>%
-           filter(Parameter == "percent_comparison") %>% 
-           pull(CI_95_upper) %>% 
+           filter(Parameter == "percent_comparison") %>%
+           pull(CI_95_upper) %>%
            round(1),
          "]) as effective as genine content in changing self-reported evaluations")
 
-noninferiority_sr <- 
+noninferiority_sr <-
   ifelse(estimates_sr %>% filter(Parameter == "effect_genuine") %>% pull(CI_95_lower) <
            estimates_sr %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_90_lower),
          "Deepfakes were found to be non-inferior to genuine content",
@@ -199,9 +199,9 @@ estimates_sr %>%
 
 ```{r}
 
-fit_implicit <- 
+fit_implicit <-
   brm(formula = IAT_D2 ~ source_valence * experiment_condition + (1 | experiment),
-      data    = data_after_exclusions, 
+      data    = data_after_exclusions,
       file    = "models/fit_implicit",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
@@ -217,7 +217,7 @@ fit_implicit <-
 plot_model(fit_implicit, type = "pred", terms = c("source_valence", "experiment_condition"))
 
 # percent moderation
-draws_imp <- 
+draws_imp <-
   bind_cols(
     select(spread_draws(fit_implicit, b_source_valencepositive), b_source_valencepositive),
     select(spread_draws(fit_implicit, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
@@ -232,7 +232,7 @@ draws_imp <-
          percent_comparison = (effect_deepfaked/effect_genuine)*100)
 
 # results
-estimates_imp <- 
+estimates_imp <-
   map_estimate(draws_imp) %>%
   mutate(pomp_MAP_Estimate = ifelse(Parameter == "percent_comparison", NA, (((MAP_Estimate+2)/4) - .50)*100)) %>%
   full_join(bayestestR::hdi(draws_imp, ci = .95) %>%
@@ -256,28 +256,28 @@ estimates_imp <-
               ungroup() %>%
               select(Parameter, p),
             by = "Parameter") %>%
-  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, 
-         CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p) 
+  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper,
+         CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p)
 
-comparison_string_imp <- 
+comparison_string_imp <-
   paste0("Deepfakes are ",
-         estimates_imp %>% 
-           filter(Parameter == "percent_comparison") %>% 
-           pull(MAP_Estimate) %>% 
+         estimates_imp %>%
+           filter(Parameter == "percent_comparison") %>%
+           pull(MAP_Estimate) %>%
            round(1),
          "% (95% CI [",
-         estimates_imp %>% 
-           filter(Parameter == "percent_comparison") %>% 
-           pull(CI_95_lower) %>% 
+         estimates_imp %>%
+           filter(Parameter == "percent_comparison") %>%
+           pull(CI_95_lower) %>%
            round(1),
          ", ",
-         estimates_imp %>% 
-           filter(Parameter == "percent_comparison") %>% 
-           pull(CI_95_upper) %>% 
+         estimates_imp %>%
+           filter(Parameter == "percent_comparison") %>%
+           pull(CI_95_upper) %>%
            round(1),
          "]) as effective as genine content in changing implicit attitudes")
 
-noninferiority_imp <- 
+noninferiority_imp <-
   ifelse(estimates_imp %>% filter(Parameter == "effect_genuine") %>% pull(CI_95_lower) <
            estimates_imp %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_90_lower),
          "Deepfakes were found to be non-inferior to genuine content",
@@ -299,9 +299,9 @@ estimates_imp %>%
 
 ```{r}
 
-fit_intentions <- 
+fit_intentions <-
   brm(formula = mean_intentions ~ source_valence * experiment_condition, # no random effect for experiment as only exp 6 assessed intentions
-      data    = data_after_exclusions, 
+      data    = data_after_exclusions,
       file    = "models/fit_intentions",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
@@ -317,7 +317,7 @@ fit_intentions <-
 plot_model(fit_intentions, type = "pred", terms = c("source_valence", "experiment_condition"))
 
 # percent moderation
-draws_intentions <- 
+draws_intentions <-
   bind_cols(
     select(spread_draws(fit_intentions, b_source_valencepositive), b_source_valencepositive),
     select(spread_draws(fit_intentions, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
@@ -332,7 +332,7 @@ draws_intentions <-
          percent_comparison = (effect_deepfaked/effect_genuine)*100)
 
 # results
-estimates_intentions <- 
+estimates_intentions <-
   map_estimate(draws_intentions) %>%
   mutate(pomp_MAP_Estimate = ifelse(Parameter == "percent_comparison", NA, (((MAP_Estimate+2)/4) - .50)*100)) %>%
   full_join(bayestestR::hdi(draws_intentions, ci = .95) %>%
@@ -356,28 +356,28 @@ estimates_intentions <-
               ungroup() %>%
               select(Parameter, p),
             by = "Parameter") %>%
-  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, 
-         CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p) 
+  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper,
+         CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p)
 
-comparison_string_intentions <- 
+comparison_string_intentions <-
   paste0("Deepfakes are ",
-         estimates_intentions %>% 
-           filter(Parameter == "percent_comparison") %>% 
-           pull(MAP_Estimate) %>% 
+         estimates_intentions %>%
+           filter(Parameter == "percent_comparison") %>%
+           pull(MAP_Estimate) %>%
            round(1),
          "% (95% CI [",
-         estimates_intentions %>% 
-           filter(Parameter == "percent_comparison") %>% 
-           pull(CI_95_lower) %>% 
+         estimates_intentions %>%
+           filter(Parameter == "percent_comparison") %>%
+           pull(CI_95_lower) %>%
            round(1),
          ", ",
-         estimates_intentions %>% 
-           filter(Parameter == "percent_comparison") %>% 
-           pull(CI_95_upper) %>% 
+         estimates_intentions %>%
+           filter(Parameter == "percent_comparison") %>%
+           pull(CI_95_upper) %>%
            round(1),
          "]) as effective as genine content in changing behavioural intentions")
 
-noninferiority_intentions <- 
+noninferiority_intentions <-
   ifelse(estimates_intentions %>% filter(Parameter == "effect_genuine") %>% pull(CI_95_lower) <
            estimates_intentions %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_90_lower),
          "Deepfakes were found to be non-inferior to genuine content",
@@ -399,7 +399,7 @@ estimates_intentions %>%
 
 ## Inter-rater relibility
 
-### deepfake_detected:
+deepfake_detected:
 
 ```{r}
 
@@ -417,7 +417,7 @@ data_after_exclusions %>%
   summarize(perc_agreement = mean(deepfake_detected_rater_1 == deepfake_detected_rater_2, na.rm = TRUE))
 
 data_after_exclusions %>%
-  count(experiment_condition, 
+  count(experiment_condition,
         deepfake_detected) %>%
   drop_na()
 
@@ -427,45 +427,45 @@ data_after_exclusions %>%
 
 Youden's J = sensitivity + specificity - 1
 
-aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions" 
+aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions"
 
 ```{r}
 
 if(file.exists("models/fit_classification_bootstraps.rds")){
-  
+
   fit_classification_bootstraps <- read_rds("fit_classification_bootstraps.rds")
-  
+
 } else {
-  
+
   # create bootstraps using out of bag method. makes a df with values that are collapsed dfs.
   boots <- data_after_exclusions %>%
     select(experiment_condition, deepfake_detected) %>%
     drop_na() %>%
     bootstraps(times = 2000)
-  
+
   # generalize to a summarize function ------
   bootstrap_categorization_stats <- function(split) {
-    
+
     data_counts <- analysis(split) %>%
       count(experiment_condition, deepfake_detected)
-    
+
     TP <- pull(filter(data_counts, experiment_condition == "deepfaked" & deepfake_detected == TRUE),  n)
     FP <- pull(filter(data_counts, experiment_condition == "genuine"   & deepfake_detected == TRUE),  n)
     FN <- pull(filter(data_counts, experiment_condition == "deepfaked" & deepfake_detected == FALSE), n)
     TN <- pull(filter(data_counts, experiment_condition == "genuine"   & deepfake_detected == FALSE), n)
-    
+
     #accuracy <- (TP+TN)/(TP+TN+FP+FN)
     sensitivity <- TP / (TP+FN)
     false_negative_rate <- 1 - sensitivity
     specificity <- TN / (TN+FP)
     false_positive_rate <- 1 - specificity
-    
-    # Youden's J statistic aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions". a zero value when a diagnostic test gives the same proportion of positive results for groups with and without the disease, i.e the test is useless. 
-    informedness <- sensitivity + specificity - 1 
-    
+
+    # Youden's J statistic aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions". a zero value when a diagnostic test gives the same proportion of positive results for groups with and without the disease, i.e the test is useless.
+    informedness <- sensitivity + specificity - 1
+
     balanced_accuracy <- (sensitivity + specificity)/2
-    
-    results <- 
+
+    results <-
       tibble(variable = c(
         #"accuracy",
         "balanced_accuracy",
@@ -484,21 +484,21 @@ if(file.exists("models/fit_classification_bootstraps.rds")){
         false_positive_rate,
         informedness
       ))
-    
+
     return(results)
   }
-  
+
   # apply to each bootstrap
-  fit_classification_bootstraps <- boots %>% 
+  fit_classification_bootstraps <- boots %>%
     mutate(categorization_stats = map(splits, bootstrap_categorization_stats)) %>%
-    select(-splits) %>% 
+    select(-splits) %>%
     unnest(categorization_stats)
-  
+
   write_rds(fit_classification_bootstraps, "models/fit_classification_bootstraps.rds")
-  
+
 }
 
-fit_classification_bootstraps %>% 
+fit_classification_bootstraps %>%
   group_by(variable) %>%
   summarize(median = quantile(value, 0.500),
             ci_lower = quantile(value, 0.025),
@@ -525,9 +525,9 @@ data_detectors_subset <- data_after_exclusions %>%
 
 ```{r}
 
-fit_selfreport_deepfaked_detected <- 
+fit_selfreport_deepfaked_detected <-
   brm(formula = mean_self_reported_evaluation ~ source_valence + (1 | experiment),
-      data    = data_detectors_subset, 
+      data    = data_detectors_subset,
       file    = "models/fit_selfreport_deepfaked_detected",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
@@ -542,11 +542,11 @@ fit_selfreport_deepfaked_detected <-
 #plot_model(fit_selfreport_deepfaked_detected)
 plot_model(fit_selfreport_deepfaked_detected, type = "pred", terms = "source_valence")
 
-draws_sr_deepfaked_detected <- 
+draws_sr_deepfaked_detected <-
   select(spread_draws(fit_selfreport_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
-  rename(effect_deepfake_detected = b_source_valencepositive) 
+  rename(effect_deepfake_detected = b_source_valencepositive)
 
-estimates_sr_deepfaked_detected <- 
+estimates_sr_deepfaked_detected <-
   map_estimate(draws_sr_deepfaked_detected) %>%
   mutate(pomp_MAP_Estimate = ifelse(Parameter == "percent_comparison", NA, (((MAP_Estimate+3)/6) - .50)*100)) %>%
   full_join(bayestestR::hdi(draws_sr_deepfaked_detected, ci = .95) %>%
@@ -578,9 +578,9 @@ estimates_sr_deepfaked_detected %>%
 
 ```{r}
 
-fit_implicit_deepfaked_detected <- 
+fit_implicit_deepfaked_detected <-
   brm(formula = IAT_D2 ~ source_valence + (1 | experiment),
-      data    = data_detectors_subset, 
+      data    = data_detectors_subset,
       file    = "models/fit_implicit_deepfaked_detected",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
@@ -595,11 +595,11 @@ fit_implicit_deepfaked_detected <-
 #plot_model(fit_implicit_deepfaked_detected)
 plot_model(fit_implicit_deepfaked_detected, type = "pred", terms = "source_valence")
 
-draws_imp_deepfaked_detected <- 
+draws_imp_deepfaked_detected <-
   select(spread_draws(fit_implicit_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
-  rename(effect_deepfake_detected = b_source_valencepositive) 
+  rename(effect_deepfake_detected = b_source_valencepositive)
 
-estimates_imp_deepfaked_detected <- 
+estimates_imp_deepfaked_detected <-
   map_estimate(draws_imp_deepfaked_detected) %>%
   mutate(pomp_MAP_Estimate = ifelse(Parameter == "percent_comparison", NA, (((MAP_Estimate+3)/6) - .50)*100)) %>%
   full_join(bayestestR::hdi(draws_imp_deepfaked_detected, ci = .95) %>%
@@ -631,9 +631,9 @@ estimates_imp_deepfaked_detected %>%
 
 ```{r}
 
-fit_intentions_deepfaked_detected <- 
+fit_intentions_deepfaked_detected <-
   brm(formula = mean_intentions ~ source_valence, # no random effect for experiment as only exp 6 assessed intentions
-      data    = data_detectors_subset, 
+      data    = data_detectors_subset,
       file    = "models/fit_intentions_deepfaked_detected",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
@@ -648,11 +648,11 @@ fit_intentions_deepfaked_detected <-
 #plot_model(fit_intentions_deepfaked_detected)
 plot_model(fit_intentions_deepfaked_detected, type = "pred", terms = "source_valence")
 
-draws_intentions_deepfaked_detected <- 
+draws_intentions_deepfaked_detected <-
   select(spread_draws(fit_intentions_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
-  rename(effect_deepfake_detected = b_source_valencepositive) 
+  rename(effect_deepfake_detected = b_source_valencepositive)
 
-estimates_intentions_deepfaked_detected <- 
+estimates_intentions_deepfaked_detected <-
   map_estimate(draws_intentions_deepfaked_detected) %>%
   mutate(pomp_MAP_Estimate = ifelse(Parameter == "percent_comparison", NA, (((MAP_Estimate+3)/6) - .50)*100)) %>%
   full_join(bayestestR::hdi(draws_intentions_deepfaked_detected, ci = .95) %>%
@@ -679,5 +679,3 @@ estimates_intentions_deepfaked_detected %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 
 ```
-
-
