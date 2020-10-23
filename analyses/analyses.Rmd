@@ -20,29 +20,22 @@ knitr::opts_chunk$set(message=FALSE,
 
 ```{r}
 
-# dependencies -----
+# dependencies
 library(tidyverse)
-#library(ggthemes)
 library(knitr)
 library(kableExtra)
-#library(broom)
-library(effsize)
-library(BayesFactor)
-library(metafor)
-library(ez)
-library(schoRsch)
-library(TOSTER)
+library(brms)
+library(tidybayes)
+library(bayestestR)
+library(sjPlot)
 library(psych)
 library(rsample)
 library(broom)
 library(purrr)
-library(brms)
-library(sjPlot)
-library(tidybayes)
-library(bayestestR)
 
 options(knitr.kable.NA = "-")
 
+# set seed for bootstrapping reproducibility
 set.seed(42)
 
 # create necessary folder
@@ -307,7 +300,7 @@ estimates_imp %>%
 ```{r}
 
 fit_intentions <- 
-  brm(formula = IAT_D2 ~ source_valence * experiment_condition, # no random effect for experiment as only exp 6 assessed intentions
+  brm(formula = mean_intentions ~ source_valence * experiment_condition, # no random effect for experiment as only exp 6 assessed intentions
       data    = data_after_exclusions, 
       file    = "models/fit_intentions",
       prior   = prior(normal(0, 10)),
@@ -411,6 +404,11 @@ estimates_intentions %>%
 ```{r}
 
 data_after_exclusions %>%
+  count(deepfake_detected,
+        deepfake_detected_rater_1,
+        deepfake_detected_rater_2)
+
+data_after_exclusions %>%
   select(deepfake_detected_rater_1,                                   
          deepfake_detected_rater_2) %>%
   cohen.kappa(.)
@@ -419,37 +417,10 @@ data_after_exclusions %>%
   summarize(perc_agreement = mean(deepfake_detected_rater_1 == deepfake_detected_rater_2, na.rm = TRUE))
 
 data_after_exclusions %>%
-  count(deepfake_detected,
-        deepfake_detected_rater_1,
-        deepfake_detected_rater_2)
-
-data_after_exclusions %>%
   count(experiment_condition, 
-        deepfake_detected)
+        deepfake_detected) %>%
+  drop_na()
 
-```
-
-### deepfake_concept_check:
-
-```{r}
-
-data_after_exclusions %>%
-  select(deepfake_concept_check_rater_1,                              
-         deepfake_concept_check_rater_2) %>%
-  cohen.kappa(.)
-
-data_after_exclusions %>%
-  summarize(perc_agreement = mean(deepfake_concept_check_rater_1 == deepfake_concept_check_rater_2, na.rm = TRUE))
-
-data_after_exclusions %>%
-  count(deepfake_concept_check,
-        deepfake_concept_check_rater_1,
-        deepfake_concept_check_rater_2)
-
-data_after_exclusions %>%
-  count(experiment_condition, 
-        deepfake_concept_check)
-  
 ```
 
 ## Can people accurately detect deepfakes?
@@ -661,7 +632,7 @@ estimates_imp_deepfaked_detected %>%
 ```{r}
 
 fit_intentions_deepfaked_detected <- 
-  brm(formula = IAT_D2 ~ source_valence, # no random effect for experiment as only exp 6 assessed intentions
+  brm(formula = mean_intentions ~ source_valence, # no random effect for experiment as only exp 6 assessed intentions
       data    = data_detectors_subset, 
       file    = "models/fit_intentions_deepfaked_detected",
       prior   = prior(normal(0, 10)),
