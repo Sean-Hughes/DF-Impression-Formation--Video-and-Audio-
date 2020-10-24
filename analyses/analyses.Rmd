@@ -1,5 +1,6 @@
 ---
 title: "Analyses"
+subtitle: "DVs standardized by SD (by experiment and condition)" 
 author: "Ian Hussey"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
@@ -34,9 +35,7 @@ library(rsample)
 library(broom)
 library(purrr)
 
-options(knitr.kable.NA = " - ",
-        bootstrap_options = c("striped", "hover", "condensed"), 
-        full_width = FALSE)
+options(knitr.kable.NA = "/")
 
 # set seed for bootstrapping reproducibility
 set.seed(42)
@@ -46,7 +45,9 @@ dir.create("models")
 
 ```
 
-# Data and exclusions
+# Data, exclusions, & transformtions
+
+NB all DVs were standardised by 1SD, within each experiment and experiment condition. Beta estimtes from models are thereofore standardized betas, and the nature of the standardization makes them somewhat comparable to Cohen's *d*. See Lorah (2018) Effect size measures for multilevel models: definition, interpretation, and TIMSS example. Large-scale Assess Educ 6, 8. https://doi.org/10.1186/s40536-018-0061-2
 
 ```{r}
 
@@ -62,7 +63,34 @@ data_processed <- read.csv("../data/processed/4_data_participant_level_with_hand
 
 # apply exclusions
 data_after_exclusions <- data_processed %>%
-  filter(exclude_subject == FALSE)
+  filter(exclude_subject == FALSE) %>%
+  # standardize by experiment and condition
+  group_by(experiment, experiment_condition) %>%
+  mutate(mean_self_reported_evaluation = mean_self_reported_evaluation/sd(mean_self_reported_evaluation),
+         IAT_D2 = IAT_D2/sd(IAT_D2),
+         mean_intentions = mean_intentions/sd(mean_intentions)) %>%
+  ungroup()
+
+```
+
+# Distributions
+
+```{r}
+
+ggplot(data_after_exclusions, aes(mean_self_reported_evaluation, color = as.factor(experiment))) +
+  geom_density() +
+  facet_wrap( ~ experiment_condition + source_valence) +
+  ggtitle("Standardized scores")
+
+ggplot(data_after_exclusions, aes(IAT_D2, color = as.factor(experiment))) +
+  geom_density() +
+  facet_wrap( ~ experiment_condition + source_valence) +
+  ggtitle("Standardized scores")
+
+ggplot(data_after_exclusions, aes(mean_intentions, color = as.factor(experiment))) +
+  geom_density() +
+  facet_wrap( ~ experiment_condition + source_valence) +
+  ggtitle("Standardized scores")
 
 ```
 
@@ -105,7 +133,7 @@ data_after_exclusions %>%
 fit_selfreport <-
   brm(formula = mean_self_reported_evaluation ~ source_valence * experiment_condition + (1 | experiment),
       data    = data_after_exclusions,
-      file    = "models/fit_selfreport",
+      file    = "models/fit_selfreport_std",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -138,12 +166,9 @@ draws_sr <-
 # results
 estimates_sr <-
   map_estimate(draws_sr) %>%
-  mutate(pomp_MAP_Estimate = ifelse(Parameter == "percent_comparison", NA, (((MAP_Estimate+3)/6) - .50)*100)) %>%
   full_join(bayestestR::hdi(draws_sr, ci = .95) %>%
               rename(CI_95_lower = CI_low,
                      CI_95_upper = CI_high) %>%
-              mutate(pomp_CI_95_lower = ifelse(Parameter == "percent_comparison", NA, (((CI_95_lower+3)/6) - .50)*100),
-                     pomp_CI_95_upper = ifelse(Parameter == "percent_comparison", NA, (((CI_95_upper+3)/6) - .50)*100)) %>%
               as_tibble(),
             by = "Parameter") %>%
   full_join(bayestestR::hdi(draws_sr, ci = .90) %>%
@@ -161,7 +186,7 @@ estimates_sr <-
               select(Parameter, p),
             by = "Parameter") %>%
   select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper,
-         CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p)
+         CI_90_lower, CI_90_upper, p)
 
 comparison_string_sr <-
   paste0("Deepfakes are ",
@@ -189,9 +214,9 @@ noninferiority_sr <-
 
 estimates_sr %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
-  mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1) %>%
   kable() %>%
-  kable_styling()
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
@@ -206,7 +231,7 @@ estimates_sr %>%
 fit_implicit <-
   brm(formula = IAT_D2 ~ source_valence * experiment_condition + (1 | experiment),
       data    = data_after_exclusions,
-      file    = "models/fit_implicit",
+      file    = "models/fit_implicit_std",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -239,12 +264,9 @@ draws_imp <-
 # results
 estimates_imp <-
   map_estimate(draws_imp) %>%
-  mutate(pomp_MAP_Estimate = ifelse(Parameter == "percent_comparison", NA, (((MAP_Estimate+2)/4) - .50)*100)) %>%
   full_join(bayestestR::hdi(draws_imp, ci = .95) %>%
               rename(CI_95_lower = CI_low,
                      CI_95_upper = CI_high) %>%
-              mutate(pomp_CI_95_lower = ifelse(Parameter == "percent_comparison", NA, (((CI_95_lower+2)/4) - .50)*100),
-                     pomp_CI_95_upper = ifelse(Parameter == "percent_comparison", NA, (((CI_95_upper+2)/4) - .50)*100)) %>%
               as_tibble(),
             by = "Parameter") %>%
   full_join(bayestestR::hdi(draws_imp, ci = .90) %>%
@@ -262,7 +284,7 @@ estimates_imp <-
               select(Parameter, p),
             by = "Parameter") %>%
   select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper,
-         CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p)
+         CI_90_lower, CI_90_upper, p)
 
 comparison_string_imp <-
   paste0("Deepfakes are ",
@@ -290,9 +312,9 @@ noninferiority_imp <-
 
 estimates_imp %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
-  mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1) %>%
   kable() %>%
-  kable_styling()
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
@@ -307,7 +329,7 @@ estimates_imp %>%
 fit_intentions <-
   brm(formula = mean_intentions ~ source_valence * experiment_condition, # no random effect for experiment as only exp 6 assessed intentions
       data    = data_after_exclusions,
-      file    = "models/fit_intentions",
+      file    = "models/fit_intentions_std",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -340,12 +362,9 @@ draws_intentions <-
 # results
 estimates_intentions <-
   map_estimate(draws_intentions) %>%
-  mutate(pomp_MAP_Estimate = ifelse(Parameter == "percent_comparison", NA, (((MAP_Estimate+2)/4) - .50)*100)) %>%
   full_join(bayestestR::hdi(draws_intentions, ci = .95) %>%
               rename(CI_95_lower = CI_low,
                      CI_95_upper = CI_high) %>%
-              mutate(pomp_CI_95_lower = ifelse(Parameter == "percent_comparison", NA, (((CI_95_lower+2)/4) - .50)*100),
-                     pomp_CI_95_upper = ifelse(Parameter == "percent_comparison", NA, (((CI_95_upper+2)/4) - .50)*100)) %>%
               as_tibble(),
             by = "Parameter") %>%
   full_join(bayestestR::hdi(draws_intentions, ci = .90) %>%
@@ -363,7 +382,7 @@ estimates_intentions <-
               select(Parameter, p),
             by = "Parameter") %>%
   select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper,
-         CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p)
+         CI_90_lower, CI_90_upper, p)
 
 comparison_string_intentions <-
   paste0("Deepfakes are ",
@@ -391,9 +410,9 @@ noninferiority_intentions <-
 
 estimates_intentions %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
-  mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1) %>%
   kable() %>%
-  kable_styling()
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
@@ -544,7 +563,7 @@ data_detectors_subset <- data_after_exclusions %>%
 fit_selfreport_deepfaked_detected <-
   brm(formula = mean_self_reported_evaluation ~ source_valence + (1 | experiment),
       data    = data_detectors_subset,
-      file    = "models/fit_selfreport_deepfaked_detected",
+      file    = "models/fit_selfreport_deepfaked_detected_std",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -565,12 +584,9 @@ draws_sr_deepfaked_detected <-
 
 estimates_sr_deepfaked_detected <-
   map_estimate(draws_sr_deepfaked_detected) %>%
-  mutate(pomp_MAP_Estimate = ifelse(Parameter == "percent_comparison", NA, (((MAP_Estimate+3)/6) - .50)*100)) %>%
   full_join(bayestestR::hdi(draws_sr_deepfaked_detected, ci = .95) %>%
               rename(CI_95_lower = CI_low,
                      CI_95_upper = CI_high) %>%
-              mutate(pomp_CI_95_lower = ifelse(Parameter == "percent_comparison", NA, (((CI_95_lower+3)/6) - .50)*100),
-                     pomp_CI_95_upper = ifelse(Parameter == "percent_comparison", NA, (((CI_95_upper+3)/6) - .50)*100)) %>%
               as_tibble(),
             by = "Parameter") %>%
   full_join(bayestestR::hdi(draws_sr_deepfaked_detected, ci = .90) %>%
@@ -587,7 +603,7 @@ estimates_sr_deepfaked_detected <-
               select(Parameter, p),
             by = "Parameter") %>%
   select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, 
-         CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p) 
+         CI_90_lower, CI_90_upper, p) 
 
 noninferiority_sr_deepfaked_detected <-
   ifelse(estimates_sr %>% 
@@ -602,9 +618,9 @@ noninferiority_sr_deepfaked_detected <-
 bind_rows(filter(estimates_sr, Parameter %in% c("effect_deepfaked")),
           estimates_sr_deepfaked_detected) %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
-  mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1) %>%
   kable() %>%
-  kable_styling()
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
@@ -617,7 +633,7 @@ bind_rows(filter(estimates_sr, Parameter %in% c("effect_deepfaked")),
 fit_implicit_deepfaked_detected <-
   brm(formula = IAT_D2 ~ source_valence + (1 | experiment),
       data    = data_detectors_subset,
-      file    = "models/fit_implicit_deepfaked_detected",
+      file    = "models/fit_implicit_deepfaked_detected_std",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -638,12 +654,9 @@ draws_imp_deepfaked_detected <-
 
 estimates_imp_deepfaked_detected <-
   map_estimate(draws_imp_deepfaked_detected) %>%
-  mutate(pomp_MAP_Estimate = ifelse(Parameter == "percent_comparison", NA, (((MAP_Estimate+3)/6) - .50)*100)) %>%
   full_join(bayestestR::hdi(draws_imp_deepfaked_detected, ci = .95) %>%
               rename(CI_95_lower = CI_low,
                      CI_95_upper = CI_high) %>%
-              mutate(pomp_CI_95_lower = ifelse(Parameter == "percent_comparison", NA, (((CI_95_lower+3)/6) - .50)*100),
-                     pomp_CI_95_upper = ifelse(Parameter == "percent_comparison", NA, (((CI_95_upper+3)/6) - .50)*100)) %>%
               as_tibble(),
             by = "Parameter") %>%
   full_join(bayestestR::hdi(draws_imp_deepfaked_detected, ci = .90) %>%
@@ -660,7 +673,7 @@ estimates_imp_deepfaked_detected <-
               select(Parameter, p),
             by = "Parameter") %>%
   select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, 
-         CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p) 
+         CI_90_lower, CI_90_upper, p) 
 
 noninferiority_imp_deepfaked_detected <-
   ifelse(estimates_imp %>% 
@@ -675,9 +688,9 @@ noninferiority_imp_deepfaked_detected <-
 bind_rows(filter(estimates_imp, Parameter %in% c("effect_deepfaked")),
           estimates_imp_deepfaked_detected) %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
-  mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1) %>%
   kable() %>%
-  kable_styling()
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
@@ -690,7 +703,7 @@ bind_rows(filter(estimates_imp, Parameter %in% c("effect_deepfaked")),
 fit_intentions_deepfaked_detected <-
   brm(formula = mean_intentions ~ source_valence, # no random effect for experiment as only exp 6 assessed intentions
       data    = data_detectors_subset,
-      file    = "models/fit_intentions_deepfaked_detected",
+      file    = "models/fit_intentions_deepfaked_detected_std",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -711,12 +724,9 @@ draws_intentions_deepfaked_detected <-
 
 estimates_intentions_deepfaked_detected <-
   map_estimate(draws_intentions_deepfaked_detected) %>%
-  mutate(pomp_MAP_Estimate = ifelse(Parameter == "percent_comparison", NA, (((MAP_Estimate+3)/6) - .50)*100)) %>%
   full_join(bayestestR::hdi(draws_intentions_deepfaked_detected, ci = .95) %>%
               rename(CI_95_lower = CI_low,
                      CI_95_upper = CI_high) %>%
-              mutate(pomp_CI_95_lower = ifelse(Parameter == "percent_comparison", NA, (((CI_95_lower+3)/6) - .50)*100),
-                     pomp_CI_95_upper = ifelse(Parameter == "percent_comparison", NA, (((CI_95_upper+3)/6) - .50)*100)) %>%
               as_tibble(),
             by = "Parameter") %>%
   full_join(bayestestR::hdi(draws_intentions_deepfaked_detected, ci = .90) %>%
@@ -733,7 +743,7 @@ estimates_intentions_deepfaked_detected <-
               select(Parameter, p),
             by = "Parameter") %>%
   select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, 
-         CI_90_lower, CI_90_upper, pomp_MAP_Estimate, pomp_CI_95_lower, pomp_CI_95_upper, p)
+         CI_90_lower, CI_90_upper, p)
 
 noninferiority_intentions_deepfaked_detected <-
   ifelse(estimates_intentions %>% 
@@ -748,9 +758,9 @@ noninferiority_intentions_deepfaked_detected <-
 bind_rows(filter(estimates_intentions, Parameter %in% c("effect_deepfaked")),
           estimates_intentions_deepfaked_detected) %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
-  mutate_at(.vars = c("pomp_MAP_Estimate", "pomp_CI_95_lower", "pomp_CI_95_upper"), round, digits = 1) %>%
   kable() %>%
-  kable_styling()
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
