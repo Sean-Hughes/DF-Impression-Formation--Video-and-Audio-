@@ -1,0 +1,65 @@
+variable,label,value_labels
+subject,Unique subject identifier,XXXXXXXXX
+experiment,Experiement data was collected as part of,XXXXXXXXX
+intervention_medium,"What medium did the intervention (whetjer deepfaked or genuine) take (e.g., video and audio vs just audio)",XXXXXXXXX
+source_valence,"What was the researcher-intended valence of the intervention? I.e., was the participant exposed to positive or negative messages?",XXXXXXXXX
+experiment_condition,Was the intervention genuine or deepfaked content?,XXXXXXXXX
+exclude_subject,"Should the participant be excluded (TRUE) or retained (FALSE) based on passed_iat_performance, complete_iat, complete_selfreport, and complete_intentions",XXXXXXXXX
+age,Participant age,XXXXXXXXX
+gender,Participant gender,XXXXXXXXX
+IAT_D2,"The IAT captures automatic evaluations of Chris, the character depicted in the intervention. Accuracies and reaction times on IAT were converted to D2 scores, following Greenwald et al 2003, and implemented using the IATScores R package. Briefly, D2 is a standardized difference score of trimmed reaction times in one block type versus the other: (mean_block_2 - mean_block_1) / standard_deviation_all_blocks",XXXXXXXXX
+mean_self_reported_evaluation,"Mean self-reported evaluation (positive-negative, good-bad, pleasant-unpleasant) of Chris, the character depicted in the intervention.",XXXXXXXXX
+mean_intentions,Mean behavioural intentions to XXXXXX,XXXXXXXXX
+deepfake_detected,"Open ended responses to the deepfaking detection question were hand scored by two independent reviewers (see ""3 Instructions for raters.docx""). If both reviewers scored an open ended response as having detected the intervention as a deepfake (whether correctly or not), this variable was set to TRUE. Otherwise FALSE.",XXXXXXXXX
+diagnosticity,XXXXXXX,XXXXXXXXX
+demand,XXXXXXX,XXXXXXXXX
+reactance,XXXXXXX,XXXXXXXXX
+hypothesis_awareness,XXXXXXX,XXXXXXXXX
+influence_awareness,XXXXXXX,XXXXXXXXX
+aot_actively_openminded_thinking_pomp,XXXXXXX,XXXXXXXXX
+bcti_belief_in_conspiracy_pomp,XXXXXXX,XXXXXXXXX
+crt_analytic_thinking_pomp,XXXXXXX,XXXXXXXXX
+ocq_overclaiming_pomp,XXXXXXX,XXXXXXXXX
+ras_relgious_affliation_pomp,XXXXXXX,XXXXXXXXX
+rei_rational_pomp,XXXXXXX,XXXXXXXXX
+rei_experiential_pomp,XXXXXXX,XXXXXXXXX
+me_fake_news_awareness_sum,XXXXXXX,XXXXXXXXX
+me_real_news_awareness_sum,XXXXXXX,XXXXXXXXX
+me_fake_news_accuracy_sum,XXXXXXX,XXXXXXXXX
+me_real_news_accuracy_sum,XXXXXXX,XXXXXXXXX
+me_fake_news_sharing_sum,XXXXXXX,XXXXXXXXX
+me_real_news_sharing_sum,XXXXXXX,XXXXXXXXX
+me_fake_news_awareness_pomp,XXXXXXX,XXXXXXXXX
+me_real_news_awareness_pomp,XXXXXXX,XXXXXXXXX
+me_fake_news_accuracy_pomp,XXXXXXX,XXXXXXXXX
+me_real_news_accuracy_pomp,XXXXXXX,XXXXXXXXX
+me_fake_news_sharing_pomp,XXXXXXX,XXXXXXXXX
+me_real_news_sharing_pomp,XXXXXXX,XXXXXXXXX
+IAT_D2_recoded_for_source_valence,"IAT_D2 recoded for source_valence. If source_valence == ""negative"", IAT_D2*-1, otherwise IAT_D2.",XXXXXXXXX
+mean_self_reported_evaluation_recoded_for_source_valence,"mean_self_reported_evaluation recoded for source_valence. If source_valence == ""negative"", mean_self_reported_evaluation*-1, otherwise mean_self_reported_evaluation.",XXXXXXXXX
+mean_intentions_recoded_for_source_valence,"mean_intentions recoded for source_valence. If source_valence == ""negative"", mean_intentions*-1, otherwise mean_intentions.",XXXXXXXXX
+deepfake_concept_check,XXXXXXX,XXXXXXXXX
+deepfake_detected_rater_1,XXXXXXX,XXXXXXXXX
+deepfake_detected_rater_2,XXXXXXX,XXXXXXXXX
+deepfake_concept_check_rater_1,XXXXXXX,XXXXXXXXX
+deepfake_concept_check_rater_2,XXXXXXX,XXXXXXXXX
+gender_self_describe,Open ended gender,XXXXXXXXX
+ethnicity,Ethnicity,XXXXXXXXX
+ethnicity_self_describe,Open ended ethnicity,XXXXXXXXX
+location,Location,XXXXXXXXX
+education,Education,XXXXXXXXX
+employment,Employment status,XXXXXXXXX
+education_recoded,Education recoded into XXXXXXXX groups,XXXXXXXXX
+income,Income level,XXXXXXXXX
+income_recoded,Income level recoded into XXXXX groups,XXXXXXXXX
+political_ideology_identity,XXXXXXX,XXXXXXXXX
+political_ideology_social_issues,XXXXXXX,XXXXXXXXX
+political_ideology_economic_issues,XXXXXXX,XXXXXXXXX
+religious_affiliation_general,XXXXXXX,XXXXXXXXX
+religious_affiliation_general_recoded,XXXXXXX,XXXXXXXXX
+passed_iat_performance,"Mark participants for exclusion if their total error rate is >30%, their error rate in any one block is >40%, or if >10% RTs are <300ms.",XXXXXXXXX
+complete_iat,Complete IAT data (used for exclusions),XXXXXXXXX
+complete_selfreport,Complete self reported evaluations data (used for exclusions),XXXXXXXXX
+complete_intentions,Complete behavioural intentions data (used for exclusions),XXXXXXXXX
+task_order,Did the particiapant complete the self-reported evaluations or the IAT first?,XXXXXXXXX
+iat_block_order,"Was the participant exposed to the intervention-consistent or intervention-inconsistent block in the IAT first? E.g., if source_valence was negative, did the IAT map Chris and negative to the same key (con) or Chris and positive (incon)?",XXXXXXXXX
