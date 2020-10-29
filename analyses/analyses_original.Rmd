@@ -1,0 +1,400 @@
+---
+title: "Original analyses"
+author: "Sean Hughes & Ian Hussey"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+# To do
+
+- elaborate d and BF for one sample analyses 
+- add more IV variables to correlations: demographics etc
+- add deepfake detection to correlations
+- Note somewhere that POMPs are included for fidelity to prereg but are unnecessary given we're studying correlations
+- Note somewhere that all correlations are underpowered, alpha correction needed, or something. Really needs its own dedicated individual difference work with large samples and feature importance selection.
+
+```{r include=FALSE}
+knitr::opts_chunk$set(message=FALSE,
+                      warning=FALSE)
+```
+
+# Dependencies & functions
+
+```{r}
+
+# dependencies
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(sjPlot)
+library(psych)
+library(effsize)
+library(BayesFactor)
+library(broom)
+
+options(knitr.kable.NA = "/")
+
+# create necessary folder
+dir.create("models")
+
+# round p value using apa format
+apa_p_value <- function(p){
+  p_formatted <- ifelse(p >= 0.0001, paste("=", round(p, 4)),
+                        ifelse(p < 0.0001, "< .0001", NA))
+  p_formatted <- gsub(pattern = "0.", replacement = ".", x = p_formatted, fixed = TRUE)
+  p_formatted
+}
+
+# calculate cohens d and return its output in tidy format - a helper function for analysis_workflow
+tidy_cohens_d <- function(data){
+  require(effsize)
+
+  fit <- effsize::cohen.d(DV ~ IV, data = data)
+
+  results <- tibble(cohens_d = fit$estimate,
+                    cohens_d_ci_lower = fit$conf.int["lower"],
+                    cohens_d_ci_upper = fit$conf.int["upper"])
+
+  return(results)
+}
+
+# calculate cohens d and return its output in tidy format - a helper function for analysis_workflow
+tidy_ttest_bf <- function(data){
+  require(BayesFactor)
+
+  fit <- data %>%
+    ttestBF(formula = DV ~ IV, data = .)
+
+  results <- data.frame(bf10 = extractBF(fit)$bf) %>%
+    mutate(bf10 = ifelse(bf10 > 1000, ">1000", 
+                         ifelse(bf10 < 0.001, "<0.001", 
+                                round(bf10, 3))))
+  return(results)
+}
+
+# full analysis workflow
+# NB workflow returns mean_reference and mean_comparison, where reference is the first factor level and comparison is the next highest level.
+analysis_workflow <- function(data, one_sample = FALSE){
+  require(dplyr)
+  require(broom)
+  
+  # frequentist t test
+  if(one_sample == TRUE){
+    
+    results_t_test <- data %>%
+      group_by(experiment, DV_type) %>%
+      do(broom::tidy(t.test(x = .$DV))) %>%
+      ungroup() %>%
+      rename(t = statistic,
+             df = parameter,
+             p = p.value,
+             mean = estimate)
+    
+    results <- results_t_test
+  
+    } else {
+    
+    results_t_test <- data %>%
+      group_by(experiment, DV_type) %>%
+      do(broom::tidy(t.test(DV ~ IV, data = .))) %>%
+      ungroup() %>%
+      rename(t = statistic,
+             df = parameter,
+             p = p.value,
+             mean_reference = estimate1,
+             mean_comparison = estimate2)
+    
+    # cohens d
+    results_cohens_d <- data %>%
+      group_by(experiment, DV_type) %>%
+      do(tidy_cohens_d(data = .)) %>%
+      ungroup()
+    
+    # BF t test
+    results_bf_t_test <- data %>%
+      group_by(experiment, DV_type) %>%
+      do(tidy_ttest_bf(data = .)) %>%
+      ungroup()
+    
+    # combine
+    results <-
+      full_join(results_t_test,
+                results_cohens_d,
+                by = c("experiment", "DV_type")) %>%
+      full_join(results_bf_t_test,
+                by = c("experiment", "DV_type")) %>%
+      select(experiment, DV_type,
+             mean_reference, mean_comparison,
+             t, df, p, cohens_d, cohens_d_ci_lower, cohens_d_ci_upper, bf10) %>%
+      mutate(reportable_result = paste0("Condition 1 M = ", round(mean_reference, 2), ", Condition 2 M = ", round(mean_comparison, 2), ", t(", round(df, 2), ") = ", round(t, 2), ", p ", apa_p_value(p), ", d = ", round(cohens_d, 2), ", 95% CI [", round(cohens_d_ci_lower, 2), ", ", round(cohens_d_ci_upper, 2), "], BF10 = ", bf10))
+    
+    
+    }
+  
+  return(results)
+}
+
+```
+
+# Data, exclusions, & transformtions
+
+```{r}
+
+# full data
+data_processed <- read.csv("../data/processed/4_data_participant_level_with_hand_scoring.csv") %>%
+  # set factor levels for t test comparisons
+  mutate(source_valence = fct_relevel(source_valence,
+                                      "negative",
+                                      "positive"),
+         experiment_condition = fct_relevel(experiment_condition,
+                                            "genuine",
+                                            "deepfaked"))
+
+# apply exclusions
+data_after_exclusions <- data_processed %>%
+  filter(exclude_subject == FALSE)
+
+```
+
+# Demographics
+
+```{r}
+
+data_processed %>%
+  group_by(experiment) %>%
+  summarise(n = n(),
+            excluded_n = sum(exclude_subject > 0),
+            excluded_percent = (excluded_n / n) *100) %>%
+  mutate_if(is.numeric, round, digits = 1) %>%
+  kable(align = "c") %>%
+  kable_styling()
+
+data_after_exclusions %>%
+  group_by(experiment) %>%
+  summarise(n = n(),
+            age_mean = mean(age, na.rm = TRUE),
+            age_sd = sd(age, na.rm = TRUE)) %>%
+  mutate_if(is.numeric, round, digits = 1) %>%
+  kable(align = "c") %>%
+  kable_styling()
+
+data_after_exclusions %>%
+  count(experiment, gender) %>%
+  spread(gender, n) %>%
+  kable(knitr.kable.NA = "/", align = "c") %>%
+  kable_styling()
+
+```
+
+# DVs ~ souce_valence
+
+```{r}
+
+results_DVs_souce_valence <- data_after_exclusions %>%
+  rename(IV = source_valence) %>%
+  gather(DV_type, DV, c(mean_self_reported_evaluation, IAT_D2, mean_intentions)) %>%
+  select(experiment, DV_type, DV, IV) %>%
+  drop_na() %>%
+  analysis_workflow(data = .)
+
+results_DVs_souce_valence %>%
+  select(experiment, DV_type, reportable_result) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+# recoded_DVs ~ 1 
+
+[self reports only?]
+
+```{r}
+
+results_recoded_DVs_one_sample <- data_after_exclusions %>%
+  rename(IV = source_valence) %>%
+  gather(DV_type, DV, c(mean_self_reported_evaluation_recoded_for_source_valence,
+                        IAT_D2_recoded_for_source_valence, 
+                        mean_intentions_recoded_for_source_valence)) %>%
+  select(experiment, DV_type, DV, IV) %>%
+  drop_na() %>%
+  analysis_workflow(data = ., one_sample = TRUE)
+
+results_recoded_DVs_one_sample %>%
+  #select(experiment, DV_type) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+# recoded_DVs ~ 1 by group
+
+## Genuine condition
+
+```{r}
+
+results_recoded_DVs_one_sample_genuine <- data_after_exclusions %>%
+  filter(experiment_condition == "genuine") %>%
+  mutate(IV = source_valence) %>%
+  gather(DV_type, DV, c(mean_self_reported_evaluation_recoded_for_source_valence,
+                        IAT_D2_recoded_for_source_valence, 
+                        mean_intentions_recoded_for_source_valence)) %>%
+  select(experiment, DV_type, DV, IV) %>%
+  drop_na() %>%
+  analysis_workflow(data = ., one_sample = TRUE)
+
+results_recoded_DVs_one_sample_genuine %>%
+  #select(experiment, DV_type) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+## Deepfake condition
+
+```{r}
+
+results_recoded_DVs_one_sample_deepfake <- data_after_exclusions %>%
+  filter(experiment_condition == "deepfaked") %>%
+  mutate(IV = source_valence) %>%
+  gather(DV_type, DV, c(mean_self_reported_evaluation_recoded_for_source_valence,
+                        IAT_D2_recoded_for_source_valence, 
+                        mean_intentions_recoded_for_source_valence)) %>%
+  select(experiment, DV_type, DV, IV) %>%
+  drop_na() %>%
+  analysis_workflow(data = ., one_sample = TRUE)
+
+results_recoded_DVs_one_sample_deepfake %>%
+  #select(experiment, DV_type) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+# recoded_DVs ~ experiment_condition
+
+```{r}
+
+results_recodedDVs_experiment_condition <- data_after_exclusions %>%
+  filter(experiment >= 3) %>% # no deepfaking condition until experiment 3
+  rename(IV = experiment_condition) %>%
+  gather(DV_type, DV, c(mean_self_reported_evaluation, IAT_D2, mean_intentions)) %>%
+  select(experiment, DV_type, DV, IV) %>%
+  drop_na() %>%
+  analysis_workflow(data = .)
+
+results_recodedDVs_experiment_condition %>%
+  select(experiment, DV_type, reportable_result) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+# Correlations
+
+DVs and detection bivariate with individual differences variables 
+
+## mean_self_reported_evaluation_recoded_for_source_valence
+
+```{r}
+
+results_correlations_sr <- 
+  corr.test(x = data_after_exclusions %>%
+              select(sr = mean_self_reported_evaluation_recoded_for_source_valence),
+            y = data_after_exclusions %>%
+              select(ends_with("_pomp")), 
+            use = "pairwise", 
+            method = "pearson",
+            adjust = "none") %>%
+  print(., short = FALSE)
+
+results_correlations_sr %>%
+  mutate(variables = paste0("SR - ", colnames(select(data_after_exclusions, ends_with("_pomp"))))) %>%
+  select(variables, r = raw.r, ci_lower = raw.lower, ci_upper = raw.upper, p = raw.p) %>%
+  arrange(p) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+```
+
+## IAT_D2_recoded_for_source_valence
+
+```{r}
+
+results_correlations_imp <- 
+  corr.test(x = data_after_exclusions %>%
+              select(sr = IAT_D2_recoded_for_source_valence),
+            y = data_after_exclusions %>%
+              select(ends_with("_pomp")), 
+            use = "pairwise", 
+            method = "pearson",
+            adjust = "none") %>%
+  print(., short = FALSE)
+
+results_correlations_imp %>%
+  mutate(variables = paste0("Implicit - ", colnames(select(data_after_exclusions, ends_with("_pomp"))))) %>%
+  select(variables, r = raw.r, ci_lower = raw.lower, ci_upper = raw.upper, p = raw.p) %>%
+  arrange(p) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+```
+
+## mean_intentions_recoded_for_source_valence
+
+```{r}
+
+results_correlations_int <- 
+  corr.test(x = data_after_exclusions %>%
+              select(sr = mean_intentions_recoded_for_source_valence),
+            y = data_after_exclusions %>%
+              select(ends_with("_pomp")), 
+            use = "pairwise", 
+            method = "pearson",
+            adjust = "none") %>%
+  print(., short = FALSE)
+
+results_correlations_int %>%
+  mutate(variables = paste0("Intentions - ", colnames(select(data_after_exclusions, ends_with("_pomp"))))) %>%
+  select(variables, r = raw.r, ci_lower = raw.lower, ci_upper = raw.upper, p = raw.p) %>%
+  arrange(p) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+```
+
+## Deepfake detection
+
+SHOULD THIS ONLY BE THE SUBSET OF DEEPFAKE CONDITION PEOPLE? OR THE SUBSET OF CORRECT CLASSIFIERS? OR?
+
+```{r}
+
+results_correlations_int <- 
+  corr.test(x = data_after_exclusions %>%
+              select(sr = mean_intentions_recoded_for_source_valence),
+            y = data_after_exclusions %>%
+              select(ends_with("_pomp")), 
+            use = "pairwise", 
+            method = "pearson",
+            adjust = "none") %>%
+  print(., short = FALSE)
+
+results_correlations_int %>%
+  mutate(variables = paste0("Intentions - ", colnames(select(data_after_exclusions, ends_with("_pomp"))))) %>%
+  select(variables, r = raw.r, ci_lower = raw.lower, ci_upper = raw.upper, p = raw.p) %>%
+  arrange(p) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+```
+
+
