@@ -1,6 +1,5 @@
 ---
 title: "Analyses"
-subtitle: "DVs standardized by SD (by experiment and condition)" 
 author: "Ian Hussey"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
@@ -47,7 +46,7 @@ dir.create("models")
 
 # Data, exclusions, & transformtions
 
-NB all DVs were standardised by 1SD, within each experiment and experiment condition. Beta estimtes from models are thereofore standardized betas, and the nature of the standardization makes them somewhat comparable to Cohen's *d*. See Lorah (2018) Effect size measures for multilevel models: definition, interpretation, and TIMSS example. Large-scale Assess Educ 6, 8. https://doi.org/10.1186/s40536-018-0061-2
+NB all DVs were standardised by 1SD, within each experiment, experiment_condition, and source_valence. Beta estimtes from models are thereofore standardized betas, and the nature of the standardization makes them somewhat comparable to Cohen's *d*. See Lorah (2018) Effect size measures for multilevel models: definition, interpretation, and TIMSS example. Large-scale Assess Educ 6, 8. https://doi.org/10.1186/s40536-018-0061-2
 
 ```{r}
 
@@ -59,13 +58,14 @@ data_processed <- read.csv("../data/processed/4_data_participant_level_with_hand
                                       "positive"),
          experiment_condition = fct_relevel(experiment_condition,
                                             "genuine",
-                                            "deepfaked"))
+                                            "deepfaked"),
+         experiment = as.factor(experiment))
 
 # apply exclusions
 data_after_exclusions <- data_processed %>%
   filter(exclude_subject == FALSE) %>%
-  # standardize by experiment and condition
-  group_by(experiment, experiment_condition) %>%
+  # standardize by experiment and conditions
+  group_by(experiment, experiment_condition, source_valence) %>%
   mutate(mean_self_reported_evaluation = mean_self_reported_evaluation/sd(mean_self_reported_evaluation),
          IAT_D2 = IAT_D2/sd(IAT_D2),
          mean_intentions = mean_intentions/sd(mean_intentions)) %>%
@@ -77,17 +77,17 @@ data_after_exclusions <- data_processed %>%
 
 ```{r}
 
-ggplot(data_after_exclusions, aes(mean_self_reported_evaluation, color = as.factor(experiment))) +
+ggplot(data_after_exclusions, aes(mean_self_reported_evaluation, color = experiment)) +
   geom_density() +
   facet_wrap( ~ experiment_condition + source_valence) +
   ggtitle("Standardized scores")
 
-ggplot(data_after_exclusions, aes(IAT_D2, color = as.factor(experiment))) +
+ggplot(data_after_exclusions, aes(IAT_D2, color = experiment)) +
   geom_density() +
   facet_wrap( ~ experiment_condition + source_valence) +
   ggtitle("Standardized scores")
 
-ggplot(data_after_exclusions, aes(mean_intentions, color = as.factor(experiment))) +
+ggplot(data_after_exclusions, aes(mean_intentions, color = experiment)) +
   geom_density() +
   facet_wrap( ~ experiment_condition + source_valence) +
   ggtitle("Standardized scores")
@@ -120,11 +120,17 @@ data_after_exclusions %>%
   count(experiment, gender) %>%
   spread(gender, n) %>%
   kable(knitr.kable.NA = "/", align = "c") %>%
-  kable_styling()
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
 # Changing evaluations
+
+- Analyses employ Bayesian multilevel models with experiment employed as a random (Group level) intercept, and source_valence, experiment_condition and their interaction as IVs. This could therefore be described as akin to a Bayesian multilevel ANOVA.
+- DVs were standardize as noted above, and as such fitted model estimates represent standardized beta values (which due to the specifics of the standardization have comparable [but not exact] interpretation as Cohen's d values). 
+- Bayesian p values are also reported: these are on a similar scale to frequentist p values, but technically are 1 minus the posterior probability that the effect is greater than 0, i.e., $1 - P(\beta>0)$.
+- Inspection of the posterior distributions allow us to infer that we employed weak priors placed on all parameters (normal distribution with M = 0 and SD = 10). Inspection of the chains indicated good convergence in all cases.
 
 ## Self-reported evaluations
 
@@ -133,7 +139,7 @@ data_after_exclusions %>%
 fit_selfreport <-
   brm(formula = mean_self_reported_evaluation ~ source_valence * experiment_condition + (1 | experiment),
       data    = data_after_exclusions,
-      file    = "models/fit_selfreport_std",
+      file    = "models/fit_selfreport",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -145,7 +151,8 @@ fit_selfreport <-
 # fit_selfreport
 # plot(fit_selfreport, ask = FALSE)
 
-#plot_model(fit_selfreport)
+# plot_model(fit_selfreport)
+# plot_model(fit_selfreport, type = "re")
 plot_model(fit_selfreport, type = "pred", terms = c("source_valence", "experiment_condition"))
 
 # percent moderation
@@ -207,10 +214,24 @@ comparison_string_sr <-
          "]) as effective as genine content in changing self-reported evaluations")
 
 noninferiority_sr <-
-  ifelse(estimates_sr %>% filter(Parameter == "effect_genuine") %>% pull(CI_95_lower) <
-           estimates_sr %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_90_lower),
-         "Deepfakes were found to be non-inferior to genuine content",
-         "Deepfakes were not found to be non-inferior to genuine content")
+  paste0(ifelse(estimates_sr %>% 
+                  filter(Parameter == "effect_genuine") %>% 
+                  pull(CI_95_lower) <
+                  estimates_sr %>% 
+                  filter(Parameter == "effect_deepfaked") %>% 
+                  pull(CI_90_lower),
+                "Deepfakes were found to be non-inferior to genuine content: ",
+                "Deepfakes were not found to be non-inferior to genuine content: "),
+         "genuine condition lowerbound 95% CI = ",
+         estimates_sr %>% 
+           filter(Parameter == "effect_genuine") %>% 
+           pull(CI_95_lower) %>%
+           round(2),
+         ", deepfaked condition lowerbound 90% CI = ",
+         estimates_sr %>% 
+           filter(Parameter == "effect_deepfaked") %>% 
+           pull(CI_90_lower) %>%
+           round(2))
 
 estimates_sr %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
@@ -231,7 +252,7 @@ estimates_sr %>%
 fit_implicit <-
   brm(formula = IAT_D2 ~ source_valence * experiment_condition + (1 | experiment),
       data    = data_after_exclusions,
-      file    = "models/fit_implicit_std",
+      file    = "models/fit_implicit",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -305,10 +326,24 @@ comparison_string_imp <-
          "]) as effective as genine content in changing implicit attitudes")
 
 noninferiority_imp <-
-  ifelse(estimates_imp %>% filter(Parameter == "effect_genuine") %>% pull(CI_95_lower) <
-           estimates_imp %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_90_lower),
-         "Deepfakes were found to be non-inferior to genuine content",
-         "Deepfakes were not found to be non-inferior to genuine content")
+  paste0(ifelse(estimates_imp %>% 
+                  filter(Parameter == "effect_genuine") %>% 
+                  pull(CI_95_lower) <
+                  estimates_imp %>% 
+                  filter(Parameter == "effect_deepfaked") %>% 
+                  pull(CI_90_lower),
+                "Deepfakes were found to be non-inferior to genuine content: ",
+                "Deepfakes were not found to be non-inferior to genuine content: "),
+         "genuine condition lowerbound 95% CI = ",
+         estimates_imp %>% 
+           filter(Parameter == "effect_genuine") %>% 
+           pull(CI_95_lower) %>%
+           round(2),
+         ", deepfaked condition lowerbound 90% CI = ",
+         estimates_imp %>% 
+           filter(Parameter == "effect_deepfaked") %>% 
+           pull(CI_90_lower) %>%
+           round(2))
 
 estimates_imp %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
@@ -329,7 +364,7 @@ estimates_imp %>%
 fit_intentions <-
   brm(formula = mean_intentions ~ source_valence * experiment_condition, # no random effect for experiment as only exp 6 assessed intentions
       data    = data_after_exclusions,
-      file    = "models/fit_intentions_std",
+      file    = "models/fit_intentions",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -403,10 +438,24 @@ comparison_string_intentions <-
          "]) as effective as genine content in changing behavioural intentions")
 
 noninferiority_intentions <-
-  ifelse(estimates_intentions %>% filter(Parameter == "effect_genuine") %>% pull(CI_95_lower) <
-           estimates_intentions %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_90_lower),
-         "Deepfakes were found to be non-inferior to genuine content",
-         "Deepfakes were not found to be non-inferior to genuine content")
+  paste0(ifelse(estimates_intentions %>% 
+                  filter(Parameter == "effect_genuine") %>% 
+                  pull(CI_95_lower) <
+                  estimates_intentions %>% 
+                  filter(Parameter == "effect_deepfaked") %>% 
+                  pull(CI_90_lower),
+                "Deepfakes were found to be non-inferior to genuine content: ",
+                "Deepfakes were not found to be non-inferior to genuine content: "),
+         "genuine condition lowerbound 95% CI = ",
+         estimates_intentions %>% 
+           filter(Parameter == "effect_genuine") %>% 
+           pull(CI_95_lower) %>%
+           round(2),
+         ", deepfaked condition lowerbound 90% CI = ",
+         estimates_intentions %>% 
+           filter(Parameter == "effect_deepfaked") %>% 
+           pull(CI_90_lower) %>%
+           round(2))
 
 estimates_intentions %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
@@ -431,12 +480,14 @@ data_after_exclusions %>%
         deepfake_detected_rater_1,
         deepfake_detected_rater_2) %>%
   kable() %>%
-  kable_styling()
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 data_after_exclusions %>%
   summarize(percent_agreement = round(mean(deepfake_detected_rater_1 == deepfake_detected_rater_2, na.rm = TRUE)*100, 1)) %>%
   kable() %>%
-  kable_styling()
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 data_after_exclusions %>%
   select(deepfake_detected_rater_1,                                   
@@ -449,7 +500,8 @@ data_after_exclusions %>%
         deepfake_detected) %>%
   drop_na() %>%
   kable() %>%
-  kable_styling()
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
@@ -460,9 +512,8 @@ Interpreation of Kappa (Altman 1999, Landis JR, 1977):
 
 ## Can people accurately detect deepfakes?
 
-Youden's J = sensitivity + specificity - 1
-
-aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions"
+- Youden's J = sensitivity + specificity - 1, aka informedness, aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions"
+- 95% CIs were bootstrapped via case removal and the percentile method. 
 
 ```{r}
 
@@ -504,20 +555,20 @@ if(file.exists("models/fit_classification_bootstraps.rds")){
       tibble(variable = c(
         #"accuracy",
         "balanced_accuracy",
+        "informedness",
         #"sensitivity",
         "false_negative_rate",
         #"specificity",
-        "false_positive_rate",
-        "informedness"
+        "false_positive_rate"
       ),
       value = c(
         #accuracy,
         balanced_accuracy,
+        informedness,
         #sensitivity,
         false_negative_rate,
         #specificity,
-        false_positive_rate,
-        informedness
+        false_positive_rate
       ))
 
     return(results)
@@ -541,13 +592,14 @@ fit_classification_bootstraps %>%
             .groups = "drop") %>%
   mutate_if(is.numeric, round, digits = 2) %>%
   kable() %>%
-  kable_styling()
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
 # Does detecting it matter?
 
-Subset who received deepfaked videos but also detected them
+Subset who received deepfaked videos but also detected them. Same Bayesian multilevel models as employed above, using only source_valence as IV, i.e., to detect whether learning effects are credibly non-zero in this subset. 
 
 ```{r}
 
@@ -563,7 +615,7 @@ data_detectors_subset <- data_after_exclusions %>%
 fit_selfreport_deepfaked_detected <-
   brm(formula = mean_self_reported_evaluation ~ source_valence + (1 | experiment),
       data    = data_detectors_subset,
-      file    = "models/fit_selfreport_deepfaked_detected_std",
+      file    = "models/fit_selfreport_deepfaked_detected",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -605,16 +657,6 @@ estimates_sr_deepfaked_detected <-
   select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, 
          CI_90_lower, CI_90_upper, p) 
 
-noninferiority_sr_deepfaked_detected <-
-  ifelse(estimates_sr %>% 
-           filter(Parameter == "effect_genuine") %>% 
-           pull(CI_95_lower) <
-           estimates_sr_deepfaked_detected %>% 
-           filter(Parameter == "effect_deepfaked_detected") %>% 
-           pull(CI_90_lower),
-         "Deepfakes were found to be non-inferior to genuine content",
-         "Deepfakes were not found to be non-inferior to genuine content")
-
 bind_rows(filter(estimates_sr, Parameter %in% c("effect_deepfaked")),
           estimates_sr_deepfaked_detected) %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
@@ -624,8 +666,6 @@ bind_rows(filter(estimates_sr, Parameter %in% c("effect_deepfaked")),
 
 ```
 
-`r noninferiority_sr_deepfaked_detected`
-
 ## Implicit
 
 ```{r}
@@ -633,7 +673,7 @@ bind_rows(filter(estimates_sr, Parameter %in% c("effect_deepfaked")),
 fit_implicit_deepfaked_detected <-
   brm(formula = IAT_D2 ~ source_valence + (1 | experiment),
       data    = data_detectors_subset,
-      file    = "models/fit_implicit_deepfaked_detected_std",
+      file    = "models/fit_implicit_deepfaked_detected",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -675,16 +715,6 @@ estimates_imp_deepfaked_detected <-
   select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, 
          CI_90_lower, CI_90_upper, p) 
 
-noninferiority_imp_deepfaked_detected <-
-  ifelse(estimates_imp %>% 
-           filter(Parameter == "effect_genuine") %>% 
-           pull(CI_95_lower) <
-           estimates_imp_deepfaked_detected %>% 
-           filter(Parameter == "effect_deepfaked_detected") %>% 
-           pull(CI_90_lower),
-         "Deepfakes were found to be non-inferior to genuine content",
-         "Deepfakes were not found to be non-inferior to genuine content")
-
 bind_rows(filter(estimates_imp, Parameter %in% c("effect_deepfaked")),
           estimates_imp_deepfaked_detected) %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
@@ -694,8 +724,6 @@ bind_rows(filter(estimates_imp, Parameter %in% c("effect_deepfaked")),
 
 ```
 
-`r noninferiority_imp_deepfaked_detected`
-
 ## Behavioural intentions
 
 ```{r}
@@ -703,7 +731,7 @@ bind_rows(filter(estimates_imp, Parameter %in% c("effect_deepfaked")),
 fit_intentions_deepfaked_detected <-
   brm(formula = mean_intentions ~ source_valence, # no random effect for experiment as only exp 6 assessed intentions
       data    = data_detectors_subset,
-      file    = "models/fit_intentions_deepfaked_detected_std",
+      file    = "models/fit_intentions_deepfaked_detected",
       prior   = prior(normal(0, 10)),
       iter    = 6000,
       warmup  = 3000,
@@ -745,16 +773,6 @@ estimates_intentions_deepfaked_detected <-
   select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper, 
          CI_90_lower, CI_90_upper, p)
 
-noninferiority_intentions_deepfaked_detected <-
-  ifelse(estimates_intentions %>% 
-           filter(Parameter == "effect_genuine") %>% 
-           pull(CI_95_lower) <
-           estimates_intentions_deepfaked_detected %>% 
-           filter(Parameter == "effect_deepfaked_detected") %>% 
-           pull(CI_90_lower),
-         "Deepfakes were found to be non-inferior to genuine content",
-         "Deepfakes were not found to be non-inferior to genuine content")
-
 bind_rows(filter(estimates_intentions, Parameter %in% c("effect_deepfaked")),
           estimates_intentions_deepfaked_detected) %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
@@ -764,6 +782,12 @@ bind_rows(filter(estimates_intentions, Parameter %in% c("effect_deepfaked")),
 
 ```
 
-`r noninferiority_intentions_deepfaked_detected`
+# Session Info
+
+```{r}
+
+sessionInfo()
+
+```
 
 
