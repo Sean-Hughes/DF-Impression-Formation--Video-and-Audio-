@@ -24,15 +24,14 @@ exp 1 "Five Things you Didn't Know About Me !" video has two versions. which one
 
 check corrispondence with preregistrations [sean]
 
-replace old jasp analyses with R implementations - mostly because the data is now likely slighly different 
+finish analyses_original
+
+raincloud plots
+
+add attitude strengths
 
 ## Processing
-
-Integrate second rater's scoring into hand scoring - in 4. integrate Rmd file.
-
-Address issues in 5-testing-coverage-of-hand-scoring.Rmd
 
 check scale n items, min and max scores. especially aot_min_item [sean]
 
 Codebook additions to be made (i.e., replace XXXXX with values) [sean]
-
