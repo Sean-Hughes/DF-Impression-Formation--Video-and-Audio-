@@ -34,5 +34,5 @@ Address issues in 5-testing-coverage-of-hand-scoring.Rmd
 
 check scale n items, min and max scores. especially aot_min_item [sean]
 
-
+Codebook additions to be made (i.e., replace XXXXX with values) [sean]
 

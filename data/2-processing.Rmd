@@ -998,13 +998,13 @@ data_participant_level <- data_conditions_and_demographics %>%
   arrange(experiment, experiment_condition) %>%
   
   # recode IAT and self reported evaluations for stimulus identity 
-  mutate(mean_self_reported_evaluation_recoded_for_stimulus_identity = ifelse(source_valence == "negative", 
+  mutate(mean_self_reported_evaluation_recoded_for_source_valence = ifelse(source_valence == "negative", 
                                                                               mean_self_reported_evaluation*-1, 
                                                                               mean_self_reported_evaluation),
-         IAT_D2_recoded_for_stimulus_identity = ifelse(source_valence == "negative", 
+         IAT_D2_recoded_for_source_valence = ifelse(source_valence == "negative", 
                                                        IAT_D2*-1, 
                                                        IAT_D2),
-         mean_intentions_recoded_for_stimulus_identity = ifelse(source_valence == "negative", 
+         mean_intentions_recoded_for_source_valence = ifelse(source_valence == "negative", 
                                                                 mean_intentions*-1, 
                                                                 mean_intentions)) %>%
   
@@ -1058,9 +1058,9 @@ data_participant_level <- data_conditions_and_demographics %>%
          me_real_news_sharing_pomp,
          
          # recoded DVs - mentioned in preregistrations but not used in my (more appropriate) reworked analyses. 
-         IAT_D2_recoded_for_stimulus_identity,
-         mean_self_reported_evaluation_recoded_for_stimulus_identity,
-         mean_intentions_recoded_for_stimulus_identity,
+         IAT_D2_recoded_for_source_valence,
+         mean_self_reported_evaluation_recoded_for_source_valence,
+         mean_intentions_recoded_for_source_valence,
          
          # additional demographics
          gender_self_describe,

@@ -11,7 +11,7 @@
 
 <meta name="author" content="Sean Hughes &amp; Ian Hussey" />
 
-<meta name="date" content="2020-10-21" />
+<meta name="date" content="2020-10-29" />
 
 <title>Data processing</title>
 
@@ -1306,21 +1306,21 @@ window.initializeCodeFolding = function(show) {
 
     // create a collapsable div to wrap the code in
     var div = $('<div class="collapse r-code-collapse"></div>');
-    show = (show || $(this).hasClass('fold-show')) && !$(this).hasClass('fold-hide');
-    if (show) div.addClass('in');
+    var showThis = (show || $(this).hasClass('fold-show')) && !$(this).hasClass('fold-hide');
+    if (showThis) div.addClass('in');
     var id = 'rcode-643E0F36' + currentIndex++;
     div.attr('id', id);
     $(this).before(div);
     $(this).detach().appendTo(div);
 
     // add a show code button right above
-    var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+    var showCodeText = $('<span>' + (showThis ? 'Hide' : 'Code') + '</span>');
     var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
     showCodeButton.append(showCodeText);
     showCodeButton
         .attr('data-toggle', 'collapse')
         .attr('data-target', '#' + id)
-        .attr('aria-expanded', show)
+        .attr('aria-expanded', showThis)
         .attr('aria-controls', id);
 
     var buttonRow = $('<div class="row"></div>');
@@ -1358,6 +1358,45 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
+<style type="text/css">
+a.anchor-section {margin-left: 10px; visibility: hidden; color: inherit;}
+a.anchor-section::before {content: '#';}
+.hasAnchor:hover a.anchor-section {visibility: visible;}
+</style>
+<script>// Anchor sections v1.0 written by Atsushi Yasumoto on Oct 3rd, 2020.
+document.addEventListener('DOMContentLoaded', function() {
+  // Do nothing if AnchorJS is used
+  if (typeof window.anchors === 'object' && anchors.hasOwnProperty('hasAnchorJSLink')) {
+    return;
+  }
+
+  const h = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+  // Do nothing if sections are already anchored
+  if (Array.from(h).some(x => x.classList.contains('hasAnchor'))) {
+    return null;
+  }
+
+  // Use section id when pandoc runs with --section-divs
+  const section_id = function(x) {
+    return ((x.classList.contains('section') || (x.tagName === 'SECTION'))
+            ? x.id : '');
+  };
+
+  // Add anchors
+  h.forEach(function(x) {
+    const id = x.id || section_id(x.parentElement);
+    if (id === '') {
+      return null;
+    }
+    let anchor = document.createElement('a');
+    anchor.href = '#' + id;
+    anchor.classList = ['anchor-section'];
+    x.classList.add('hasAnchor');
+    x.appendChild(anchor);
+  });
+});
+</script>
 <script>$(document).ready(function(){
     if (typeof $('[data-toggle="tooltip"]').tooltip === 'function') {
         $('[data-toggle="tooltip"]').tooltip();
@@ -1367,6 +1406,230 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+<style type="text/css">
+.lightable-minimal {
+border-collapse: separate;
+border-spacing: 16px 1px;
+width: 100%;
+margin-bottom: 10px;
+}
+.lightable-minimal td {
+margin-left: 5px;
+margin-right: 5px;
+}
+.lightable-minimal th {
+margin-left: 5px;
+margin-right: 5px;
+}
+.lightable-minimal thead tr:last-child th {
+border-bottom: 2px solid #00000050;
+empty-cells: hide;
+}
+.lightable-minimal tbody tr:first-child td {
+padding-top: 0.5em;
+}
+.lightable-minimal.lightable-hover tbody tr:hover {
+background-color: #f5f5f5;
+}
+.lightable-minimal.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-classic {
+border-top: 0.16em solid #111111;
+border-bottom: 0.16em solid #111111;
+width: 100%;
+margin-bottom: 10px;
+margin: 10px 5px;
+}
+.lightable-classic tfoot tr td {
+border: 0;
+}
+.lightable-classic tfoot tr:first-child td {
+border-top: 0.14em solid #111111;
+}
+.lightable-classic caption {
+color: #222222;
+}
+.lightable-classic td {
+padding-left: 5px;
+padding-right: 5px;
+color: #222222;
+}
+.lightable-classic th {
+padding-left: 5px;
+padding-right: 5px;
+font-weight: normal;
+color: #222222;
+}
+.lightable-classic thead tr:last-child th {
+border-bottom: 0.10em solid #111111;
+}
+.lightable-classic.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-classic.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-classic-2 {
+border-top: 3px double #111111;
+border-bottom: 3px double #111111;
+width: 100%;
+margin-bottom: 10px;
+}
+.lightable-classic-2 tfoot tr td {
+border: 0;
+}
+.lightable-classic-2 tfoot tr:first-child td {
+border-top: 3px double #111111;
+}
+.lightable-classic-2 caption {
+color: #222222;
+}
+.lightable-classic-2 td {
+padding-left: 5px;
+padding-right: 5px;
+color: #222222;
+}
+.lightable-classic-2 th {
+padding-left: 5px;
+padding-right: 5px;
+font-weight: normal;
+color: #222222;
+}
+.lightable-classic-2 tbody tr:last-child td {
+border-bottom: 3px double #111111;
+}
+.lightable-classic-2 thead tr:last-child th {
+border-bottom: 1px solid #111111;
+}
+.lightable-classic-2.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-classic-2.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-material {
+min-width: 100%;
+white-space: nowrap;
+table-layout: fixed;
+font-family: Roboto, sans-serif;
+border: 1px solid #EEE;
+border-collapse: collapse;
+margin-bottom: 10px;
+}
+.lightable-material tfoot tr td {
+border: 0;
+}
+.lightable-material tfoot tr:first-child td {
+border-top: 1px solid #EEE;
+}
+.lightable-material th {
+height: 56px;
+padding-left: 16px;
+padding-right: 16px;
+}
+.lightable-material td {
+height: 52px;
+padding-left: 16px;
+padding-right: 16px;
+border-top: 1px solid #eeeeee;
+}
+.lightable-material.lightable-hover tbody tr:hover {
+background-color: #f5f5f5;
+}
+.lightable-material.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-material.lightable-striped tbody td {
+border: 0;
+}
+.lightable-material.lightable-striped thead tr:last-child th {
+border-bottom: 1px solid #ddd;
+}
+.lightable-material-dark {
+min-width: 100%;
+white-space: nowrap;
+table-layout: fixed;
+font-family: Roboto, sans-serif;
+border: 1px solid #FFFFFF12;
+border-collapse: collapse;
+margin-bottom: 10px;
+background-color: #363640;
+}
+.lightable-material-dark tfoot tr td {
+border: 0;
+}
+.lightable-material-dark tfoot tr:first-child td {
+border-top: 1px solid #FFFFFF12;
+}
+.lightable-material-dark th {
+height: 56px;
+padding-left: 16px;
+padding-right: 16px;
+color: #FFFFFF60;
+}
+.lightable-material-dark td {
+height: 52px;
+padding-left: 16px;
+padding-right: 16px;
+color: #FFFFFF;
+border-top: 1px solid #FFFFFF12;
+}
+.lightable-material-dark.lightable-hover tbody tr:hover {
+background-color: #FFFFFF12;
+}
+.lightable-material-dark.lightable-striped tbody tr:nth-child(even) {
+background-color: #FFFFFF12;
+}
+.lightable-material-dark.lightable-striped tbody td {
+border: 0;
+}
+.lightable-material-dark.lightable-striped thead tr:last-child th {
+border-bottom: 1px solid #FFFFFF12;
+}
+.lightable-paper {
+width: 100%;
+margin-bottom: 10px;
+color: #444;
+}
+.lightable-paper tfoot tr td {
+border: 0;
+}
+.lightable-paper tfoot tr:first-child td {
+border-top: 1px solid #00000020;
+}
+.lightable-paper thead tr:last-child th {
+color: #666;
+vertical-align: bottom;
+border-bottom: 1px solid #00000020;
+line-height: 1.15em;
+padding: 10px 5px;
+}
+.lightable-paper td {
+vertical-align: middle;
+border-bottom: 1px solid #00000010;
+line-height: 1.15em;
+padding: 7px 5px;
+}
+.lightable-paper.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-paper.lightable-striped tbody tr:nth-child(even) {
+background-color: #00000008;
+}
+.lightable-paper.lightable-striped tbody td {
+border: 0;
+}
+</style>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
 
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -1689,7 +1952,7 @@ div.tocify {
 
 <h1 class="title toc-ignore">Data processing</h1>
 <h4 class="author">Sean Hughes &amp; Ian Hussey</h4>
-<h4 class="date">21 October 2020</h4>
+<h4 class="date">29 October 2020</h4>
 
 </div>
 
@@ -2696,13 +2959,13 @@ excess
 <span id="cb26-13"><a href="#cb26-13"></a><span class="st">  </span><span class="kw">arrange</span>(experiment, experiment_condition) <span class="op">%&gt;%</span></span>
 <span id="cb26-14"><a href="#cb26-14"></a><span class="st">  </span></span>
 <span id="cb26-15"><a href="#cb26-15"></a><span class="st">  </span><span class="co"># recode IAT and self reported evaluations for stimulus identity </span></span>
-<span id="cb26-16"><a href="#cb26-16"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mean_self_reported_evaluation_recoded_for_stimulus_identity =</span> <span class="kw">ifelse</span>(source_valence <span class="op">==</span><span class="st"> &quot;negative&quot;</span>, </span>
+<span id="cb26-16"><a href="#cb26-16"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mean_self_reported_evaluation_recoded_for_source_valence =</span> <span class="kw">ifelse</span>(source_valence <span class="op">==</span><span class="st"> &quot;negative&quot;</span>, </span>
 <span id="cb26-17"><a href="#cb26-17"></a>                                                                              mean_self_reported_evaluation<span class="op">*-</span><span class="dv">1</span>, </span>
 <span id="cb26-18"><a href="#cb26-18"></a>                                                                              mean_self_reported_evaluation),</span>
-<span id="cb26-19"><a href="#cb26-19"></a>         <span class="dt">IAT_D2_recoded_for_stimulus_identity =</span> <span class="kw">ifelse</span>(source_valence <span class="op">==</span><span class="st"> &quot;negative&quot;</span>, </span>
+<span id="cb26-19"><a href="#cb26-19"></a>         <span class="dt">IAT_D2_recoded_for_source_valence =</span> <span class="kw">ifelse</span>(source_valence <span class="op">==</span><span class="st"> &quot;negative&quot;</span>, </span>
 <span id="cb26-20"><a href="#cb26-20"></a>                                                       IAT_D2<span class="op">*-</span><span class="dv">1</span>, </span>
 <span id="cb26-21"><a href="#cb26-21"></a>                                                       IAT_D2),</span>
-<span id="cb26-22"><a href="#cb26-22"></a>         <span class="dt">mean_intentions_recoded_for_stimulus_identity =</span> <span class="kw">ifelse</span>(source_valence <span class="op">==</span><span class="st"> &quot;negative&quot;</span>, </span>
+<span id="cb26-22"><a href="#cb26-22"></a>         <span class="dt">mean_intentions_recoded_for_source_valence =</span> <span class="kw">ifelse</span>(source_valence <span class="op">==</span><span class="st"> &quot;negative&quot;</span>, </span>
 <span id="cb26-23"><a href="#cb26-23"></a>                                                                mean_intentions<span class="op">*-</span><span class="dv">1</span>, </span>
 <span id="cb26-24"><a href="#cb26-24"></a>                                                                mean_intentions)) <span class="op">%&gt;%</span></span>
 <span id="cb26-25"><a href="#cb26-25"></a><span class="st">  </span></span>
@@ -2756,9 +3019,9 @@ excess
 <span id="cb26-73"><a href="#cb26-73"></a>         me_real_news_sharing_pomp,</span>
 <span id="cb26-74"><a href="#cb26-74"></a>         </span>
 <span id="cb26-75"><a href="#cb26-75"></a>         <span class="co"># recoded DVs - mentioned in preregistrations but not used in my (more appropriate) reworked analyses. </span></span>
-<span id="cb26-76"><a href="#cb26-76"></a>         IAT_D2_recoded_for_stimulus_identity,</span>
-<span id="cb26-77"><a href="#cb26-77"></a>         mean_self_reported_evaluation_recoded_for_stimulus_identity,</span>
-<span id="cb26-78"><a href="#cb26-78"></a>         mean_intentions_recoded_for_stimulus_identity,</span>
+<span id="cb26-76"><a href="#cb26-76"></a>         IAT_D2_recoded_for_source_valence,</span>
+<span id="cb26-77"><a href="#cb26-77"></a>         mean_self_reported_evaluation_recoded_for_source_valence,</span>
+<span id="cb26-78"><a href="#cb26-78"></a>         mean_intentions_recoded_for_source_valence,</span>
 <span id="cb26-79"><a href="#cb26-79"></a>         </span>
 <span id="cb26-80"><a href="#cb26-80"></a>         <span class="co"># additional demographics</span></span>
 <span id="cb26-81"><a href="#cb26-81"></a>         gender_self_describe,</span>
@@ -2815,7 +3078,7 @@ excess
 
 // add bootstrap table styles to pandoc tables
 function bootstrapStylePandocTables() {
-  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
 }
 $(document).ready(function () {
   bootstrapStylePandocTables();

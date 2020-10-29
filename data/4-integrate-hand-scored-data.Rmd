@@ -82,7 +82,6 @@ data_participant_level_with_hand_scoring <- data_participant_level %>%
          reactance, 
          hypothesis_awareness, 
          influence_awareness, 
-         issues_with_study, 
          aot_actively_openminded_thinking_pomp, 
          bcti_belief_in_conspiracy_pomp, 
          crt_analytic_thinking_pomp, 
@@ -98,9 +97,9 @@ data_participant_level_with_hand_scoring <- data_participant_level %>%
          me_real_news_sharing_pomp,
          
          # recoded DVs - mentioned in preregistrations but not used in my (more appropriate) reworked analyses. 
-         IAT_D2_recoded_for_stimulus_identity,
-         mean_self_reported_evaluation_recoded_for_stimulus_identity,
-         mean_intentions_recoded_for_stimulus_identity,
+         IAT_D2_recoded_for_source_valence,
+         mean_self_reported_evaluation_recoded_for_source_valence,
+         mean_intentions_recoded_for_source_valence,
          
          # individual raters
          deepfake_concept_check,
