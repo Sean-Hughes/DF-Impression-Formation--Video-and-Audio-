@@ -428,6 +428,8 @@ data_completeness_iat %>%
 
 ### Performance
 
+Mark participants for exclusion if their total error rate is >30%, their error rate in any one block is >40%, or if >10% RTs are <300ms.
+
 ```{r}
 
 # exclude if total error rate > 30% 
@@ -503,7 +505,7 @@ data_iat_D2_scores <- data_trial_level_iat %>%
   select(-subject) %>%
   rename(subject = subject_original,
          IAT_D2 = p2112) %>%
-  mutate(IAT_D2 = round(IAT_D2, 3))
+  mutate(IAT_D2 = ifelse(abs(IAT_D2) > 2, NA, round(IAT_D2, 3))) # if D2 score is beyond theoretical limits, drop it. Otherwise round.
 
 ```
 
@@ -651,7 +653,7 @@ data_exploratory_questions <- data_trial_level %>%
 
 ```{r}
 
-data_individual_differences_temp <- data_preprocessed %>% 
+data_individual_differences_temp <- data_preprocessed %>%  # ideally this would use data_trial_level so as not to return to using the raw data, but wrangling trial_level would need to be reworked. These variables aren't of centrla interest so I haven't done it.
   select(subject, 
          ends_with("_bcti"), 
          starts_with("crt_"), 
@@ -671,7 +673,7 @@ master_bcti_n_items = 15
 master_crt_n_items = 7
 master_ocq_n_items = 30
 master_ras_n_items = 8
-master_rei_n_items = 10
+master_rei_n_items = 20
 master_me_n_items = 6
 
 aot_min_item = 2  # seems too high?
@@ -975,7 +977,7 @@ data_individual_differences <- data_aot %>%
                                                       master_rei_n_items, 
                                                       rei_min_item,
                                                       rei_max_item)) %>%
-  select(subject, contains("pomp"))
+  select(subject, contains("_pomp"), contains("_sum"))
 
 ```
 
@@ -994,7 +996,6 @@ data_participant_level <- data_conditions_and_demographics %>%
   full_join(data_induction,                              by = "subject") %>% 
   full_join(data_exploratory_questions,                  by = "subject") %>%
   full_join(data_individual_differences,                 by = "subject") %>%
-  full_join(data_me,                                     by = "subject") %>%
   arrange(experiment, experiment_condition) %>%
   
   # recode IAT and self reported evaluations for stimulus identity 
@@ -1043,6 +1044,28 @@ data_participant_level <- data_conditions_and_demographics %>%
          hypothesis_awareness, 
          influence_awareness, 
          issues_with_study, 
+         
+         aot_actively_openminded_thinking_sum, 
+         bcti_belief_in_conspiracy_sum, 
+         crt_analytic_thinking_sum, 
+         ocq_overclaiming_sum, 
+         ras_relgious_affliation_sum, 
+         rei_rational_sum, 
+         rei_experiential_sum, 
+         me_fake_news_awareness_sum, 
+         me_real_news_awareness_sum, 
+         me_fake_news_accuracy_sum, 
+         me_real_news_accuracy_sum, 
+         me_fake_news_sharing_sum, 
+         me_real_news_sharing_sum,
+         
+        me_fake_news_awareness_sum, 
+        me_real_news_awareness_sum, 
+        me_fake_news_accuracy_sum, 
+        me_real_news_accuracy_sum, 
+        me_fake_news_sharing_sum, 
+        me_real_news_sharing_sum,  
+         
          aot_actively_openminded_thinking_pomp, 
          bcti_belief_in_conspiracy_pomp, 
          crt_analytic_thinking_pomp, 

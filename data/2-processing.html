@@ -2370,6 +2370,7 @@ partial
 </div>
 <div id="performance" class="section level3">
 <h3>Performance</h3>
+<p>Mark participants for exclusion if their total error rate is &gt;30%, their error rate in any one block is &gt;40%, or if &gt;10% RTs are &lt;300ms.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="co"># exclude if total error rate &gt; 30% </span></span>
 <span id="cb9-2"><a href="#cb9-2"></a>data_iat_accuracy_overall &lt;-<span class="st"> </span>data_trial_level_iat <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb9-3"><a href="#cb9-3"></a><span class="st">  </span><span class="kw">group_by</span>(subject) <span class="op">%&gt;%</span><span class="st"> </span></span>
@@ -2469,7 +2470,7 @@ TRUE
 <span id="cb10-18"><a href="#cb10-18"></a><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>subject) <span class="op">%&gt;%</span></span>
 <span id="cb10-19"><a href="#cb10-19"></a><span class="st">  </span><span class="kw">rename</span>(<span class="dt">subject =</span> subject_original,</span>
 <span id="cb10-20"><a href="#cb10-20"></a>         <span class="dt">IAT_D2 =</span> p2112) <span class="op">%&gt;%</span></span>
-<span id="cb10-21"><a href="#cb10-21"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">IAT_D2 =</span> <span class="kw">round</span>(IAT_D2, <span class="dv">3</span>))</span></code></pre></div>
+<span id="cb10-21"><a href="#cb10-21"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">IAT_D2 =</span> <span class="kw">ifelse</span>(<span class="kw">abs</span>(IAT_D2) <span class="op">&gt;</span><span class="st"> </span><span class="dv">2</span>, <span class="ot">NA</span>, <span class="kw">round</span>(IAT_D2, <span class="dv">3</span>))) <span class="co"># if D2 score is beyond theoretical limits, drop it. Otherwise round.</span></span></code></pre></div>
 </div>
 </div>
 <div id="self-reported-ratings" class="section level2">
@@ -2649,7 +2650,7 @@ excess
 </div>
 <div id="individual-differenced-measures" class="section level2">
 <h2>Individual differenced measures</h2>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a>data_individual_differences_temp &lt;-<span class="st"> </span>data_preprocessed <span class="op">%&gt;%</span><span class="st"> </span></span>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a>data_individual_differences_temp &lt;-<span class="st"> </span>data_preprocessed <span class="op">%&gt;%</span><span class="st">  </span><span class="co"># ideally this would use data_trial_level so as not to return to using the raw data, but wrangling trial_level would need to be reworked. These variables aren&#39;t of centrla interest so I haven&#39;t done it.</span></span>
 <span id="cb17-2"><a href="#cb17-2"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
 <span id="cb17-3"><a href="#cb17-3"></a>         <span class="kw">ends_with</span>(<span class="st">&quot;_bcti&quot;</span>), </span>
 <span id="cb17-4"><a href="#cb17-4"></a>         <span class="kw">starts_with</span>(<span class="st">&quot;crt_&quot;</span>), </span>
@@ -2669,7 +2670,7 @@ excess
 <span id="cb17-18"><a href="#cb17-18"></a>master_crt_n_items =<span class="st"> </span><span class="dv">7</span></span>
 <span id="cb17-19"><a href="#cb17-19"></a>master_ocq_n_items =<span class="st"> </span><span class="dv">30</span></span>
 <span id="cb17-20"><a href="#cb17-20"></a>master_ras_n_items =<span class="st"> </span><span class="dv">8</span></span>
-<span id="cb17-21"><a href="#cb17-21"></a>master_rei_n_items =<span class="st"> </span><span class="dv">10</span></span>
+<span id="cb17-21"><a href="#cb17-21"></a>master_rei_n_items =<span class="st"> </span><span class="dv">20</span></span>
 <span id="cb17-22"><a href="#cb17-22"></a>master_me_n_items =<span class="st"> </span><span class="dv">6</span></span>
 <span id="cb17-23"><a href="#cb17-23"></a></span>
 <span id="cb17-24"><a href="#cb17-24"></a>aot_min_item =<span class="st"> </span><span class="dv">2</span>  <span class="co"># seems too high?</span></span>
@@ -2939,7 +2940,7 @@ excess
 <span id="cb25-70"><a href="#cb25-70"></a>                                                      master_rei_n_items, </span>
 <span id="cb25-71"><a href="#cb25-71"></a>                                                      rei_min_item,</span>
 <span id="cb25-72"><a href="#cb25-72"></a>                                                      rei_max_item)) <span class="op">%&gt;%</span></span>
-<span id="cb25-73"><a href="#cb25-73"></a><span class="st">  </span><span class="kw">select</span>(subject, <span class="kw">contains</span>(<span class="st">&quot;pomp&quot;</span>))</span></code></pre></div>
+<span id="cb25-73"><a href="#cb25-73"></a><span class="st">  </span><span class="kw">select</span>(subject, <span class="kw">contains</span>(<span class="st">&quot;_pomp&quot;</span>), <span class="kw">contains</span>(<span class="st">&quot;_sum&quot;</span>))</span></code></pre></div>
 </div>
 </div>
 <div id="combine-and-add-transformations" class="section level2">
@@ -2955,99 +2956,120 @@ excess
 <span id="cb26-9"><a href="#cb26-9"></a><span class="st">  </span><span class="kw">full_join</span>(data_induction,                              <span class="dt">by =</span> <span class="st">&quot;subject&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></span>
 <span id="cb26-10"><a href="#cb26-10"></a><span class="st">  </span><span class="kw">full_join</span>(data_exploratory_questions,                  <span class="dt">by =</span> <span class="st">&quot;subject&quot;</span>) <span class="op">%&gt;%</span></span>
 <span id="cb26-11"><a href="#cb26-11"></a><span class="st">  </span><span class="kw">full_join</span>(data_individual_differences,                 <span class="dt">by =</span> <span class="st">&quot;subject&quot;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb26-12"><a href="#cb26-12"></a><span class="st">  </span><span class="kw">full_join</span>(data_me,                                     <span class="dt">by =</span> <span class="st">&quot;subject&quot;</span>) <span class="op">%&gt;%</span></span>
-<span id="cb26-13"><a href="#cb26-13"></a><span class="st">  </span><span class="kw">arrange</span>(experiment, experiment_condition) <span class="op">%&gt;%</span></span>
-<span id="cb26-14"><a href="#cb26-14"></a><span class="st">  </span></span>
-<span id="cb26-15"><a href="#cb26-15"></a><span class="st">  </span><span class="co"># recode IAT and self reported evaluations for stimulus identity </span></span>
-<span id="cb26-16"><a href="#cb26-16"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mean_self_reported_evaluation_recoded_for_source_valence =</span> <span class="kw">ifelse</span>(source_valence <span class="op">==</span><span class="st"> &quot;negative&quot;</span>, </span>
-<span id="cb26-17"><a href="#cb26-17"></a>                                                                              mean_self_reported_evaluation<span class="op">*-</span><span class="dv">1</span>, </span>
-<span id="cb26-18"><a href="#cb26-18"></a>                                                                              mean_self_reported_evaluation),</span>
-<span id="cb26-19"><a href="#cb26-19"></a>         <span class="dt">IAT_D2_recoded_for_source_valence =</span> <span class="kw">ifelse</span>(source_valence <span class="op">==</span><span class="st"> &quot;negative&quot;</span>, </span>
-<span id="cb26-20"><a href="#cb26-20"></a>                                                       IAT_D2<span class="op">*-</span><span class="dv">1</span>, </span>
-<span id="cb26-21"><a href="#cb26-21"></a>                                                       IAT_D2),</span>
-<span id="cb26-22"><a href="#cb26-22"></a>         <span class="dt">mean_intentions_recoded_for_source_valence =</span> <span class="kw">ifelse</span>(source_valence <span class="op">==</span><span class="st"> &quot;negative&quot;</span>, </span>
-<span id="cb26-23"><a href="#cb26-23"></a>                                                                mean_intentions<span class="op">*-</span><span class="dv">1</span>, </span>
-<span id="cb26-24"><a href="#cb26-24"></a>                                                                mean_intentions)) <span class="op">%&gt;%</span></span>
-<span id="cb26-25"><a href="#cb26-25"></a><span class="st">  </span></span>
-<span id="cb26-26"><a href="#cb26-26"></a><span class="st">  </span><span class="co"># compound exclusions</span></span>
-<span id="cb26-27"><a href="#cb26-27"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">exclude_subject =</span> <span class="kw">ifelse</span>(complete_iat <span class="op">==</span><span class="st"> &quot;complete&quot;</span> <span class="op">&amp;</span></span>
-<span id="cb26-28"><a href="#cb26-28"></a><span class="st">                                    </span>complete_selfreport <span class="op">==</span><span class="st"> &quot;complete&quot;</span> <span class="op">&amp;</span><span class="st"> </span></span>
-<span id="cb26-29"><a href="#cb26-29"></a><span class="st">                                    </span>(complete_intentions <span class="op">==</span><span class="st"> &quot;complete&quot;</span> <span class="op">|</span><span class="st"> </span><span class="kw">is.na</span>(complete_intentions)) <span class="op">&amp;</span><span class="st"> </span><span class="co"># measure not used in all studies, so NA also acceptable</span></span>
-<span id="cb26-30"><a href="#cb26-30"></a><span class="st">                                    </span>passed_iat_performance <span class="op">==</span><span class="st"> </span><span class="ot">TRUE</span>, <span class="ot">FALSE</span>, <span class="ot">TRUE</span>),</span>
-<span id="cb26-31"><a href="#cb26-31"></a>         <span class="dt">exclude_subject =</span> <span class="kw">ifelse</span>(<span class="kw">is.na</span>(exclude_subject), <span class="ot">TRUE</span>, exclude_subject)) <span class="op">%&gt;%</span></span>
-<span id="cb26-32"><a href="#cb26-32"></a><span class="st">  </span></span>
-<span id="cb26-33"><a href="#cb26-33"></a><span class="st">  </span><span class="co"># retain only distinct rows, remove duplications</span></span>
-<span id="cb26-34"><a href="#cb26-34"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span></span>
-<span id="cb26-35"><a href="#cb26-35"></a><span class="st">  </span></span>
-<span id="cb26-36"><a href="#cb26-36"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
-<span id="cb26-37"><a href="#cb26-37"></a>         experiment, </span>
-<span id="cb26-38"><a href="#cb26-38"></a>         intervention_medium, </span>
-<span id="cb26-39"><a href="#cb26-39"></a>         source_valence, </span>
-<span id="cb26-40"><a href="#cb26-40"></a>         experiment_condition, </span>
-<span id="cb26-41"><a href="#cb26-41"></a>         exclude_subject,</span>
-<span id="cb26-42"><a href="#cb26-42"></a>         age, </span>
-<span id="cb26-43"><a href="#cb26-43"></a>         gender,</span>
-<span id="cb26-44"><a href="#cb26-44"></a>         IAT_D2, </span>
-<span id="cb26-45"><a href="#cb26-45"></a>         mean_self_reported_evaluation, </span>
-<span id="cb26-46"><a href="#cb26-46"></a>         mean_intentions,</span>
-<span id="cb26-47"><a href="#cb26-47"></a>         deepfake_check,</span>
-<span id="cb26-48"><a href="#cb26-48"></a>         deepfake_concept_check,</span>
-<span id="cb26-49"><a href="#cb26-49"></a>         </span>
-<span id="cb26-50"><a href="#cb26-50"></a>         <span class="co"># intervention description</span></span>
-<span id="cb26-51"><a href="#cb26-51"></a>         memory_of_video_content, </span>
-<span id="cb26-52"><a href="#cb26-52"></a>         memory_of_audio_content,</span>
-<span id="cb26-53"><a href="#cb26-53"></a>         </span>
-<span id="cb26-54"><a href="#cb26-54"></a>         <span class="co"># exploratory measures</span></span>
-<span id="cb26-55"><a href="#cb26-55"></a>         diagnosticity, </span>
-<span id="cb26-56"><a href="#cb26-56"></a>         demand, </span>
-<span id="cb26-57"><a href="#cb26-57"></a>         reactance, </span>
-<span id="cb26-58"><a href="#cb26-58"></a>         hypothesis_awareness, </span>
-<span id="cb26-59"><a href="#cb26-59"></a>         influence_awareness, </span>
-<span id="cb26-60"><a href="#cb26-60"></a>         issues_with_study, </span>
-<span id="cb26-61"><a href="#cb26-61"></a>         aot_actively_openminded_thinking_pomp, </span>
-<span id="cb26-62"><a href="#cb26-62"></a>         bcti_belief_in_conspiracy_pomp, </span>
-<span id="cb26-63"><a href="#cb26-63"></a>         crt_analytic_thinking_pomp, </span>
-<span id="cb26-64"><a href="#cb26-64"></a>         ocq_overclaiming_pomp, </span>
-<span id="cb26-65"><a href="#cb26-65"></a>         ras_relgious_affliation_pomp, </span>
-<span id="cb26-66"><a href="#cb26-66"></a>         rei_rational_pomp, </span>
-<span id="cb26-67"><a href="#cb26-67"></a>         rei_experiential_pomp, </span>
-<span id="cb26-68"><a href="#cb26-68"></a>         me_fake_news_awareness_pomp, </span>
-<span id="cb26-69"><a href="#cb26-69"></a>         me_real_news_awareness_pomp, </span>
-<span id="cb26-70"><a href="#cb26-70"></a>         me_fake_news_accuracy_pomp, </span>
-<span id="cb26-71"><a href="#cb26-71"></a>         me_real_news_accuracy_pomp, </span>
-<span id="cb26-72"><a href="#cb26-72"></a>         me_fake_news_sharing_pomp, </span>
-<span id="cb26-73"><a href="#cb26-73"></a>         me_real_news_sharing_pomp,</span>
+<span id="cb26-12"><a href="#cb26-12"></a><span class="st">  </span><span class="kw">arrange</span>(experiment, experiment_condition) <span class="op">%&gt;%</span></span>
+<span id="cb26-13"><a href="#cb26-13"></a><span class="st">  </span></span>
+<span id="cb26-14"><a href="#cb26-14"></a><span class="st">  </span><span class="co"># recode IAT and self reported evaluations for stimulus identity </span></span>
+<span id="cb26-15"><a href="#cb26-15"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mean_self_reported_evaluation_recoded_for_source_valence =</span> <span class="kw">ifelse</span>(source_valence <span class="op">==</span><span class="st"> &quot;negative&quot;</span>, </span>
+<span id="cb26-16"><a href="#cb26-16"></a>                                                                              mean_self_reported_evaluation<span class="op">*-</span><span class="dv">1</span>, </span>
+<span id="cb26-17"><a href="#cb26-17"></a>                                                                              mean_self_reported_evaluation),</span>
+<span id="cb26-18"><a href="#cb26-18"></a>         <span class="dt">IAT_D2_recoded_for_source_valence =</span> <span class="kw">ifelse</span>(source_valence <span class="op">==</span><span class="st"> &quot;negative&quot;</span>, </span>
+<span id="cb26-19"><a href="#cb26-19"></a>                                                       IAT_D2<span class="op">*-</span><span class="dv">1</span>, </span>
+<span id="cb26-20"><a href="#cb26-20"></a>                                                       IAT_D2),</span>
+<span id="cb26-21"><a href="#cb26-21"></a>         <span class="dt">mean_intentions_recoded_for_source_valence =</span> <span class="kw">ifelse</span>(source_valence <span class="op">==</span><span class="st"> &quot;negative&quot;</span>, </span>
+<span id="cb26-22"><a href="#cb26-22"></a>                                                                mean_intentions<span class="op">*-</span><span class="dv">1</span>, </span>
+<span id="cb26-23"><a href="#cb26-23"></a>                                                                mean_intentions)) <span class="op">%&gt;%</span></span>
+<span id="cb26-24"><a href="#cb26-24"></a><span class="st">  </span></span>
+<span id="cb26-25"><a href="#cb26-25"></a><span class="st">  </span><span class="co"># compound exclusions</span></span>
+<span id="cb26-26"><a href="#cb26-26"></a><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">exclude_subject =</span> <span class="kw">ifelse</span>(complete_iat <span class="op">==</span><span class="st"> &quot;complete&quot;</span> <span class="op">&amp;</span></span>
+<span id="cb26-27"><a href="#cb26-27"></a><span class="st">                                    </span>complete_selfreport <span class="op">==</span><span class="st"> &quot;complete&quot;</span> <span class="op">&amp;</span><span class="st"> </span></span>
+<span id="cb26-28"><a href="#cb26-28"></a><span class="st">                                    </span>(complete_intentions <span class="op">==</span><span class="st"> &quot;complete&quot;</span> <span class="op">|</span><span class="st"> </span><span class="kw">is.na</span>(complete_intentions)) <span class="op">&amp;</span><span class="st"> </span><span class="co"># measure not used in all studies, so NA also acceptable</span></span>
+<span id="cb26-29"><a href="#cb26-29"></a><span class="st">                                    </span>passed_iat_performance <span class="op">==</span><span class="st"> </span><span class="ot">TRUE</span>, <span class="ot">FALSE</span>, <span class="ot">TRUE</span>),</span>
+<span id="cb26-30"><a href="#cb26-30"></a>         <span class="dt">exclude_subject =</span> <span class="kw">ifelse</span>(<span class="kw">is.na</span>(exclude_subject), <span class="ot">TRUE</span>, exclude_subject)) <span class="op">%&gt;%</span></span>
+<span id="cb26-31"><a href="#cb26-31"></a><span class="st">  </span></span>
+<span id="cb26-32"><a href="#cb26-32"></a><span class="st">  </span><span class="co"># retain only distinct rows, remove duplications</span></span>
+<span id="cb26-33"><a href="#cb26-33"></a><span class="st">  </span><span class="kw">distinct</span>() <span class="op">%&gt;%</span></span>
+<span id="cb26-34"><a href="#cb26-34"></a><span class="st">  </span></span>
+<span id="cb26-35"><a href="#cb26-35"></a><span class="st">  </span><span class="kw">select</span>(subject, </span>
+<span id="cb26-36"><a href="#cb26-36"></a>         experiment, </span>
+<span id="cb26-37"><a href="#cb26-37"></a>         intervention_medium, </span>
+<span id="cb26-38"><a href="#cb26-38"></a>         source_valence, </span>
+<span id="cb26-39"><a href="#cb26-39"></a>         experiment_condition, </span>
+<span id="cb26-40"><a href="#cb26-40"></a>         exclude_subject,</span>
+<span id="cb26-41"><a href="#cb26-41"></a>         age, </span>
+<span id="cb26-42"><a href="#cb26-42"></a>         gender,</span>
+<span id="cb26-43"><a href="#cb26-43"></a>         IAT_D2, </span>
+<span id="cb26-44"><a href="#cb26-44"></a>         mean_self_reported_evaluation, </span>
+<span id="cb26-45"><a href="#cb26-45"></a>         mean_intentions,</span>
+<span id="cb26-46"><a href="#cb26-46"></a>         deepfake_check,</span>
+<span id="cb26-47"><a href="#cb26-47"></a>         deepfake_concept_check,</span>
+<span id="cb26-48"><a href="#cb26-48"></a>         </span>
+<span id="cb26-49"><a href="#cb26-49"></a>         <span class="co"># intervention description</span></span>
+<span id="cb26-50"><a href="#cb26-50"></a>         memory_of_video_content, </span>
+<span id="cb26-51"><a href="#cb26-51"></a>         memory_of_audio_content,</span>
+<span id="cb26-52"><a href="#cb26-52"></a>         </span>
+<span id="cb26-53"><a href="#cb26-53"></a>         <span class="co"># exploratory measures</span></span>
+<span id="cb26-54"><a href="#cb26-54"></a>         diagnosticity, </span>
+<span id="cb26-55"><a href="#cb26-55"></a>         demand, </span>
+<span id="cb26-56"><a href="#cb26-56"></a>         reactance, </span>
+<span id="cb26-57"><a href="#cb26-57"></a>         hypothesis_awareness, </span>
+<span id="cb26-58"><a href="#cb26-58"></a>         influence_awareness, </span>
+<span id="cb26-59"><a href="#cb26-59"></a>         issues_with_study, </span>
+<span id="cb26-60"><a href="#cb26-60"></a>         </span>
+<span id="cb26-61"><a href="#cb26-61"></a>         aot_actively_openminded_thinking_sum, </span>
+<span id="cb26-62"><a href="#cb26-62"></a>         bcti_belief_in_conspiracy_sum, </span>
+<span id="cb26-63"><a href="#cb26-63"></a>         crt_analytic_thinking_sum, </span>
+<span id="cb26-64"><a href="#cb26-64"></a>         ocq_overclaiming_sum, </span>
+<span id="cb26-65"><a href="#cb26-65"></a>         ras_relgious_affliation_sum, </span>
+<span id="cb26-66"><a href="#cb26-66"></a>         rei_rational_sum, </span>
+<span id="cb26-67"><a href="#cb26-67"></a>         rei_experiential_sum, </span>
+<span id="cb26-68"><a href="#cb26-68"></a>         me_fake_news_awareness_sum, </span>
+<span id="cb26-69"><a href="#cb26-69"></a>         me_real_news_awareness_sum, </span>
+<span id="cb26-70"><a href="#cb26-70"></a>         me_fake_news_accuracy_sum, </span>
+<span id="cb26-71"><a href="#cb26-71"></a>         me_real_news_accuracy_sum, </span>
+<span id="cb26-72"><a href="#cb26-72"></a>         me_fake_news_sharing_sum, </span>
+<span id="cb26-73"><a href="#cb26-73"></a>         me_real_news_sharing_sum,</span>
 <span id="cb26-74"><a href="#cb26-74"></a>         </span>
-<span id="cb26-75"><a href="#cb26-75"></a>         <span class="co"># recoded DVs - mentioned in preregistrations but not used in my (more appropriate) reworked analyses. </span></span>
-<span id="cb26-76"><a href="#cb26-76"></a>         IAT_D2_recoded_for_source_valence,</span>
-<span id="cb26-77"><a href="#cb26-77"></a>         mean_self_reported_evaluation_recoded_for_source_valence,</span>
-<span id="cb26-78"><a href="#cb26-78"></a>         mean_intentions_recoded_for_source_valence,</span>
-<span id="cb26-79"><a href="#cb26-79"></a>         </span>
-<span id="cb26-80"><a href="#cb26-80"></a>         <span class="co"># additional demographics</span></span>
-<span id="cb26-81"><a href="#cb26-81"></a>         gender_self_describe,</span>
-<span id="cb26-82"><a href="#cb26-82"></a>         ethnicity,</span>
-<span id="cb26-83"><a href="#cb26-83"></a>         ethnicity_self_describe,</span>
-<span id="cb26-84"><a href="#cb26-84"></a>         location,</span>
-<span id="cb26-85"><a href="#cb26-85"></a>         education, </span>
-<span id="cb26-86"><a href="#cb26-86"></a>         employment, </span>
-<span id="cb26-87"><a href="#cb26-87"></a>         education_recoded, </span>
-<span id="cb26-88"><a href="#cb26-88"></a>         income, </span>
-<span id="cb26-89"><a href="#cb26-89"></a>         income_recoded, </span>
-<span id="cb26-90"><a href="#cb26-90"></a>         political_ideology_identity, </span>
-<span id="cb26-91"><a href="#cb26-91"></a>         political_ideology_social_issues, </span>
-<span id="cb26-92"><a href="#cb26-92"></a>         political_ideology_economic_issues, </span>
-<span id="cb26-93"><a href="#cb26-93"></a>         religious_affiliation_general, </span>
-<span id="cb26-94"><a href="#cb26-94"></a>         religious_affiliation_general_recoded,</span>
+<span id="cb26-75"><a href="#cb26-75"></a>        me_fake_news_awareness_sum, </span>
+<span id="cb26-76"><a href="#cb26-76"></a>        me_real_news_awareness_sum, </span>
+<span id="cb26-77"><a href="#cb26-77"></a>        me_fake_news_accuracy_sum, </span>
+<span id="cb26-78"><a href="#cb26-78"></a>        me_real_news_accuracy_sum, </span>
+<span id="cb26-79"><a href="#cb26-79"></a>        me_fake_news_sharing_sum, </span>
+<span id="cb26-80"><a href="#cb26-80"></a>        me_real_news_sharing_sum,  </span>
+<span id="cb26-81"><a href="#cb26-81"></a>         </span>
+<span id="cb26-82"><a href="#cb26-82"></a>         aot_actively_openminded_thinking_pomp, </span>
+<span id="cb26-83"><a href="#cb26-83"></a>         bcti_belief_in_conspiracy_pomp, </span>
+<span id="cb26-84"><a href="#cb26-84"></a>         crt_analytic_thinking_pomp, </span>
+<span id="cb26-85"><a href="#cb26-85"></a>         ocq_overclaiming_pomp, </span>
+<span id="cb26-86"><a href="#cb26-86"></a>         ras_relgious_affliation_pomp, </span>
+<span id="cb26-87"><a href="#cb26-87"></a>         rei_rational_pomp, </span>
+<span id="cb26-88"><a href="#cb26-88"></a>         rei_experiential_pomp, </span>
+<span id="cb26-89"><a href="#cb26-89"></a>         me_fake_news_awareness_pomp, </span>
+<span id="cb26-90"><a href="#cb26-90"></a>         me_real_news_awareness_pomp, </span>
+<span id="cb26-91"><a href="#cb26-91"></a>         me_fake_news_accuracy_pomp, </span>
+<span id="cb26-92"><a href="#cb26-92"></a>         me_real_news_accuracy_pomp, </span>
+<span id="cb26-93"><a href="#cb26-93"></a>         me_fake_news_sharing_pomp, </span>
+<span id="cb26-94"><a href="#cb26-94"></a>         me_real_news_sharing_pomp,</span>
 <span id="cb26-95"><a href="#cb26-95"></a>         </span>
-<span id="cb26-96"><a href="#cb26-96"></a>         <span class="co"># component exclusion variables</span></span>
-<span id="cb26-97"><a href="#cb26-97"></a>         passed_iat_performance, </span>
-<span id="cb26-98"><a href="#cb26-98"></a>         complete_iat, </span>
-<span id="cb26-99"><a href="#cb26-99"></a>         complete_selfreport,</span>
-<span id="cb26-100"><a href="#cb26-100"></a>         complete_intentions,</span>
-<span id="cb26-101"><a href="#cb26-101"></a>         </span>
-<span id="cb26-102"><a href="#cb26-102"></a>         <span class="co"># methods variables</span></span>
-<span id="cb26-103"><a href="#cb26-103"></a>         task_order, </span>
-<span id="cb26-104"><a href="#cb26-104"></a>         iat_block_order)</span></code></pre></div>
+<span id="cb26-96"><a href="#cb26-96"></a>         <span class="co"># recoded DVs - mentioned in preregistrations but not used in my (more appropriate) reworked analyses. </span></span>
+<span id="cb26-97"><a href="#cb26-97"></a>         IAT_D2_recoded_for_source_valence,</span>
+<span id="cb26-98"><a href="#cb26-98"></a>         mean_self_reported_evaluation_recoded_for_source_valence,</span>
+<span id="cb26-99"><a href="#cb26-99"></a>         mean_intentions_recoded_for_source_valence,</span>
+<span id="cb26-100"><a href="#cb26-100"></a>         </span>
+<span id="cb26-101"><a href="#cb26-101"></a>         <span class="co"># additional demographics</span></span>
+<span id="cb26-102"><a href="#cb26-102"></a>         gender_self_describe,</span>
+<span id="cb26-103"><a href="#cb26-103"></a>         ethnicity,</span>
+<span id="cb26-104"><a href="#cb26-104"></a>         ethnicity_self_describe,</span>
+<span id="cb26-105"><a href="#cb26-105"></a>         location,</span>
+<span id="cb26-106"><a href="#cb26-106"></a>         education, </span>
+<span id="cb26-107"><a href="#cb26-107"></a>         employment, </span>
+<span id="cb26-108"><a href="#cb26-108"></a>         education_recoded, </span>
+<span id="cb26-109"><a href="#cb26-109"></a>         income, </span>
+<span id="cb26-110"><a href="#cb26-110"></a>         income_recoded, </span>
+<span id="cb26-111"><a href="#cb26-111"></a>         political_ideology_identity, </span>
+<span id="cb26-112"><a href="#cb26-112"></a>         political_ideology_social_issues, </span>
+<span id="cb26-113"><a href="#cb26-113"></a>         political_ideology_economic_issues, </span>
+<span id="cb26-114"><a href="#cb26-114"></a>         religious_affiliation_general, </span>
+<span id="cb26-115"><a href="#cb26-115"></a>         religious_affiliation_general_recoded,</span>
+<span id="cb26-116"><a href="#cb26-116"></a>         </span>
+<span id="cb26-117"><a href="#cb26-117"></a>         <span class="co"># component exclusion variables</span></span>
+<span id="cb26-118"><a href="#cb26-118"></a>         passed_iat_performance, </span>
+<span id="cb26-119"><a href="#cb26-119"></a>         complete_iat, </span>
+<span id="cb26-120"><a href="#cb26-120"></a>         complete_selfreport,</span>
+<span id="cb26-121"><a href="#cb26-121"></a>         complete_intentions,</span>
+<span id="cb26-122"><a href="#cb26-122"></a>         </span>
+<span id="cb26-123"><a href="#cb26-123"></a>         <span class="co"># methods variables</span></span>
+<span id="cb26-124"><a href="#cb26-124"></a>         task_order, </span>
+<span id="cb26-125"><a href="#cb26-125"></a>         iat_block_order)</span></code></pre></div>
 </div>
 <div id="write-to-disk-1" class="section level2">
 <h2>Write to disk</h2>
