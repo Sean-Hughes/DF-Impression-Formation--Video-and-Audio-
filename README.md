@@ -73,6 +73,18 @@ Apart from this were are consistent with the pre-reg documents
 
 
 
+**Sean**: Actually when I started updating the manuscript with the analyses files I realized there is an error in the section "Differences between genuine and deepfaked content (after rescoring for source_valence)
+
+It is supposed to be looking at "recoded_DVs ~ experiment_condition" but in the code it is using the non-recoded variables. You can see this reflected in the scores that are produced. Basically no scores in the self-reports when there should be. I changed this in the analysis files.
+
+
+
+Also could we add in the SDs for the Means that we compute? Thanks
+
+
+
+
+
 raincloud plots [ian]
 
 add attitude strengths [ian]

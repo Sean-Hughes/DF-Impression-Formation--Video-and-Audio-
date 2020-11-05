@@ -337,7 +337,7 @@ recoded_DVs ~ experiment_condition
 results_recodedDVs_experiment_condition <- data_after_exclusions %>%
   filter(experiment >= 3) %>% # no deepfaking condition until experiment 3
   rename(IV = experiment_condition) %>%
-  gather(DV_type, DV, c(mean_self_reported_evaluation, IAT_D2, mean_intentions)) %>%
+  gather(DV_type, DV, c(mean_self_reported_evaluation_recoded_for_source_valence, IAT_D2_recoded_for_source_valence, mean_intentions_recoded_for_source_valence)) %>%
   select(experiment, DV_type, DV, IV) %>%
   drop_na() %>%
   analysis_workflow(data = .)
