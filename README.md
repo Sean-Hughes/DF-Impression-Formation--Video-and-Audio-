@@ -72,13 +72,15 @@ We also said we would run the following analyses:
 
 - One sample t-tests that compare the self-reported evaluations from zero, one for the people exposed to positive content and another for the people exposed to negative content, for each experiment (i.e., NOT the rescored versions but the raw versions for each condition). I ran these in JASP and included them in the Supplementary Materials paper but they are not in the R file. Would  be good to include them. 
 
+  > Ian: just checking my understanding: one sample t tests comparing each source_valence condition against zero, combining both genuine and df conditions? I don't see the utility of this analysis, but am happy to add it if it was preregistered.
+
 - Once you add these to the analysis file I'll update the Supplementary Materials paper with the values from your analyses for Experiments 1-6.  
 
   > Ian: Working on this
 
 Also could we add in the SDs for the Means that we compute? Thanks
 
-> Ian: Working on this
+> Ian: This is actually a giant pain to do because the IV factor levels change between analyses, and getting SDs to neatly print in the results requires parsing by level. The current results contain all the standard outputs: estimated means by level and the inference tests to decide if these means differ, as well as standardized effect sizes of the differences in means by SD. I know of a handfull of reviewers who like to also see SDs for some reason, but they are very rare, and if they're that eager they can easily look at our data. The SDs by themselves dont have any bearing on the tests or inferences we want to make.
 
 
 
