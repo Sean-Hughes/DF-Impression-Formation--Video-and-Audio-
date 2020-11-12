@@ -674,7 +674,7 @@ master_crt_n_items = 7
 master_ocq_n_items = 30
 master_ras_n_items = 8
 master_rei_n_items = 20
-master_me_n_items = 6
+master_me_n_items = 12
 
 aot_min_item = 2  # seems too high?
 bcti_min_item = 1
@@ -784,8 +784,8 @@ data_me_awareness <- data_individual_differences_temp %>%
             me_real_news_awareness_sum = sum(me_real_news, na.rm = TRUE),
             me_n_items = n(),
             .groups = "drop") %>%
-  mutate(me_fake_news_awareness_sum = ifelse(me_n_items == master_me_n_items*2, me_fake_news_awareness_sum, NA),
-         me_real_news_awareness_sum = ifelse(me_n_items == master_me_n_items*2, me_real_news_awareness_sum, NA)) %>%
+  mutate(me_fake_news_awareness_sum = ifelse(me_n_items == master_me_n_items, me_fake_news_awareness_sum, NA),
+         me_real_news_awareness_sum = ifelse(me_n_items == master_me_n_items, me_real_news_awareness_sum, NA)) %>%
   select(-me_n_items)
 
 # accuracy
@@ -801,8 +801,8 @@ data_me_accuracy <- data_individual_differences_temp %>%
             me_real_news_accuracy_sum = sum(as.numeric(me_real_news), na.rm = TRUE),
             me_n_items = n(),
             .groups = "drop") %>%
-  mutate(me_fake_news_accuracy_sum = ifelse(me_n_items == master_me_n_items*2, me_fake_news_accuracy_sum, NA),
-         me_real_news_accuracy_sum = ifelse(me_n_items == master_me_n_items*2, me_real_news_accuracy_sum, NA)) %>%
+  mutate(me_fake_news_accuracy_sum = ifelse(me_n_items == master_me_n_items, me_fake_news_accuracy_sum, NA),
+         me_real_news_accuracy_sum = ifelse(me_n_items == master_me_n_items, me_real_news_accuracy_sum, NA)) %>%
   select(-me_n_items)
 
 # sharing
@@ -820,8 +820,8 @@ data_me_sharing <- data_individual_differences_temp %>%
             me_real_news_sharing_sum = sum(me_real_news, na.rm = TRUE),
             me_n_items = n(),
             .groups = "drop") %>%
-  mutate(me_fake_news_sharing_sum = ifelse(me_n_items == master_me_n_items*2, me_fake_news_sharing_sum, NA),
-         me_real_news_sharing_sum = ifelse(me_n_items == master_me_n_items*2, me_real_news_sharing_sum, NA)) %>%
+  mutate(me_fake_news_sharing_sum = ifelse(me_n_items == master_me_n_items, me_fake_news_sharing_sum, NA),
+         me_real_news_sharing_sum = ifelse(me_n_items == master_me_n_items, me_real_news_sharing_sum, NA)) %>%
   select(-me_n_items)
 
 data_me <- data_me_awareness %>%
