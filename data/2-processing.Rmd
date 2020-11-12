@@ -676,15 +676,15 @@ master_ras_n_items = 8
 master_rei_n_items = 20
 master_me_n_items = 12
 
-aot_min_item = 2  # seems too high?
+aot_min_item = 1
 bcti_min_item = 1
 crt_min_item = 0
 ocq_min_item = 0
 ras_min_item = 1
 rei_min_item = 1
-me_awareness_min_item = 0
-me_accuracy_min_item = 1  # check
-me_sharing_min_item = 0
+me_awareness_min_item = 1
+me_accuracy_min_item = 1  
+me_sharing_min_item = 1
 
 aot_max_item = 6
 bcti_max_item = 9
@@ -692,9 +692,9 @@ crt_max_item = 1
 ocq_max_item = 6
 ras_max_item = 5
 rei_max_item = 7
-me_awareness_max_item = 1
-me_accuracy_max_item = 4 # check
-me_sharing_max_item = 1
+me_awareness_max_item = 3
+me_accuracy_max_item = 4 
+me_sharing_max_item = 3
 
 ```
 

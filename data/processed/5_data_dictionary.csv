@@ -1,7 +1,7 @@
 variable;label
 subject;Unique subject identifier
-experiment;Experiement data was collected as part of
-intervention_medium;What medium did the intervention (whetjer deepfaked or genuine) take (e.g., video and audio vs just audio)
+experiment;Experiment data was collected as part of
+intervention_medium;What medium did the intervention (whether deepfaked or genuine) take (e.g., video and audio vs just audio)
 source_valence;What was the researcher-intended valence of the intervention? I.e., was the participant exposed to positive or negative messages?
 experiment_condition;Was the intervention genuine or deepfaked content?
 exclude_subject;Should the participant be excluded (TRUE) or retained (FALSE) based on passed_iat_performance, complete_iat, complete_selfreport, and complete_intentions
@@ -9,7 +9,7 @@ age;Participant age
 gender;Participant gender
 IAT_D2;The IAT captures automatic evaluations of Chris, the character depicted in the intervention. Accuracies and reaction times on IAT were converted to D2 scores, following Greenwald et al 2003, and implemented using the IATScores R package. Briefly, D2 is a standardized difference score of trimmed reaction times in one block type versus the other: (mean_block_2 - mean_block_1) / standard_deviation_all_blocks
 mean_self_reported_evaluation;Mean self-reported evaluation (positive-negative, good-bad, pleasant-unpleasant) of Chris, the character depicted in the intervention.
-mean_intentions;Mean behavioural intentions to XXXXXX
+mean_intentions;Mean behavioural intentions
 deepfake_detected;"Open ended responses to the deepfaking detection question were hand scored by two independent reviewers (see ""3 Instructions for raters.docx""). If both reviewers scored an open ended response as having detected the intervention as a deepfake (whether correctly or not), this variable was set to TRUE. Otherwise FALSE."
 diagnosticity;question assessing whether people believe that the targets actions in the video/audio were representative of his 'true' character
 demand;Assesssment of whether evaluations of the targer reflected how the person genuinely felt or if they simply responded in a way they thought the researchers wanted them to.
@@ -51,7 +51,7 @@ education;Education
 employment;Employment status
 education_recoded;Education recoded into seven groups
 income;Income level
-income_recoded;Income level recoded into XXXXX groups
+income_recoded;Income level recoded into 7 groups
 political_ideology_identity;4 item-measure of political ideology developed by Pennycook and Rand (2018). This measure combines the two questions about the importance of political ideology to one's self-identity
 political_ideology_social_issues;4 item-measure of political ideology developed by Pennycook and Rand (2018). This measure combines the two questions about how liberal vs. conservative they are when it comes to social issues.
 political_ideology_economic_issues;4 item-measure of political ideology developed by Pennycook and Rand (2018). This measure combines the two questions about how liberal vs. conservative they are when it comes to economic issues.
