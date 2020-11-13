@@ -31,6 +31,8 @@ As far as the correspondence  between the pre-reg documents and pre-reg analyses
   >**Sean**: Ok - let's go with r > .7 then. Added this to pre-reg analyses files where appropriate.
   >
   >Ian: I see you added this to the data analysis plan files - I would undo this, it looks like we're tweaking the prereg after the fact. Just say in the analysis file that this is what was done in the published lit, but no value was given for what they mean for highly, so we include the single and the compound metric for others to make their own choices on, and report the correlation. Maybe that means no cutoff is needed as we dont really do anything with it all. 
+  >
+  >**Sean**: Removed  from the data analysis plan files. Note added to the pre-reg analysis files.
 
 - In Experiments 5-6 we said that "If the two political ideology scores were found to correlate highly with one another then we will average them to create a ‘General *Political Ideology*’ score, with higher values indicative of more conservative beliefs and lower values of more liberal beliefs. " We did not do this. 
 
@@ -53,6 +55,8 @@ We also said we would run the following analyses:
   > Regardless, I did pre-reg it, and do see value in it, so if it's trivial to spit out then let's do so.   
   >
   > > "I then need follow-up tests to explore the nature of that difference, right?" No, the direction of the test statistic (or the marginal means) tells you its in the predicted direction. The harm is as i say above, it requires additional assumptions but provides no new information, you already know they're different. you can get into situations where one is different from zero and the other is not, which becomes harder to write up, but is only redered meaningful based on your interpretation of zero (which is as problematic for self reports as IAT scores). This is all a debate re what to do in future studies of course, i'll add it here since its preregistered, but i see literally no value in it (and potential costs) for future studies. 
+  > >
+  > > **Sean**: Cool.
 
 - Once you add these to the analysis file I'll update the Supplementary Materials paper with the values from your analyses for Experiments 1-6.  
 

@@ -385,7 +385,10 @@ results_recodedDVs_experiment_condition %>%
 
 DVs and detection bivariate with individual differences variables 
 
+
 ```{r}
+
+# Note: we indicated in the pre-reg files that if the two political ideology scores were to highly correlate with one another then we would create a composite score (as the original authors did in their work with these measures). However, given that those authors did not specify what "highly" related meant, we decided to include both the composite and the individual scores for others to inspect and use as they see fit. 
 
 # which columns should be used on the RHS?
 column_names <- data_after_exclusions %>%
