@@ -13,6 +13,12 @@ IAT_D2,The IAT captures automatic evaluations of Chris the character depicted in
 mean_self_reported_evaluation,Mean self-reported evaluation (positive-negative good-bad pleasant-unpleasant) of Chris the character depicted in the intervention.
 mean_intentions,Mean behavioural intentions
 deepfake_detected,"Open ended responses to the deepfaking detection question were hand scored by two independent reviewers (see ""3 Instructions for raters.docx""). If both reviewers scored an open ended response as having detected the intervention as a deepfake (whether correctly or not), this variable was set to TRUE. Otherwise FALSE."
+ratings_negative_positive,"Item level data for self report ratings scale item 1, negative vs positive"
+ratings_bad_good,"Item level data for self report ratings scale item 1, bad vs good"
+ratings_dislike_like,"Item level data for self report ratings scale item 1, dislike vs like"
+behavioral_intentions_share,"Item level data for self report ratings scale item 1: ""I would support him by clicking the ‘share’ button (i.e., share his video with other people)”"
+behavioral_intentions_subscribe,Item level data for self report ratings scale item 2: “Chris has just started to make these videos and wants to become a YouTuber. I happen to encounter his video on YouTube. I would ‘subscribe’ to his channel to learn more about him.” 
+behavioral_intentions_recommend,Item level data for self report ratings scale item 3: “I would recommend Chris’ videos to others”)
 diagnosticity,Question assessing whether people believe that the targets actions in the video/audio were representative of his 'true' character
 demand,Assesssment of whether evaluations of the targer reflected how the person genuinely felt or if they simply responded in a way they thought the researchers wanted them to.
 reactance,Assesssment of whether evaluations of the targer reflected how the person genuinely felt or if they responded in the opposite way than they thought the researchers wanted them to.

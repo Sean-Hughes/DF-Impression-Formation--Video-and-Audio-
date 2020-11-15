@@ -78,6 +78,15 @@ data_participant_level_with_hand_scoring <- data_participant_level %>%
          mean_intentions,
          deepfake_detected,
          
+         # item level data
+         ratings_bad_good,
+         ratings_dislike_like,
+         ratings_negative_positive,
+         behavioral_intentions_share,
+         behavioral_intentions_subscribe,
+         behavioral_intentions_recommend,
+         ## NB IAT item level data is written to disk as a separate file
+         
          # exploratory measures
          diagnosticity,
          demand,

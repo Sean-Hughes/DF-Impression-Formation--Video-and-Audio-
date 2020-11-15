@@ -31,7 +31,7 @@ library(IATscores)
 
 ```{r}
 
-#data_preprocessed <- read_rds("processed/1_data_preprocessed.rds")
+data_preprocessed <- read_rds("processed/1_data_preprocessed.rds")
 
 ```
 
@@ -92,9 +92,9 @@ data_trial_level <- data_preprocessed %>%
   
   
   # wrangle ratings
-  mutate(ratings_item = case_when(task == "ratings_good_bad" ~ "good_bad",
-                                  task == "ratings_like_dislike" ~ "like_dislike",
-                                  task == "ratings_negative_positive" ~ "negative_positive"),
+  mutate(ratings_item = case_when(task == "ratings_good_bad"          ~ "ratings_bad_good",
+                                  task == "ratings_like_dislike"      ~ "ratings_dislike_like",
+                                  task == "ratings_negative_positive" ~ "ratings_negative_positive"),
          task = ifelse(task %in% c("ratings_good_bad",
                                    "ratings_like_dislike",
                                    "ratings_negative_positive"), "self-reported ratings", task),
@@ -395,8 +395,8 @@ data_induction_linger_time <- data_trial_level %>%
   select(subject, 
          latency) %>%
   mutate(intervention_linger_minutes = round(as.numeric(latency)/(1000*60), 3),
-         exclude_implausible_intervention_linger = ifelse(intervention_linger_minutes >= 1.5 &
-                                                            intervention_linger_minutes <= 4.5, 
+         exclude_implausible_intervention_linger = ifelse(intervention_linger_minutes <= 1.5 |
+                                                            intervention_linger_minutes >= 4.5, 
                                                           TRUE, FALSE)) %>%
   drop_na()
 
@@ -525,9 +525,11 @@ data_trial_level_iat_dummy_subjects <- data_trial_level_iat %>%
   mutate(subject_original = subject,
          subject = row_number()) 
 
-data_iat_D2_scores <- data_trial_level_iat %>%
+data_iat_item_level <- data_trial_level_iat %>%
   rename(subject_original = subject) %>%
-  left_join(data_trial_level_iat_dummy_subjects, by = "subject_original") %>%
+  left_join(data_trial_level_iat_dummy_subjects, by = "subject_original") 
+
+data_iat_D2_scores <- data_iat_item_level %>%
   # parameters are identical to those the package lists in the D2 wrapper function
   IATscores::RobustScores(IATdata = .,
                           P1 = "fxtrim",  # Trim values < 400ms
@@ -589,19 +591,36 @@ data_self_reported_evaluations_mean_scores <- data_trial_level_self_reported_eva
 
 ```
 
-## Behavioural intentions
+### Item level data
 
 ```{r}
 
-data_behavioural_intentions <- data_trial_level %>%
+data_self_reported_evaluations_item_level <- data_trial_level_self_reported_evaluations %>%
+  pivot_wider(names_from = ratings_item, 
+              values_from = ratings_response,
+              values_fn = {mean}) 
+
+```
+
+## Behavioural intentions
+
+Mean scoring, completeness, and item level data
+
+```{r}
+
+data_behavioural_intentions_item_level <- data_trial_level %>%
   select(subject, 
-         intentions_q1, 
-         intentions_q2, 
-         intentions_q3) %>%
-  drop_na() %>%
-  gather(intentions_item, intentions_response, c("intentions_q1", "intentions_q2", "intentions_q3")) %>%
+         behavioral_intentions_share     = intentions_q1, 
+         behavioral_intentions_subscribe = intentions_q2, 
+         behavioral_intentions_recommend = intentions_q3) %>%
+  drop_na() 
+
+data_behavioural_intentions <- data_behavioural_intentions_item_level %>%  
+  gather(intentions_item, intentions_response, c("behavioral_intentions_share", 
+                                                 "behavioral_intentions_subscribe", 
+                                                 "behavioral_intentions_recommend")) %>%
   # rescore from 1-to-5 to -2-to-+2 to make inversion easier
-  mutate(intentions_response = intentions_response - 3) %>%  
+  mutate(intentions_response = intentions_response - 3) %>%
   group_by(subject) %>%
   summarize(n = n(),
             mean_intentions = round(mean(intentions_response), 2), .groups = "drop") %>%
@@ -1032,6 +1051,8 @@ data_participant_level <- data_conditions_and_demographics %>%
   full_join(data_induction_description,                  by = "subject") %>% 
   full_join(data_exploratory_questions,                  by = "subject") %>%
   full_join(data_individual_differences,                 by = "subject") %>%
+  full_join(data_self_reported_evaluations_item_level,   by = "subject") %>%
+  full_join(data_behavioural_intentions_item_level,      by = "subject") %>%
   arrange(experiment, experiment_condition) %>%
   
   # recode IAT and self reported evaluations for stimulus identity 
@@ -1061,6 +1082,8 @@ data_participant_level <- data_conditions_and_demographics %>%
          source_valence, 
          experiment_condition, 
          exclude_subject,
+         exclude_implausible_intervention_linger,
+         intervention_linger_minutes,
          age, 
          gender,
          IAT_D2, 
@@ -1070,9 +1093,16 @@ data_participant_level <- data_conditions_and_demographics %>%
          deepfake_concept_check,
          
          # intervention
-         intervention_linger_minutes,
-         exclude_implausible_intervention_linger,
          memory_of_intervention_content,
+         
+         # item level data
+         ratings_bad_good,
+         ratings_dislike_like,
+         ratings_negative_positive,
+         behavioral_intentions_share,
+         behavioral_intentions_subscribe,
+         behavioral_intentions_recommend,
+         ## NB IAT item level data is written to disk as a separate file
          
          # exploratory measures
          diagnosticity, 
@@ -1096,12 +1126,12 @@ data_participant_level <- data_conditions_and_demographics %>%
          me_fake_news_sharing_sum, 
          me_real_news_sharing_sum,
          
-        me_fake_news_awareness_sum, 
-        me_real_news_awareness_sum, 
-        me_fake_news_accuracy_sum, 
-        me_real_news_accuracy_sum, 
-        me_fake_news_sharing_sum, 
-        me_real_news_sharing_sum,  
+         me_fake_news_awareness_sum, 
+         me_real_news_awareness_sum, 
+         me_fake_news_accuracy_sum, 
+         me_real_news_accuracy_sum, 
+         me_fake_news_sharing_sum, 
+         me_real_news_sharing_sum,  
          
          aot_actively_openminded_thinking_pomp, 
          bcti_belief_in_conspiracy_pomp, 
@@ -1169,6 +1199,9 @@ data_participant_level %>%
   filter(exclude_subject == FALSE) %>%
   select(subject, experiment, deepfake_check, deepfake_concept_check) %>%
   write_csv("processed/2.3_data_participant_level_for_hand_scoring.csv")
+
+# item level IAT for internal reliability analysis
+write_csv(data_iat_item_level, "processed/2.4_data_iat_item_level.csv")
 
 ```
 

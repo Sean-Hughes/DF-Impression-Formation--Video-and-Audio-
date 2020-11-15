@@ -32,43 +32,45 @@ library(codebook)
 library(labelled)
 library(rio)
 
-options(knitr.kable.NA = "/")
-
 
 # Add labels ----
 
 # read data
-codebook_data <- read.csv("processed/4_data_participant_level_with_hand_scoring.csv")
+data_codebook <- read.csv("processed/4_data_participant_level_with_hand_scoring.csv") 
 
-# read data dictionary
-dict <- read.csv("processed/5_data_dictionary.csv")
+# read data data_dictionary
+data_dictionary <- read.csv("processed/5_data_dictionary.csv")
 
-# add dictionary as labels
-var_label(codebook_data) <- dict %>% 
+# add data_dictionary as labels
+var_label(data_codebook) <- data_dictionary %>% 
   select(variable, label) %>% 
   dict_to_list()
 
 
 # Add meta data ----
 
-metadata(codebook_data)$name <- "Evaluative learning via deepfaked media"
-metadata(codebook_data)$description <- "Across multiple experiments, we demonstrated that 'deepfakes' can establish automatic biases, self-reported evaluations, and behavioural intentions."
-#metadata(codebook_data)$identifier <- "https://dx.doi.org/XXXXXXX"
+metadata(data_codebook)$name <- "Evaluative learning via deepfaked media"
+metadata(data_codebook)$description <- "Across multiple experiments, we demonstrated that 'deepfakes' can establish automatic biases, self-reported evaluations, and behavioural intentions."
+#metadata(data_codebook)$identifier <- "https://dx.doi.org/XXXXXXX"
 
-metadata(codebook_data)$creator <- "Sean Hughes"
-metadata(codebook_data)$citation <- "Hughes, S., Fried, O., Ferguson, M. J., Yao, D., Hughes, C., Hughes, R., & Hussey, I. (2020). Using Deepfakes to Hack the Human Mind."
-metadata(codebook_data)$url <- "https://github.com/Sean-Hughes/DF-Impression-Formation--Video-and-Audio-"
+metadata(data_codebook)$creator <- "Sean Hughes"
+metadata(data_codebook)$citation <- "Hughes, S., Fried, O., Ferguson, M. J., Yao, D., Hughes, C., Hughes, R., & Hussey, I. (2020). Using Deepfakes to Hack the Human Mind."
+metadata(data_codebook)$url <- "https://github.com/Sean-Hughes/DF-Impression-Formation--Video-and-Audio-"
 
 # other meta data:  see https://schema.org/Dataset
-metadata(codebook_data)$datePublished <- "2020"
-metadata(codebook_data)$spatialCoverage <- "Online" 
+metadata(data_codebook)$datePublished <- "2020"
+metadata(data_codebook)$spatialCoverage <- "Online" 
 
 
 # Create codebook ----
 
-codebook(codebook_data)
+data_codebook %>%
+  select(-behavioral_intentions_share, -behavioral_intentions_subscribe, -behavioral_intentions_recommend) %>%
+  codebook()
 
 ```
+
+- dropped item level behavioural intentions from codebook as they throw an error I couldn't solve.
 
 # Write alternative file types to disk
 
@@ -78,9 +80,9 @@ I include an R .rds file (which includes data labels and data types), SPSS .sav 
 
 ```{r}
 
-write_rds(codebook_data, "processed/4_data_participant_level_with_hand_scoring.rds") 
-rio::export(codebook_data, "processed/4_data_participant_level_with_hand_scoring.sav") # SPSS file
-rio::export(codebook_data, "processed/4_data_participant_level_with_hand_scoring.dta") # Stata file
+write_rds(data_codebook, "processed/4_data_participant_level_with_hand_scoring.rds") 
+rio::export(data_codebook, "processed/4_data_participant_level_with_hand_scoring.sav") # SPSS file
+rio::export(data_codebook, "processed/4_data_participant_level_with_hand_scoring.dta") # Stata file
 
 ```
 
