@@ -1,65 +1,74 @@
-variable;label
-subject;Unique subject identifier
-experiment;Experiment data was collected as part of
-intervention_medium;What medium did the intervention (whether deepfaked or genuine) take (e.g., video and audio vs just audio)
-source_valence;What was the researcher-intended valence of the intervention? I.e., was the participant exposed to positive or negative messages?
-experiment_condition;Was the intervention genuine or deepfaked content?
-exclude_subject;Should the participant be excluded (TRUE) or retained (FALSE) based on passed_iat_performance, complete_iat, complete_selfreport, and complete_intentions
-age;Participant age
-gender;Participant gender
-IAT_D2;The IAT captures automatic evaluations of Chris, the character depicted in the intervention. Accuracies and reaction times on IAT were converted to D2 scores, following Greenwald et al 2003, and implemented using the IATScores R package. Briefly, D2 is a standardized difference score of trimmed reaction times in one block type versus the other: (mean_block_2 - mean_block_1) / standard_deviation_all_blocks
-mean_self_reported_evaluation;Mean self-reported evaluation (positive-negative, good-bad, pleasant-unpleasant) of Chris, the character depicted in the intervention.
-mean_intentions;Mean behavioural intentions
-deepfake_detected;"Open ended responses to the deepfaking detection question were hand scored by two independent reviewers (see ""3 Instructions for raters.docx""). If both reviewers scored an open ended response as having detected the intervention as a deepfake (whether correctly or not), this variable was set to TRUE. Otherwise FALSE."
-diagnosticity;question assessing whether people believe that the targets actions in the video/audio were representative of his 'true' character
-demand;Assesssment of whether evaluations of the targer reflected how the person genuinely felt or if they simply responded in a way they thought the researchers wanted them to.
-reactance;Assesssment of whether evaluations of the targer reflected how the person genuinely felt or if they responded in the opposite way than they thought the researchers wanted them to.
-hypothesis_awareness;Question asking what participants thought the experiment was about (i.e., what the experimenter's agenda was in the study)
-influence_awareness;Question asking if participants thought the video/audio influenced how much they liked or disliked the target
-aot_actively_openminded_thinking_pomp;scale assessing actively open minded thinking about evidence (Pennycook, G., Cheyne, J. A., Koehler, D., & Fugelsang, J. A. (2019). On the belief that beliefs should change according to evidence: Implications for conspiratorial, moral, paranormal, political, religious, and science beliefs.)
-bcti_belief_in_conspiracy_pomp;"The Belief in Conspiracy Theories Inventory (BCTI; Swami et al., 2010) which assessed general conspiracist ideation or belief in conspiracy theories "
-crt_analytic_thinking_pomp;Revised Cognitive Reflection Test (RCRT). The Revised Cognitive Reflection Test originally developed by Toplak, West, and Stanovich (2014) and subsequently revised by Bronstein, Pennycook, Bear, Rand, and Cannon (2019) was used to measure analytic thinking ability. 
-ocq_overclaiming_pomp;The overclaiming questionnaire adapted from Paulhus et al. (2003). 
-ras_relgious_affliation_pomp;POMP scores derived from the Religious Affiliation Scale (Pennycook, Cheyne, Barr, Koehler & Fugelsang, 2014). 
-rei_rational_pomp;POMP scores for the rational scale. Derived from the Rational-Experiential Inventory (REI) developed by Pacini and Epstein (1999) designed to measure individual differences in processing styles. 
-rei_experiential_pomp;POMP scores for the experiential scale. Derived from the Rational-Experiential Inventory (REI) developed by Pacini and Epstein (1999) designed to measure individual differences in processing styles. 
-me_fake_news_awareness_sum;Media evaluation task. Awareness sum score for the fake news items
-me_real_news_awareness_sum;Media evaluation task. Awareness sum score for the real news items
-me_fake_news_accuracy_sum;Media evaluation task. Accuracy sum score for the fake news items
-me_real_news_accuracy_sum;Media evaluation task. Accuracy sum score for the real news items
-me_fake_news_sharing_sum;Media evaluation task. Sharing sum score for the fake news items
-me_real_news_sharing_sum;Media evaluation task. Accuracy sum score for the real news items
-me_fake_news_awareness_pomp;Media evaluation task. POMP score for the fake news items (awareness)
-me_real_news_awareness_pomp;Media evaluation task. POMP score for the real news items (awareness)
-me_fake_news_accuracy_pomp;Media evaluation task. POMP score for the fake news items (accuracy)
-me_real_news_accuracy_pomp;Media evaluation task. POMP score for the real news items (accuracy)
-me_fake_news_sharing_pomp;Media evaluation task. POMP score for the fake news items (sharing)
-me_real_news_sharing_pomp;Media evaluation task. POMP score for the real news items (sharing)
-IAT_D2_recoded_for_source_valence;"IAT_D2 recoded for source_valence. If source_valence == ""negative"", IAT_D2*-1, otherwise IAT_D2."
-mean_self_reported_evaluation_recoded_for_source_valence;"mean_self_reported_evaluation recoded for source_valence. If source_valence == ""negative"", mean_self_reported_evaluation*-1, otherwise mean_self_reported_evaluation."
-mean_intentions_recoded_for_source_valence;"mean_intentions recoded for source_valence. If source_valence == ""negative"", mean_intentions*-1, otherwise mean_intentions."
-deepfake_concept_check;Question assessin if participants were aware of the concept of Deepfaking before taking part in the study
-deepfake_detected_rater_1;Ratings indicating whether a participant detected that they were exposed to Deepfaked content during the study. Ratings obtained from Rater 1
-deepfake_detected_rater_2;Ratings indicating whether a participant detected that they were exposed to Deepfaked content during the study. Ratings obtained from Rater 2
-deepfake_concept_check_rater_1;Ratings indicating if participants were aware of the concept of a Deepfake before  taking part in the study. Ratings obtained from Rater 1
-deepfake_concept_check_rater_2;Ratings indicating if participants were aware of the concept of a Deepfake before  taking part in the study. Ratings obtained from Rater 2
-gender_self_describe;Open ended gender
-ethnicity;Ethnicity
-ethnicity_self_describe;Open ended ethnicity
-location;Location
-education;Education
-employment;Employment status
-education_recoded;Education recoded into seven groups
-income;Income level
-income_recoded;Income level recoded into 7 groups
-political_ideology_identity;4 item-measure of political ideology developed by Pennycook and Rand (2018). This measure combines the two questions about the importance of political ideology to one's self-identity
-political_ideology_social_issues;4 item-measure of political ideology developed by Pennycook and Rand (2018). This measure combines the two questions about how liberal vs. conservative they are when it comes to social issues.
-political_ideology_economic_issues;4 item-measure of political ideology developed by Pennycook and Rand (2018). This measure combines the two questions about how liberal vs. conservative they are when it comes to economic issues.
-religious_affiliation_general;Religious Affiliation Scale (Pennycook, Cheyne, Barr, Koehler & Fugelsang, 2014). Raw responses
-religious_affiliation_general_recoded;Religious Affiliation Scale (Pennycook, Cheyne, Barr, Koehler & Fugelsang, 2014). Participants categorised into one of three groups (Agnostic, Atheist, Religious)
-passed_iat_performance;Mark participants for exclusion if their total error rate is >30%, their error rate in any one block is >40%, or if >10% RTs are <300ms.
-complete_iat;Complete IAT data (used for exclusions)
-complete_selfreport;Complete self reported evaluations data (used for exclusions)
-complete_intentions;Complete behavioural intentions data (used for exclusions)
-task_order;Did the particiapant complete the self-reported evaluations or the IAT first?
-iat_block_order;Was the participant exposed to the intervention-consistent or intervention-inconsistent block in the IAT first? E.g., if source_valence was negative, did the IAT map Chris and negative to the same key (con) or Chris and positive (incon)?
+variable,label
+subject,Unique subject identifier
+experiment,Experiment data was collected as part of
+intervention_medium,What medium did the intervention (whether deepfaked or genuine) take (e.g. video and audio vs just audio)
+source_valence,What was the researcher-intended valence of the intervention? I.e. was the participant exposed to positive or negative messages?
+experiment_condition,Was the intervention genuine or deepfaked content?
+exclude_subject,Should the participant be excluded (TRUE) or retained (FALSE) based on passed_iat_performance complete_iat complete_selfreport and complete_intentions
+exclude_implausible_intervention_linger,Should the participant be excluded (TRUE) or retained (FALSE) based on them spending not enough time (<1.5 minutes or too much time (>4.5 minutes) on the page that delivered the audio/video intervention.
+intervention_linger_minutes,Number of minutes spent viewing the page that delivered the intervention.
+age,Participant age
+gender,Participant gender
+IAT_D2,The IAT captures automatic evaluations of Chris the character depicted in the intervention. Accuracies and reaction times on IAT were converted to D2 scores following Greenwald et al 2003 and implemented using the IATScores R package. Briefly D2 is a standardized difference score of trimmed reaction times in one block type versus the other: (mean_block_2 - mean_block_1) / standard_deviation_all_blocks
+mean_self_reported_evaluation,Mean self-reported evaluation (positive-negative good-bad pleasant-unpleasant) of Chris the character depicted in the intervention.
+mean_intentions,Mean behavioural intentions
+deepfake_detected,"Open ended responses to the deepfaking detection question were hand scored by two independent reviewers (see ""3 Instructions for raters.docx""). If both reviewers scored an open ended response as having detected the intervention as a deepfake (whether correctly or not), this variable was set to TRUE. Otherwise FALSE."
+diagnosticity,Question assessing whether people believe that the targets actions in the video/audio were representative of his 'true' character
+demand,Assesssment of whether evaluations of the targer reflected how the person genuinely felt or if they simply responded in a way they thought the researchers wanted them to.
+reactance,Assesssment of whether evaluations of the targer reflected how the person genuinely felt or if they responded in the opposite way than they thought the researchers wanted them to.
+hypothesis_awareness,Question asking what participants thought the experiment was about (i.e. what the experimenter's agenda was in the study)
+influence_awareness,Question asking if participants thought the video/audio influenced how much they liked or disliked the target
+aot_actively_openminded_thinking_sum,Scale assessing actively open minded thinking about evidence (Pennycook G. Cheyne J. A. Koehler D. & Fugelsang J. A. (2019). On the belief that beliefs should change according to evidence: Implications for conspiratorial moral paranormal political religious and science beliefs.)
+bcti_belief_in_conspiracy_sum,"The Belief in Conspiracy Theories Inventory (BCTI, Swami et al., 2010) which assessed general conspiracist ideation or belief in conspiracy theories "
+crt_analytic_thinking_sum,The revised Cognitive Reflection Test (RCRT). The Revised Cognitive Reflection Test originally developed by Toplak West and Stanovich (2014) and subsequently revised by Bronstein Pennycook Bear Rand and Cannon (2019) was used to measure analytic thinking ability. 
+ocq_overclaiming_sum,The overclaiming questionnaire adapted from Paulhus et al. (2003). 
+ras_relgious_affliation_sum,The Religious Affiliation Scale (Pennycook Cheyne Barr Koehler & Fugelsang 2014). 
+rei_rational_sum,The rational scale. Derived from the Rational-Experiential Inventory (REI) developed by Pacini and Epstein (1999) designed to measure individual differences in processing styles. 
+rei_experiential_sum,The experiential scale. Derived from the Rational-Experiential Inventory (REI) developed by Pacini and Epstein (1999) designed to measure individual differences in processing styles. 
+me_fake_news_awareness_sum,Media evaluation task. Awareness sum score for the fake news items
+me_real_news_awareness_sum,Media evaluation task. Awareness sum score for the real news items
+me_fake_news_accuracy_sum,Media evaluation task. Accuracy sum score for the fake news items
+me_real_news_accuracy_sum,Media evaluation task. Accuracy sum score for the real news items
+me_fake_news_sharing_sum,Media evaluation task. Sharing sum score for the fake news items
+me_real_news_sharing_sum,Media evaluation task. Accuracy sum score for the real news items
+aot_actively_openminded_thinking_pomp,POMP scores derived from scale assessing actively open minded thinking about evidence (Pennycook G. Cheyne J. A. Koehler D. & Fugelsang J. A. (2019). On the belief that beliefs should change according to evidence: Implications for conspiratorial moral paranormal political religious and science beliefs.)
+bcti_belief_in_conspiracy_pomp,"POMP scores derived from the Belief in Conspiracy Theories Inventory (BCTI, Swami et al., 2010) which assessed general conspiracist ideation or belief in conspiracy theories "
+crt_analytic_thinking_pomp,POMP scores derived from revised Cognitive Reflection Test (RCRT). The Revised Cognitive Reflection Test originally developed by Toplak West and Stanovich (2014) and subsequently revised by Bronstein Pennycook Bear Rand and Cannon (2019) was used to measure analytic thinking ability. 
+ocq_overclaiming_pomp,POMP scores derived from the overclaiming questionnaire adapted from Paulhus et al. (2003). 
+ras_relgious_affliation_pomp,POMP scores derived from the Religious Affiliation Scale (Pennycook Cheyne Barr Koehler & Fugelsang 2014). 
+rei_rational_pomp,POMP scores for the rational scale. Derived from the Rational-Experiential Inventory (REI) developed by Pacini and Epstein (1999) designed to measure individual differences in processing styles. 
+rei_experiential_pomp,POMP scores for the experiential scale. Derived from the Rational-Experiential Inventory (REI) developed by Pacini and Epstein (1999) designed to measure individual differences in processing styles. 
+me_fake_news_awareness_pomp,Media evaluation task. POMP score for the fake news items (awareness)
+me_real_news_awareness_pomp,Media evaluation task. POMP score for the real news items (awareness)
+me_fake_news_accuracy_pomp,Media evaluation task. POMP score for the fake news items (accuracy)
+me_real_news_accuracy_pomp,Media evaluation task. POMP score for the real news items (accuracy)
+me_fake_news_sharing_pomp,Media evaluation task. POMP score for the fake news items (sharing)
+me_real_news_sharing_pomp,Media evaluation task. POMP score for the real news items (sharing)
+IAT_D2_recoded_for_source_valence,"IAT_D2 recoded for source_valence. If source_valence == ""negative"", IAT_D2*-1, otherwise IAT_D2."
+mean_self_reported_evaluation_recoded_for_source_valence,"mean_self_reported_evaluation recoded for source_valence. If source_valence == ""negative"", mean_self_reported_evaluation*-1, otherwise mean_self_reported_evaluation."
+mean_intentions_recoded_for_source_valence,"mean_intentions recoded for source_valence. If source_valence == ""negative"", mean_intentions*-1, otherwise mean_intentions."
+deepfake_concept_check,Question assessin if participants were aware of the concept of Deepfaking before taking part in the study
+deepfake_detected_rater_1,Ratings indicating whether a participant detected that they were exposed to Deepfaked content during the study. Ratings obtained from Rater 1
+deepfake_detected_rater_2,Ratings indicating whether a participant detected that they were exposed to Deepfaked content during the study. Ratings obtained from Rater 2
+deepfake_concept_check_rater_1,Ratings indicating if participants were aware of the concept of a Deepfake before  taking part in the study. Ratings obtained from Rater 1
+deepfake_concept_check_rater_2,Ratings indicating if participants were aware of the concept of a Deepfake before  taking part in the study. Ratings obtained from Rater 2
+gender_self_describe,Open ended gender
+ethnicity,Ethnicity
+ethnicity_self_describe,Open ended ethnicity
+location,Location
+education,Education
+employment,Employment status
+education_recoded,Education recoded into seven groups
+income,Income level
+income_recoded,Income level recoded into 7 groups
+political_ideology_identity,4 item-measure of political ideology developed by Pennycook and Rand (2018). This measure combines the two questions about the importance of political ideology to one's self-identity
+political_ideology_social_issues,4 item-measure of political ideology developed by Pennycook and Rand (2018). This measure combines the two questions about how liberal vs. conservative they are when it comes to social issues.
+political_ideology_economic_issues,4 item-measure of political ideology developed by Pennycook and Rand (2018). This measure combines the two questions about how liberal vs. conservative they are when it comes to economic issues.
+religious_affiliation_general,Religious Affiliation Scale (Pennycook Cheyne Barr Koehler & Fugelsang 2014). Raw responses
+religious_affiliation_general_recoded,Religious Affiliation Scale (Pennycook Cheyne Barr Koehler & Fugelsang 2014). Participants categorised into one of three groups (Agnostic Atheist Religious)
+passed_iat_performance,Mark participants for exclusion if their total error rate is >30% their error rate in any one block is >40% or if >10% RTs are <300ms.
+complete_iat,Complete IAT data (used for exclusions)
+complete_selfreport,Complete self reported evaluations data (used for exclusions)
+complete_intentions,Complete behavioural intentions data (used for exclusions)
+task_order,Did the particiapant complete the self-reported evaluations or the IAT first?
+iat_block_order,Was the participant exposed to the intervention-consistent or intervention-inconsistent block in the IAT first? E.g. if source_valence was negative did the IAT map Chris and negative to the same key (con) or Chris and positive (incon)?

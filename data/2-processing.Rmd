@@ -31,7 +31,7 @@ library(IATscores)
 
 ```{r}
 
-data_preprocessed <- read_rds("processed/1_data_preprocessed.rds")
+#data_preprocessed <- read_rds("processed/1_data_preprocessed.rds")
 
 ```
 
@@ -45,21 +45,38 @@ NB no attempt to remove duplicate participants is made at this stage - that is d
 
 data_trial_level <- data_preprocessed %>%
   
-  mutate(task = tolower(sender),
+  rename(task = sender) %>%
+  mutate(task = tolower(task),
          task = case_when(task == "stimulus" ~ "iat",
                           task == "demographics_1" ~ "demographics",
                           task == "demographics_2" ~ "demographics",
                           str_detect(task, "deepfake_check") ~ "deepfake_check",
+                          # trials representing the intervention (audio/video)
+                          task == "video_positive_baseline" ~ "intervention",
+                          task == "video_negative_baseline" ~ "intervention",
+                          task == "video_positive_genuine" ~ "intervention",
+                          task == "video_negative_genuine" ~ "intervention",
+                          task == "video_positive_df" ~ "intervention",
+                          task == "video_negative_df" ~ "intervention",
+                          task == "audio_positive_baseline" ~ "intervention",
+                          task == "audio_negative_baseline" ~ "intervention",
+                          task == "audio_positive_deepfake" ~ "intervention",
+                          task == "audio_negative_deepfake" ~ "intervention",
+                          task == "audio_positive_genuine" ~ "intervention",
+                          task == "audio_negative_genuine" ~ "intervention",
+                          task == "audio_positive_deepfaked" ~ "intervention",
+                          task == "audio_negative_deepfaked" ~ "intervention",
                           TRUE ~ task)) %>%
   
   # retain only rows with useful information used to score the tasks
   filter(task %in% c("demographics",
+                     "intervention",
                      "iat",
                      "ratings_good_bad",
                      "ratings_like_dislike",
                      "ratings_negative_positive",
-                     "deepfake_check",
                      "behavioral_intentions",
+                     "deepfake_check",
                      "memory questions",
                      "exploratory questions",
                      "actively_openminded_thinking",
@@ -215,7 +232,7 @@ data_trial_level <- data_preprocessed %>%
          trial,
          iat_stimulus,
          correct,
-         latency,
+         latency, ## also used for intervention viewing time (task == "intervention")
          blockcode,
          praccrit,
          
@@ -367,7 +384,25 @@ data_conditions_and_demographics <- data_trial_level %>%
 
 ```
 
-## Induction video
+## Intervention (video/audio)
+
+### Viewing time
+
+```{r}
+
+data_induction_linger_time <- data_trial_level %>%
+  filter(task == "intervention") %>%
+  select(subject, 
+         latency) %>%
+  mutate(intervention_linger_minutes = round(as.numeric(latency)/(1000*60), 3),
+         exclude_implausible_intervention_linger = ifelse(intervention_linger_minutes >= 1.5 &
+                                                            intervention_linger_minutes <= 4.5, 
+                                                          TRUE, FALSE)) %>%
+  drop_na()
+
+```
+
+### Open ended description of video/audio
 
 Participants were asked to describe what they saw in the video. Nothing was done with these responses but notionally they could be inspected or hand coded.
 
@@ -375,15 +410,15 @@ Participants were asked to describe what they saw in the video. Nothing was done
 
 data_induction_video <- data_trial_level %>% 
   select(subject, 
-         memory_of_video_content) %>% 
+         memory_of_intervention_content = memory_of_video_content) %>% 
   drop_na()
 
 data_induction_audio <- data_trial_level %>% 
   select(subject, 
-         memory_of_audio_content) %>% 
+         memory_of_intervention_content = memory_of_audio_content) %>% 
   drop_na()
 
-data_induction <- bind_rows(data_induction_video, data_induction_audio)
+data_induction_description <- bind_rows(data_induction_video, data_induction_audio)
 
 ```
 
@@ -993,7 +1028,8 @@ data_participant_level <- data_conditions_and_demographics %>%
   full_join(data_self_reported_evaluations_mean_scores,  by = "subject") %>%
   full_join(data_behavioural_intentions,                 by = "subject") %>% 
   full_join(data_detection,                              by = "subject") %>% 
-  full_join(data_induction,                              by = "subject") %>% 
+  full_join(data_induction_linger_time,                  by = "subject") %>%
+  full_join(data_induction_description,                  by = "subject") %>% 
   full_join(data_exploratory_questions,                  by = "subject") %>%
   full_join(data_individual_differences,                 by = "subject") %>%
   arrange(experiment, experiment_condition) %>%
@@ -1033,9 +1069,10 @@ data_participant_level <- data_conditions_and_demographics %>%
          deepfake_check,
          deepfake_concept_check,
          
-         # intervention description
-         memory_of_video_content, 
-         memory_of_audio_content,
+         # intervention
+         intervention_linger_minutes,
+         exclude_implausible_intervention_linger,
+         memory_of_intervention_content,
          
          # exploratory measures
          diagnosticity, 

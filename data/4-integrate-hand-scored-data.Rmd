@@ -63,52 +63,54 @@ data_participant_level_with_hand_scoring <- data_participant_level %>%
                      TRUE ~ FALSE)) %>%
   
   # drop open ended text responses now that they've been coded for analysis
-  select(subject, 
-         experiment, 
-         intervention_medium, 
-         source_valence, 
-         experiment_condition, 
+  select(subject,
+         experiment,
+         intervention_medium,
+         source_valence,
+         experiment_condition,
          exclude_subject,
-         age, 
+         exclude_implausible_intervention_linger,
+         intervention_linger_minutes,
+         age,
          gender,
-         IAT_D2, 
-         mean_self_reported_evaluation, 
+         IAT_D2,
+         mean_self_reported_evaluation,
          mean_intentions,
          deepfake_detected,
          
          # exploratory measures
-         diagnosticity, 
-         demand, 
-         reactance, 
-         hypothesis_awareness, 
-         influence_awareness, 
-         
-         aot_actively_openminded_thinking_sum, 
-         bcti_belief_in_conspiracy_sum, 
-         crt_analytic_thinking_sum, 
-         ocq_overclaiming_sum, 
-         ras_relgious_affliation_sum, 
-         rei_rational_sum, 
-         rei_experiential_sum, 
-         me_fake_news_awareness_sum, 
-         me_real_news_awareness_sum, 
-         me_fake_news_accuracy_sum, 
-         me_real_news_accuracy_sum, 
-         me_fake_news_sharing_sum, 
+         diagnosticity,
+         demand,
+         reactance,
+         hypothesis_awareness,
+         influence_awareness,
+         ## individual difference measures - sum scores
+         aot_actively_openminded_thinking_sum,
+         bcti_belief_in_conspiracy_sum,
+         crt_analytic_thinking_sum,
+         ocq_overclaiming_sum,
+         ras_relgious_affliation_sum,
+         rei_rational_sum,
+         rei_experiential_sum,
+         me_fake_news_awareness_sum,
+         me_real_news_awareness_sum,
+         me_fake_news_accuracy_sum,
+         me_real_news_accuracy_sum,
+         me_fake_news_sharing_sum,
          me_real_news_sharing_sum,
-         
-         aot_actively_openminded_thinking_pomp, 
-         bcti_belief_in_conspiracy_pomp, 
-         crt_analytic_thinking_pomp, 
-         ocq_overclaiming_pomp, 
-         ras_relgious_affliation_pomp, 
-         rei_rational_pomp, 
-         rei_experiential_pomp, 
-         me_fake_news_awareness_pomp, 
-         me_real_news_awareness_pomp, 
-         me_fake_news_accuracy_pomp, 
-         me_real_news_accuracy_pomp, 
-         me_fake_news_sharing_pomp, 
+         ## individual difference measures - POMP scores
+         aot_actively_openminded_thinking_pomp,
+         bcti_belief_in_conspiracy_pomp,
+         crt_analytic_thinking_pomp,
+         ocq_overclaiming_pomp,
+         ras_relgious_affliation_pomp,
+         rei_rational_pomp,
+         rei_experiential_pomp,
+         me_fake_news_awareness_pomp,
+         me_real_news_awareness_pomp,
+         me_fake_news_accuracy_pomp,
+         me_real_news_accuracy_pomp,
+         me_fake_news_sharing_pomp,
          me_real_news_sharing_pomp,
          
          # recoded DVs - mentioned in preregistrations but not used in my (more appropriate) reworked analyses. 
@@ -128,25 +130,25 @@ data_participant_level_with_hand_scoring <- data_participant_level %>%
          ethnicity,
          ethnicity_self_describe,
          location,
-         education, 
-         education_recoded, 
-         employment, 
-         income, 
-         income_recoded, 
-         political_ideology_identity, 
-         political_ideology_social_issues, 
-         political_ideology_economic_issues, 
-         religious_affiliation_general, 
+         education,
+         employment,
+         education_recoded,
+         income,
+         income_recoded,
+         political_ideology_identity,
+         political_ideology_social_issues,
+         political_ideology_economic_issues,
+         religious_affiliation_general,
          religious_affiliation_general_recoded,
+         passed_iat_performance,
          
          # component exclusion variables
-         passed_iat_performance, 
-         complete_iat, 
+         complete_iat,
          complete_selfreport,
          complete_intentions,
          
          # methods variables
-         task_order, 
+         task_order,
          iat_block_order)
 
 ```
@@ -156,7 +158,7 @@ data_participant_level_with_hand_scoring <- data_participant_level %>%
 ```{r}
 
 write_csv(data_participant_level_with_hand_scoring, "processed/4_data_participant_level_with_hand_scoring.csv")
-  
+
 ```
 
 

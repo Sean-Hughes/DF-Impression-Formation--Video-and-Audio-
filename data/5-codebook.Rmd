@@ -41,7 +41,7 @@ options(knitr.kable.NA = "/")
 codebook_data <- read.csv("processed/4_data_participant_level_with_hand_scoring.csv")
 
 # read data dictionary
-dict <- read.csv("processed/5_data_dictionary.csv", row.names=NULL, sep = ";")
+dict <- read.csv("processed/5_data_dictionary.csv")
 
 # add dictionary as labels
 var_label(codebook_data) <- dict %>% 
