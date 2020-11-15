@@ -14,7 +14,7 @@ output:
 
 Same core research questions as preregistered (i.e., can real and deepfaked content establish evaluative learning), but a single form of multilevel Bayesian model. This has the benefit of summarizing evidence across studies, not mixing Frequentist and semi-Bayesian methods (p values and BF), and making the comparison of genuine vs deepfaked content more intuitive (i.e., via non-inferiority test and percent effectiveness).
 
-I also add exclusion of participants who spent an implausiblly short or long time viewing the intervention (e.g., those who could not have watched the video because they spent only a few seconds on the page).
+I also add exclusion of participants who spent an implausibly short or long time viewing the intervention (e.g., those who could not have watched the video because they spent only a few seconds on the page).
 
 ```{r include=FALSE}
 knitr::opts_chunk$set(message=FALSE,
@@ -52,9 +52,9 @@ dir.create("models")
 
 ```
 
-# Data, exclusions, & transformtions
+# Data, exclusions, & transformations
 
-NB all DVs were standardised by 1SD, within each experiment, experiment_condition, and source_valence. Beta estimtes from models are thereofore standardized betas, and the nature of the standardization makes them somewhat comparable to Cohen's *d*. See Lorah (2018) Effect size measures for multilevel models: definition, interpretation, and TIMSS example. Large-scale Assess Educ 6, 8. https://doi.org/10.1186/s40536-018-0061-2
+NB all DVs were standardised by 1SD, where SD was calculated at for each experiment, experiment_condition, and source_valence. Beta estimates from models are therefore standardized betas, and the nature of the standardization makes them somewhat comparable to Cohen's *d*. See Lorah (2018) Effect size measures for multilevel models: definition, interpretation, and TIMSS example. Large-scale Assess Educ 6, 8. https://doi.org/10.1186/s40536-018-0061-2
 
 ```{r}
 
@@ -223,7 +223,7 @@ results_reliability_bi %>%
 
 ```
 
-# Changing evaluations
+# Establishing evaluations
 
 - Analyses employ Bayesian multilevel models with experiment employed as a random (Group level) intercept, and source_valence, experiment_condition and their interaction as IVs. This could therefore be described as akin to a Bayesian multilevel ANOVA.
 - DVs were standardize as noted above, and as such fitted model estimates represent standardized beta values (which due to the specifics of the standardization have comparable [but not exact] interpretation as Cohen's d values). 
@@ -309,55 +309,52 @@ estimates_sr <-
   select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper,
          CI_90_lower, CI_90_upper, p)
 
-comparison_string_sr <-
-  paste0("Deepfakes are ",
-         estimates_sr %>%
-           filter(Parameter == "percent_comparison") %>%
-           pull(MAP_Estimate) %>%
-           round(1),
-         "% (95% CI [",
-         estimates_sr %>%
-           filter(Parameter == "percent_comparison") %>%
-           pull(CI_95_lower) %>%
-           round(1),
-         ", ",
-         estimates_sr %>%
-           filter(Parameter == "percent_comparison") %>%
-           pull(CI_95_upper) %>%
-           round(1),
-         "]) as effective as genine content in changing self-reported evaluations")
-
-noninferiority_sr <-
-  paste0(ifelse(estimates_sr %>% 
-                  filter(Parameter == "effect_genuine") %>% 
-                  pull(CI_95_lower) <
-                  estimates_sr %>% 
-                  filter(Parameter == "effect_deepfaked") %>% 
-                  pull(CI_90_lower),
-                "Deepfakes were found to be non-inferior to genuine content: ",
-                "Deepfakes were not found to be non-inferior to genuine content: "),
-         "genuine condition lowerbound 95% CI = ",
-         estimates_sr %>% 
-           filter(Parameter == "effect_genuine") %>% 
-           pull(CI_95_lower) %>%
-           round(2),
-         ", deepfaked condition lowerbound 90% CI = ",
-         estimates_sr %>% 
-           filter(Parameter == "effect_deepfaked") %>% 
-           pull(CI_90_lower) %>%
-           round(2))
-
+# results table
 estimates_sr %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
 
+# hypothesis testing
+H1a <- ifelse((estimates_sr %>% filter(Parameter == "effect_genuine") %>% pull(CI_95_lower)) > 0, 
+              "Accepted", "Rejected")
+
+H1b <- ifelse((estimates_sr %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_95_lower)) > 0, 
+              "Accepted", "Rejected")
+
+H2a <- ifelse((estimates_sr %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_90_lower)) > 
+                (estimates_sr %>% filter(Parameter == "effect_genuine") %>% pull(CI_95_lower)), 
+              "Accepted", "Rejected")
+
+comparison_string_sr <-
+  paste0("Deepfakes are ",
+         estimates_sr %>% filter(Parameter == "percent_comparison") %>% pull(MAP_Estimate) %>% round(1),
+         "% (95% CI [",
+         estimates_sr %>% filter(Parameter == "percent_comparison") %>% pull(CI_95_lower) %>% round(1),
+         ", ",
+         estimates_sr %>% filter(Parameter == "percent_comparison") %>% pull(CI_95_upper) %>% round(1),
+         "]) as effective as genuine content in establishing self-reported evaluations")
+
 ```
 
-`r noninferiority_sr`
+*H1a*
 
-`r comparison_string_sr`
+The content of the genuine videos (i.e., Source Valence) will influence participants’ self-reported evaluations. Specifically, we will use a Bayesian linear model (model 1) to estimate a 95% Confidence Interval on standardized effect size change in self-reported evaluations between Source Valence conditions in the genuine video condition subgroup. Confidence Intervals whose lower bounds are > 0 will be considered evidence in support of this hypothesis. 
+
+- Result: `r H1a`
+
+*H1b*
+
+The content of the Deepfaked videos (i.e., Source Valence) will influence participants’ self-reported evaluations. Specifically, we will use a Bayesian linear model (model 1) to estimate a 95% Confidence Interval on standardized effect size change in self-reported evaluations between Source Valence conditions in the Deepfaked video condition subgroup. Confidence Intervals whose lower bounds are > 0 will be considered evidence in support of this hypothesis.
+
+- Result: `r H1b`
+
+*H2a*
+
+Change in self-reported evaluations (i.e., between Source Valence conditions) induced by Deepfaked video content will be non-inferior to genuine content.
+
+- Result: `r H2a`. `r comparison_string_sr`.
 
 ## Implicit
 
@@ -396,7 +393,7 @@ draws_imp <-
          #percent_moderation = (main_experiment_condition + interaction)/main_valence *100,  # alt method, same result
          percent_comparison = (effect_deepfaked/effect_genuine)*100)
 
-# results
+# results table
 estimates_imp <-
   map_estimate(draws_imp) %>%
   full_join(bayestestR::hdi(draws_imp, ci = .95) %>%
@@ -421,55 +418,51 @@ estimates_imp <-
   select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper,
          CI_90_lower, CI_90_upper, p)
 
-comparison_string_imp <-
-  paste0("Deepfakes are ",
-         estimates_imp %>%
-           filter(Parameter == "percent_comparison") %>%
-           pull(MAP_Estimate) %>%
-           round(1),
-         "% (95% CI [",
-         estimates_imp %>%
-           filter(Parameter == "percent_comparison") %>%
-           pull(CI_95_lower) %>%
-           round(1),
-         ", ",
-         estimates_imp %>%
-           filter(Parameter == "percent_comparison") %>%
-           pull(CI_95_upper) %>%
-           round(1),
-         "]) as effective as genine content in changing implicit attitudes")
-
-noninferiority_imp <-
-  paste0(ifelse(estimates_imp %>% 
-                  filter(Parameter == "effect_genuine") %>% 
-                  pull(CI_95_lower) <
-                  estimates_imp %>% 
-                  filter(Parameter == "effect_deepfaked") %>% 
-                  pull(CI_90_lower),
-                "Deepfakes were found to be non-inferior to genuine content: ",
-                "Deepfakes were not found to be non-inferior to genuine content: "),
-         "genuine condition lowerbound 95% CI = ",
-         estimates_imp %>% 
-           filter(Parameter == "effect_genuine") %>% 
-           pull(CI_95_lower) %>%
-           round(2),
-         ", deepfaked condition lowerbound 90% CI = ",
-         estimates_imp %>% 
-           filter(Parameter == "effect_deepfaked") %>% 
-           pull(CI_90_lower) %>%
-           round(2))
-
 estimates_imp %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
 
+# hypothesis testing
+H1c <- ifelse((estimates_imp %>% filter(Parameter == "effect_genuine") %>% pull(CI_95_lower)) > 0, 
+              "Accepted", "Rejected")
+
+H1d <- ifelse((estimates_imp %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_95_lower)) > 0, 
+              "Accepted", "Rejected")
+
+H2b <- ifelse((estimates_imp %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_90_lower)) > 
+                (estimates_imp %>% filter(Parameter == "effect_genuine") %>% pull(CI_95_lower)), 
+              "Accepted", "Rejected")
+
+comparison_string_imp <-
+  paste0("Deepfakes are ",
+         estimates_imp %>% filter(Parameter == "percent_comparison") %>% pull(MAP_Estimate) %>% round(1), 
+         "% (95% CI [",
+         estimates_imp %>% filter(Parameter == "percent_comparison") %>% pull(CI_95_lower) %>% round(1),
+         ", ",
+         estimates_imp %>% filter(Parameter == "percent_comparison") %>% pull(CI_95_upper) %>% round(1),
+         "]) as effective as genuine content in establishing self-reported evaluations")
+
 ```
 
-`r noninferiority_imp`
+*H1c*
 
-`r comparison_string_imp`
+The content of the genuine videos (i.e., Source Valence) will influence participants’ IAT D2 scores. Specifically, we will use a Bayesian linear model (model 2) to estimate a 95% Confidence Interval on standardized effect size change in IAT D2 scores between Source Valence conditions in the genuine video condition subgroup. Confidence Intervals whose lower bounds are > 0 will be considered evidence in support of this hypothesis.
+
+- Result: `r H1c`
+
+*H1d*
+
+The content of the Deepfaked videos (i.e., Source Valence) will influence participants’ IAT D2 scores. Specifically, we will use a Bayesian linear model (model 2) to estimate a 95% Confidence Interval on standardized effect size change in IAT D2 scores between Source Valence conditions in the Deepfaked video condition subgroup. Confidence Intervals whose lower bounds are > 0 will be considered evidence in support of this hypothesis.
+
+- Result: `r H1d`
+
+*H2b*
+
+Change in IAT D2 scores (i.e., between Source Valence conditions) induced by Deepfaked video content will be non-inferior to genuine content.
+
+- Result: `r H2b`. `r comparison_string_imp`.
 
 ## Behavioural intentions
 
@@ -508,7 +501,7 @@ draws_intentions <-
          #percent_moderation = (main_experiment_condition + interaction)/main_valence *100,  # alt method, same result
          percent_comparison = (effect_deepfaked/effect_genuine)*100)
 
-# results
+# results table
 estimates_intentions <-
   map_estimate(draws_intentions) %>%
   full_join(bayestestR::hdi(draws_intentions, ci = .95) %>%
@@ -533,55 +526,51 @@ estimates_intentions <-
   select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper,
          CI_90_lower, CI_90_upper, p)
 
-comparison_string_intentions <-
-  paste0("Deepfakes are ",
-         estimates_intentions %>%
-           filter(Parameter == "percent_comparison") %>%
-           pull(MAP_Estimate) %>%
-           round(1),
-         "% (95% CI [",
-         estimates_intentions %>%
-           filter(Parameter == "percent_comparison") %>%
-           pull(CI_95_lower) %>%
-           round(1),
-         ", ",
-         estimates_intentions %>%
-           filter(Parameter == "percent_comparison") %>%
-           pull(CI_95_upper) %>%
-           round(1),
-         "]) as effective as genine content in changing behavioural intentions")
-
-noninferiority_intentions <-
-  paste0(ifelse(estimates_intentions %>% 
-                  filter(Parameter == "effect_genuine") %>% 
-                  pull(CI_95_lower) <
-                  estimates_intentions %>% 
-                  filter(Parameter == "effect_deepfaked") %>% 
-                  pull(CI_90_lower),
-                "Deepfakes were found to be non-inferior to genuine content: ",
-                "Deepfakes were not found to be non-inferior to genuine content: "),
-         "genuine condition lowerbound 95% CI = ",
-         estimates_intentions %>% 
-           filter(Parameter == "effect_genuine") %>% 
-           pull(CI_95_lower) %>%
-           round(2),
-         ", deepfaked condition lowerbound 90% CI = ",
-         estimates_intentions %>% 
-           filter(Parameter == "effect_deepfaked") %>% 
-           pull(CI_90_lower) %>%
-           round(2))
-
 estimates_intentions %>%
   mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
 
+# hypothesis testing
+H1e <- ifelse((estimates_intentions %>% filter(Parameter == "effect_genuine") %>% pull(CI_95_lower)) > 0, 
+              "Accepted", "Rejected")
+
+H1f <- ifelse((estimates_intentions %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_95_lower)) > 0, 
+              "Accepted", "Rejected")
+
+H2c <- ifelse((estimates_intentions %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_90_lower)) > 
+                (estimates_intentions %>% filter(Parameter == "effect_genuine") %>% pull(CI_95_lower)), 
+              "Accepted", "Rejected")
+
+comparison_string_intentions <-
+  paste0("Deepfakes are ",
+         estimates_intentions %>% filter(Parameter == "percent_comparison") %>% pull(MAP_Estimate) %>% round(1), 
+         "% (95% CI [",
+         estimates_intentions %>% filter(Parameter == "percent_comparison") %>% pull(CI_95_lower) %>% round(1),
+         ", ",
+         estimates_intentions %>% filter(Parameter == "percent_comparison") %>% pull(CI_95_upper) %>% round(1),
+         "]) as effective as genuine content in establishing self-reported evaluations")
+
 ```
 
-`r noninferiority_intentions`
+*H1e*
 
-`r comparison_string_intentions`
+The content of the genuine videos (i.e., Source Valence) will influence participants’ behavioral intention responses. Specifically, we will use a Bayesian linear model (model 2) to estimate a 95% Confidence Interval on standardized effect size change in behavioral intention scores between Source Valence conditions in the genuine video condition subgroup. Confidence Intervals whose lower bounds are > 0 will be considered evidence in support of this hypothesis.
+
+- Result: `r H1e`
+
+*H1f*
+
+The content of the Deepfaked videos (i.e., Source Valence) will influence participants’ behavioral intention responses. Specifically, we will use a Bayesian linear model (model 2) to estimate a 95% Confidence Interval on standardized effect size change in behavioral intention scores between Source Valence conditions in the Deepfaked video condition subgroup. Confidence Intervals whose lower bounds are > 0 will be considered evidence in support of this hypothesis.
+
+- Result: `r H1f`
+
+*H2c*
+
+Change in behavioral intentions (i.e., between Source Valence conditions) induced by Deepfaked video content will be non-inferior to genuine content.
+
+- Result: `r H2c`. `r comparison_string_intentions`.
 
 # Detection
 
@@ -611,7 +600,7 @@ data_after_exclusions %>%
 
 ```
 
-Interpreation of Kappa (Altman 1999, Landis JR, 1977):
+Interpretation of Kappa (Altman 1999, Landis JR, 1977):
 
 - 0.61 - 0.80	Substantial
 - 0.81 - 1.00	Almost perfect
@@ -717,6 +706,24 @@ fit_classification_bootstraps %>%
 
 ```
 
+H3: Participants are poor at making accurate and informed judgements about whether online video content is genuine or Deepfaked. Our predictions here are descriptive/continuous rather than involving cut-off based inference rules.
+
+*H3a* 
+
+We expect participants to be poor at correctly detecting Deepfakes (i.e., demonstrate a high false negative rate, FNR ≳ .80).
+
+*H3b*
+
+We expect participants to incorrectly detect Deepfakes even when the video content was real (i.e., demonstrate a high false positive rate, FPR ≳ .05).
+
+*H3c*
+
+We expect participants to be poor at making accurate decisions about whether content is genuine or not (i.e., balanced accuracy not greatly above chance, ≲ .60).
+
+*H3d* 
+
+We expect participants to make poorly informed decisions about whether content is genuine or not (i.e., informedness/Youden’s J ≲ .25). 
+
 # Does detecting it matter?
 
 Subset who received deepfaked videos but also detected them. Same Bayesian multilevel models as employed above, using only source_valence as IV, i.e., to detect whether learning effects are credibly non-zero in this subset. 
@@ -769,6 +776,7 @@ fit_selfreport_deepfaked_detected <-
 #plot_model(fit_selfreport_deepfaked_detected)
 plot_model(fit_selfreport_deepfaked_detected, type = "pred", terms = "source_valence")
 
+# results table
 draws_sr_deepfaked_detected <-
   select(spread_draws(fit_selfreport_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
   rename(effect_deepfaked_detected = b_source_valencepositive)
@@ -803,7 +811,18 @@ bind_rows(filter(estimates_sr, Parameter %in% c("effect_deepfaked")),
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
 
+# hypothesis testing
+H4a <- ifelse((estimates_sr_deepfaked_detected %>% filter(Parameter == "effect_deepfaked_detected") %>%
+                 pull(CI_95_lower)) > 0, 
+              "Accepted", "Rejected")
+
 ```
+
+*H4a* 
+
+In the subset of participants who were shown a Deepfaked video and accurately detected that the video was Deepfaked, the content of the Deepfaked videos (i.e., Source Valence) will influence participants’ self-reported evaluations. Specifically, we will use a Bayesian linear model (model 3) to estimate a 95% Confidence Interval on standardized effect size change in self-reported evaluations between Source Valence conditions in the genuine video condition subgroup. Confidence Intervals whose lower bounds are > 0 will be considered evidence in support of this hypothesis.
+
+- Result: `r H4a`
 
 ## Implicit
 
@@ -827,6 +846,7 @@ fit_implicit_deepfaked_detected <-
 #plot_model(fit_implicit_deepfaked_detected)
 plot_model(fit_implicit_deepfaked_detected, type = "pred", terms = "source_valence")
 
+# results table
 draws_imp_deepfaked_detected <-
   select(spread_draws(fit_implicit_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
   rename(effect_deepfaked_detected = b_source_valencepositive)
@@ -861,7 +881,18 @@ bind_rows(filter(estimates_imp, Parameter %in% c("effect_deepfaked")),
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
 
+# hypothesis testing
+H4b <- ifelse((estimates_imp_deepfaked_detected %>% filter(Parameter == "effect_deepfaked_detected") %>%
+                 pull(CI_95_lower)) > 0, 
+              "Accepted", "Rejected")
+
 ```
+
+*H4b* 
+
+In the subset of participants who were shown a Deepfaked video and accurately detected that the video was Deepfaked, the content of the Deepfaked videos (i.e., Source Valence) will influence participants’ IAT D2 scores. Specifically, we will use a Bayesian linear model (model 4) to estimate a 95% Confidence Interval on standardized effect size change in IAT D2 scores between Source Valence conditions in the Deepfaked video condition subgroup. Confidence Intervals whose lower bounds are > 0 will be considered evidence in support of this hypothesis.
+
+- Result: `r H4b`
 
 ## Behavioural intentions
 
@@ -885,6 +916,7 @@ fit_intentions_deepfaked_detected <-
 #plot_model(fit_intentions_deepfaked_detected)
 plot_model(fit_intentions_deepfaked_detected, type = "pred", terms = "source_valence")
 
+# results table
 draws_intentions_deepfaked_detected <-
   select(spread_draws(fit_intentions_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
   rename(effect_deepfaked_detected = b_source_valencepositive)
@@ -919,7 +951,18 @@ bind_rows(filter(estimates_intentions, Parameter %in% c("effect_deepfaked")),
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
 
+# hypothesis testing
+H4c <- ifelse((estimates_intentions_deepfaked_detected %>% filter(Parameter == "effect_deepfaked_detected") %>%
+                 pull(CI_95_lower)) > 0, 
+              "Accepted", "Rejected")
+
 ```
+
+*H4c* 
+
+In the subset of participants who were shown a Deepfaked video and accurately detected that the video was Deepfaked, the content of the Deepfaked videos (i.e., Source Valence) will influence participants’ behavioral intention scores. Specifically, we will use a Bayesian linear model (model 4) to estimate a 95% Confidence Interval on standardized effect size change in behavioral intention scores between Source Valence conditions in the Deepfaked video condition subgroup. Confidence Intervals whose lower bounds are > 0 will be considered evidence in support of this hypothesis.
+
+- Result: `r H4c`
 
 # Session Info
 
