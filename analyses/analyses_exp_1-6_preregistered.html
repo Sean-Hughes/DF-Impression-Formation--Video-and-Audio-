@@ -9,9 +9,9 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Sean Hughes &amp; Ian Hussey" />
+<meta name="author" content="Ian Hussey &amp; Sean Hughes" />
 
-<meta name="date" content="2020-11-12" />
+<meta name="date" content="2020-11-15" />
 
 <title>Analyses</title>
 
@@ -1952,22 +1952,12 @@ div.tocify {
 
 <h1 class="title toc-ignore">Analyses</h1>
 <h3 class="subtitle">Experiments 1-6 as preregistered</h3>
-<h4 class="author">Sean Hughes &amp; Ian Hussey</h4>
-<h4 class="date">12 november 2020</h4>
+<h4 class="author">Ian Hussey &amp; Sean Hughes</h4>
+<h4 class="date">15 November 2020</h4>
 
 </div>
 
 
-<div id="to-do" class="section level1">
-<h1>To do</h1>
-<ul>
-<li>elaborate d and BF for one sample analyses</li>
-<li>add more IV variables to correlations: demographics etc</li>
-<li>add deepfake detection to correlations</li>
-<li>Note somewhere that POMPs are included for fidelity to prereg but are unnecessary given we’re studying correlations</li>
-<li>Note somewhere that all correlations are underpowered, alpha correction needed, or something. Really needs its own dedicated individual difference work with large samples and feature importance selection.</li>
-</ul>
-</div>
 <div id="dependencies-functions" class="section level1">
 <h1>Dependencies &amp; functions</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="co"># dependencies</span></span>
@@ -5292,18 +5282,20 @@ Condition 1 M = 1.43, Condition 2 M = 1.89, t(206.7) = -2.92, p = .0039, d = -0.
 <div id="correlations" class="section level1">
 <h1>Correlations</h1>
 <p>DVs and detection bivariate with individual differences variables</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="co"># which columns should be used on the RHS?</span></span>
-<span id="cb12-2"><a href="#cb12-2"></a>column_names &lt;-<span class="st"> </span>data_after_exclusions <span class="op">%&gt;%</span></span>
-<span id="cb12-3"><a href="#cb12-3"></a><span class="st">  </span><span class="kw">select</span>(<span class="kw">ends_with</span>(<span class="st">&quot;_pomp&quot;</span>),</span>
-<span id="cb12-4"><a href="#cb12-4"></a>         diagnosticity, </span>
-<span id="cb12-5"><a href="#cb12-5"></a>         demand, </span>
-<span id="cb12-6"><a href="#cb12-6"></a>         reactance, </span>
-<span id="cb12-7"><a href="#cb12-7"></a>         hypothesis_awareness, </span>
-<span id="cb12-8"><a href="#cb12-8"></a>         influence_awareness,</span>
-<span id="cb12-9"><a href="#cb12-9"></a>         political_ideology_identity,</span>
-<span id="cb12-10"><a href="#cb12-10"></a>         political_ideology_social_issues,</span>
-<span id="cb12-11"><a href="#cb12-11"></a>         political_ideology_economic_issues) <span class="op">%&gt;%</span></span>
-<span id="cb12-12"><a href="#cb12-12"></a><span class="st">  </span><span class="kw">colnames</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="co"># Note: we indicated in the pre-reg files that if the two political ideology scores were to highly correlate with one another then we would create a composite score (as the original authors did in their work with these measures). However, given that those authors did not specify what &quot;highly&quot; related meant, we decided to include both the composite and the individual scores for others to inspect and use as they see fit. </span></span>
+<span id="cb12-2"><a href="#cb12-2"></a></span>
+<span id="cb12-3"><a href="#cb12-3"></a><span class="co"># which columns should be used on the RHS?</span></span>
+<span id="cb12-4"><a href="#cb12-4"></a>column_names &lt;-<span class="st"> </span>data_after_exclusions <span class="op">%&gt;%</span></span>
+<span id="cb12-5"><a href="#cb12-5"></a><span class="st">  </span><span class="kw">select</span>(<span class="kw">ends_with</span>(<span class="st">&quot;_pomp&quot;</span>),</span>
+<span id="cb12-6"><a href="#cb12-6"></a>         diagnosticity, </span>
+<span id="cb12-7"><a href="#cb12-7"></a>         demand, </span>
+<span id="cb12-8"><a href="#cb12-8"></a>         reactance, </span>
+<span id="cb12-9"><a href="#cb12-9"></a>         hypothesis_awareness, </span>
+<span id="cb12-10"><a href="#cb12-10"></a>         influence_awareness,</span>
+<span id="cb12-11"><a href="#cb12-11"></a>         political_ideology_identity,</span>
+<span id="cb12-12"><a href="#cb12-12"></a>         political_ideology_social_issues,</span>
+<span id="cb12-13"><a href="#cb12-13"></a>         political_ideology_economic_issues) <span class="op">%&gt;%</span></span>
+<span id="cb12-14"><a href="#cb12-14"></a><span class="st">  </span><span class="kw">colnames</span>()</span></code></pre></div>
 <div id="mean_self_reported_evaluation_recoded_for_source_valence" class="section level2">
 <h2>mean_self_reported_evaluation_recoded_for_source_valence</h2>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>results_correlations_sr &lt;-<span class="st"> </span></span>
@@ -6321,9 +6313,9 @@ Implicit - hypothesis_awareness
 ##    political_ideology_economic_issues
 ## sr                                218
 ##    aot_actively_openminded_thinking_pomp bcti_belief_in_conspiracy_pomp
-## sr                                  0.57                            NaN
+## sr                                  0.57                             NA
 ##    crt_analytic_thinking_pomp ocq_overclaiming_pomp
-## sr                       0.19                   NaN
+## sr                       0.19                    NA
 ##    ras_relgious_affliation_pomp rei_rational_pomp rei_experiential_pomp
 ## sr                         0.85              0.88                   0.4
 ##    me_fake_news_awareness_pomp me_real_news_awareness_pomp
@@ -6342,9 +6334,9 @@ Implicit - hypothesis_awareness
 ##  Confidence intervals based upon normal theory.  To get bootstrapped values, try cor.ci
 ##                  raw.lower raw.r raw.upper raw.p lower.adj upper.adj
 ## sr-a____             -0.10  0.04      0.17  0.57     -0.17      0.24
-## sr-b____                NA    NA       NaN   NaN        NA       NaN
+## sr-b____                NA    NA        NA    NA        NA        NA
 ## sr-cr___             -0.22 -0.09      0.05  0.19     -0.29      0.12
-## sr-ocq__                NA    NA       NaN   NaN        NA       NaN
+## sr-ocq__                NA    NA        NA    NA        NA        NA
 ## sr-rs___             -0.12  0.01      0.15  0.85     -0.19      0.22
 ## sr-r_rt_             -0.14 -0.01      0.12  0.88     -0.21      0.20
 ## sr-r_xp_             -0.08  0.06      0.19  0.40     -0.15      0.26
@@ -7080,6 +7072,55 @@ DF detection - me_fake_news_awareness_pomp
 </tbody>
 </table>
 </div>
+</div>
+<div id="session-info" class="section level1">
+<h1>Session info</h1>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a><span class="kw">sessionInfo</span>()</span></code></pre></div>
+<pre><code>## R version 4.0.2 (2020-06-22)
+## Platform: x86_64-apple-darwin17.0 (64-bit)
+## Running under: macOS Catalina 10.15.7
+## 
+## Matrix products: default
+## BLAS:   /Library/Frameworks/R.framework/Versions/4.0/Resources/lib/libRblas.dylib
+## LAPACK: /Library/Frameworks/R.framework/Versions/4.0/Resources/lib/libRlapack.dylib
+## 
+## locale:
+## [1] en_IE.UTF-8/en_IE.UTF-8/en_IE.UTF-8/C/en_IE.UTF-8/en_IE.UTF-8
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+##  [1] plotrix_3.7-8          broom_0.7.2            BayesFactor_0.9.12-4.2
+##  [4] Matrix_1.2-18          coda_0.19-3            effsize_0.8.1         
+##  [7] psych_2.0.9            sjPlot_2.8.4           kableExtra_1.3.1      
+## [10] knitr_1.30             forcats_0.5.0          stringr_1.4.0         
+## [13] dplyr_1.0.2            purrr_0.3.4            readr_1.3.1           
+## [16] tidyr_1.1.2            tibble_3.0.3           ggplot2_3.3.2         
+## [19] tidyverse_1.3.0       
+## 
+## loaded via a namespace (and not attached):
+##  [1] nlme_3.1-148       fs_1.4.1           lubridate_1.7.9    insight_0.10.0    
+##  [5] webshot_0.5.2      httr_1.4.1         tools_4.0.2        backports_1.1.9   
+##  [9] R6_2.4.1           sjlabelled_1.1.7   DBI_1.1.0          colorspace_1.4-1  
+## [13] withr_2.2.0        tidyselect_1.1.0   mnormt_1.5-7       emmeans_1.4.6     
+## [17] compiler_4.0.2     performance_0.4.6  cli_2.0.2          rvest_0.3.5       
+## [21] xml2_1.3.2         sandwich_2.5-1     bayestestR_0.7.5   scales_1.1.1      
+## [25] mvtnorm_1.1-1      pbapply_1.4-2      digest_0.6.25      minqa_1.2.4       
+## [29] rmarkdown_2.5      pkgconfig_2.0.3    htmltools_0.5.0    lme4_1.1-25       
+## [33] highr_0.8          dbplyr_1.4.3       rlang_0.4.8        readxl_1.3.1      
+## [37] rstudioapi_0.11    generics_0.0.2     zoo_1.8-8          jsonlite_1.7.1    
+## [41] gtools_3.8.2       magrittr_1.5       parameters_0.8.6   Rcpp_1.0.5        
+## [45] munsell_0.5.0      fansi_0.4.1        lifecycle_0.2.0    stringi_1.4.6     
+## [49] multcomp_1.4-13    yaml_2.2.1         MASS_7.3-53        grid_4.0.2        
+## [53] parallel_4.0.2     sjmisc_2.8.5       crayon_1.3.4       lattice_0.20-41   
+## [57] ggeffects_0.14.3   haven_2.3.1        splines_4.0.2      sjstats_0.18.0    
+## [61] hms_0.5.3          pillar_1.4.6       boot_1.3-25        estimability_1.3  
+## [65] effectsize_0.4.0   codetools_0.2-16   reprex_0.3.0       glue_1.4.2        
+## [69] evaluate_0.14      modelr_0.1.8       vctrs_0.3.4        nloptr_1.2.2.2    
+## [73] MatrixModels_0.4-1 cellranger_1.1.0   gtable_0.3.0       assertthat_0.2.1  
+## [77] xfun_0.19          xtable_1.8-4       survival_3.1-12    viridisLite_0.3.0 
+## [81] statmod_1.4.34     TH.data_1.0-10     ellipsis_0.3.1</code></pre>
 </div>
 
 

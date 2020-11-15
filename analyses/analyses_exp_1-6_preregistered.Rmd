@@ -1,7 +1,7 @@
 ---
 title: "Analyses"
 subtitle: "Experiments 1-6 as preregistered"
-author: "Sean Hughes & Ian Hussey"
+author: "Ian Hussey & Sean Hughes"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
   html_document:
@@ -11,14 +11,6 @@ output:
     toc: yes
     toc_float: yes
 ---
-
-# To do
-
-- elaborate d and BF for one sample analyses 
-- add more IV variables to correlations: demographics etc
-- add deepfake detection to correlations
-- Note somewhere that POMPs are included for fidelity to prereg but are unnecessary given we're studying correlations
-- Note somewhere that all correlations are underpowered, alpha correction needed, or something. Really needs its own dedicated individual difference work with large samples and feature importance selection.
 
 ```{r include=FALSE}
 knitr::opts_chunk$set(message=FALSE,
@@ -508,6 +500,14 @@ results_correlations_df_detection %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
+
+```
+
+# Session info
+
+```{r}
+
+sessionInfo()
 
 ```
 
