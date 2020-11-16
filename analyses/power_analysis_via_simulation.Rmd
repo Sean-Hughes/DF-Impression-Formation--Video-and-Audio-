@@ -1,0 +1,197 @@
+
+
+
+```{r}
+
+# from https://cran.r-project.org/web/packages/simglm/vignettes/tidy_simulation.html
+
+# dependencies
+library(tidyverse)
+library(simglm)
+library(brms)
+library(bayestestR)
+
+# set seed
+set.seed(42) 
+
+fit_selfreport <- read_rds("models/fit_selfreport.rds")
+fit_implicit   <- read_rds("models/fit_implicit.rds")
+fit_intentions <- read_rds("models/fit_intentions.rds")
+
+# data_after_exclusions %>%
+#   select(mean_self_reported_evaluation, source_valence, experiment_condition) %>%
+#   pivot_longer(cols = c("source_valence", "experiment_condition"),
+#                names_to = "IV",
+#                values_to = "level") %>%
+#   group_by(IV) %>%
+#   summarize(mean = mean(mean_self_reported_evaluation),
+#             sd = sd(mean_self_reported_evaluation)) %>%
+#   mutate_if(is.numeric, round, digits = 2)
+
+```
+
+```{r}
+
+simulate_data <- function(fitted_empirical_model, N){
+  
+  # get point estimates from fitted data
+  results_empirical <- as_tibble(map_estimate(fitted_empirical_model))
+  
+  # extract these point estimates
+  beta_Intercept <- results_empirical %>% 
+    filter(Parameter == "b_Intercept") %>% 
+    pull(MAP_Estimate)
+  
+  beta_source_valence <- results_empirical %>% 
+    filter(Parameter == "b_source_valencepositive") %>% 
+    pull(MAP_Estimate)
+  
+  beta_experiment_condition <- results_empirical %>% 
+    filter(Parameter == "b_experiment_conditiondeepfaked") %>%
+    pull(MAP_Estimate)
+  
+  beta_interaction <- results_empirical %>% 
+    filter(Parameter == "b_source_valencepositive.experiment_conditiondeepfaked") %>% 
+    pull(MAP_Estimate)
+  
+  # set parameters of model to be simulated using point estimates
+  simulation_arguments <- 
+    list(formula     = DV ~ 1 + source_valence + experiment_condition + interaction,
+         reg_weights = c(beta_Intercept, beta_source_valence, beta_experiment_condition, beta_interaction),
+         fixed       = list(source_valence       = list(var_type = "continuous", mean = 0, sd = 2),
+                            experiment_condition = list(var_type = "continuous", mean = 0, sd = 2),
+                            interaction          = list(var_type = "continuous", mean = 0, sd = 2)),
+         sample_size = N)
+  
+  # simulate data to fit_initial model
+  data_simulated <- simulation_arguments %>%
+    simulate_fixed(data = NULL, .) %>%
+    simulate_error(simulation_arguments) %>%
+    generate_response(simulation_arguments)
+  
+  return(data_simulated)
+  
+}
+
+data_simulated_sr <- simulate_data(fit_selfreport, N = 500)
+
+```
+
+Remember to change fit_initial saved file to be DV specific
+
+```{r}
+
+# NB it is faster to simulate and fit the model once, then use update() this fit, rather than generating the STAN code for the model at every iteration. I'll refer to this first model as fit_initial.
+
+
+fit_initial_model <- function(fitted_empirical_model, N){
+  
+  # simulate data using fitted model
+  simulated_data <- simulate_data(fitted_empirical_model, N = N)
+  
+  # fit the same model to the simulated data
+  fit_initial <- 
+    brm(formula = DV ~ 1 + source_valence + experiment_condition + interaction,
+        data    = simulated_data,
+        prior   = prior(normal(0, 10)),
+        iter    = 10000,
+        warmup  = 3000,
+        control = list(adapt_delta = 0.99),  # to avoid divergent transitions
+        chains  = 4,
+        cores   = parallel::detectCores())
+  
+  # sanity check: can we recover comparable parameters that we built the model with?
+  # e.g., the fixed effect estimates should be close to the reg_weights used above.
+  results_comparison <- results_empirical %>%
+    mutate(Parameter = case_when(Parameter == "b_source_valencepositive" ~ "b_source_valence",
+                                 Parameter == "b_experiment_conditiondeepfaked" ~ "b_experiment_condition",
+                                 Parameter == "b_source_valencepositive.experiment_conditiondeepfaked" ~ "b_interaction",
+                                 TRUE ~ Parameter)) %>%
+    rename(empirical = MAP_Estimate) %>%
+    full_join(fit_initial %>%
+                map_estimate() %>%
+                as_tibble() %>%
+                rename(simulated = MAP_Estimate), by = "Parameter") %>%
+    mutate_if(is.numeric, round, digits = 2)
+  
+  return(list(fitted_empirical_model = fitted_empirical_model,
+              fit_initial = fit_initial,
+              results_comparison = results_comparison))
+  
+}
+
+x <- fit_initial_model(fitted_empirical_model = fit_selfreport, N = 500)
+
+x$results_comparison
+
+```
+
+```{r}
+
+updated_initial_model <- function(){
+  
+  
+  
+}
+
+# simulate data to refit the model (via updating) using the initial model and newly simulated data
+data_simulated <- simulation_arguments %>%
+  simulate_fixed(data = NULL, .) %>%
+  simulate_error(simulation_arguments) %>%
+  generate_response(simulation_arguments)
+
+# find a new (updated) fit using the newly simulated data
+fit_updated <- update(fit_initial, newdata = data_simulated)
+
+# [NB below hypothesis testing code adapted from analysis code]
+
+# manipulate posterior distributions
+draws_fit_updated <-
+  bind_cols(select(spread_draws(fit_updated, b_Intercept),            b_Intercept),
+            select(spread_draws(fit_updated, b_source_valence),       b_source_valence),
+            select(spread_draws(fit_updated, b_experiment_condition), b_experiment_condition),
+            select(spread_draws(fit_updated, b_interaction),          b_interaction)) %>%
+  mutate(effect_genuine   = b_source_valence,
+         effect_deepfaked = b_source_valence + b_experiment_condition + b_interaction)
+
+# parameterize posteriors
+estimates_fit_updated <-
+  # 95% CIs
+  (bayestestR::hdi(draws_fit_updated, ci = .95) %>% 
+     rename(CI_95_lower = CI_low) %>%
+              as_tibble()) %>%
+  # 90% CIs (for non-inferiority test)
+  full_join(bayestestR::hdi(draws_fit_updated, ci = .90) %>%
+              as_tibble() %>%
+              rename(CI_90_lower = CI_low),
+            by = "Parameter") %>%
+  select(Parameter, CI_95_lower, CI_90_lower)
+
+# lower CI estimates hypothesis tests
+effect_genuine_95_CI_lower   <- estimates_fit_updated %>% filter(Parameter == "effect_genuine")   %>% pull(CI_95_lower)
+effect_deepfaked_95_CI_lower <- estimates_fit_updated %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_95_lower)
+effect_deepfaked_90_CI_lower <- estimates_fit_updated %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_90_lower)
+
+## non-zero effect in genuine condition
+H1ace <- ifelse(effect_genuine_95_CI_lower > 0, 1, 0)
+## non-zero effect in deepfake condition
+H1bdf <- ifelse(effect_deepfaked_95_CI_lower > 0, 1, 0)
+## non-inferiority of deepfakes compared to genuine
+H2abc <- ifelse(effect_genuine_95_CI_lower < effect_deepfaked_90_CI_lower, 1, 0)
+
+# binary hypothesis tests
+results_simulation <- tibble(effect_genuine_95_CI_lower = effect_genuine_95_CI_lower,
+                             effect_deepfaked_95_CI_lower = effect_deepfaked_95_CI_lower,
+                             effect_deepfaked_90_CI_lower = effect_deepfaked_90_CI_lower,
+                             H1ace = H1ace,
+                             H1bdf = H1bdf,
+                             H2abc = H2abc)
+
+# print
+results_simulation
+
+```
+
+
+
+
