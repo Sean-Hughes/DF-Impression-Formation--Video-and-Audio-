@@ -27,15 +27,18 @@ knitr::opts_chunk$set(message=FALSE,
 
 ```{r}
 
-# from https://cran.r-project.org/web/packages/simglm/vignettes/tidy_simulation.html
+# see https://cran.r-project.org/web/packages/simglm/vignettes/tidy_simulation.html
 
 # dependencies
 library(tidyverse)
 library(simglm)
 library(brms)
 library(bayestestR)
+library(tidybayes)
 library(future)
 library(furrr)
+library(knitr)
+library(kableExtra)
 
 # run furrr:::future_map in parallel
 plan(multiprocess)
@@ -292,10 +295,14 @@ if(file.exists("models/simulation_iterations_self_report.csv")){
 } else {
   # run simulations
   simulation_iterations_self_report <- fit_selfreport %>%
-    fit_initial_model(fitted_empirical_model = ., filename = "fit_simulation_selfreport", N = N_participants) %>%
-    simulation(fit_initial_model_object = ., n_sim = N_simulations)
+    fit_initial_model(fitted_empirical_model = ., 
+                      filename = "fit_simulation_selfreport", 
+                      N = N_participants) %>%
+    simulation(fit_initial_model_object = ., 
+               n_sim = N_simulations)
   # write to disk
-  simulation_iterations_self_report %>% write_csv("models/simulation_iterations_self_report.csv")
+  simulation_iterations_self_report %>% 
+    write_csv("models/simulation_iterations_self_report.csv")
 }
 
 ```
