@@ -1,6 +1,6 @@
 ---
 title: "Analyses"
-subtitle: "Non preregistered analyses - alternative Bayesian multilevel models across studies"
+subtitle: "Non preregistered analyses - alternative Bayesian metaanalytic models"
 author: "Ian Hussey"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
@@ -12,9 +12,7 @@ output:
     toc_float: yes
 ---
 
-Same core research questions as preregistered (i.e., can real and deepfaked content establish evaluative learning), but a single form of multilevel Bayesian model. This has the benefit of summarizing evidence across studies, not mixing Frequentist and semi-Bayesian methods (p values and BF), and making the comparison of genuine vs deepfaked content more intuitive (i.e., via non-inferiority test and percent effectiveness).
-
-I also add exclusion of participants who spent an implausibly short or long time viewing the intervention (e.g., those who could not have watched the video because they spent only a few seconds on the page).
+The original preregistrations for the studies contained both hypotheses and the specific analytic strategies that would be used to test them. However, these preregistrations did not include a meta-analytic strategy. Separately, a number of research questions/hypotheses were generated from exploration of the data from Experiments 1-6 that were not contained in the original preregistration, or where the specific analytic strategy to test them was poorly specified or more difficult to interpret. Separately, some methodological improvements were thought of after Experiments 1-6 was run (e.g., improved exclusion criteria to ensure participants stayed on the page where they watched/listened to the intervention in its entirety). We therefore elected to use the data from Experiments 1-6 to create this (non-preregistered) alternative analytic strategy that formalized our core research questions, hypotheses, analytic models, inference rules, and other researcher degrees of freedom. This analytic strategy (and code to implement it) will be preregistered for Experiment 7 which will provide strong confirmatory tests of these hypotheses.
 
 ```{r include=FALSE}
 knitr::opts_chunk$set(message=FALSE,
@@ -52,10 +50,10 @@ dir.create("models")
 
 ```
 
-# Data, exclusions, & transformations
+# Exclusions & standaridization
 
-NB all DVs were standardised by 1SD, where SD was calculated at for each experiment, experiment_condition, and source_valence. Beta estimates from models are therefore standardized betas, and the nature of the standardization makes them somewhat comparable to Cohen's *d*. See Lorah (2018) Effect size measures for multilevel models: definition, interpretation, and TIMSS example. Large-scale Assess Educ 6, 8. https://doi.org/10.1186/s40536-018-0061-2
-
+All dependent variables (self-reported evaluations and IAT D2 scores) were standardized (by 1 SD) after exclusions and prior to analysis condition (see Lorah, 2018: https://doi.org/10.1186/s40536-018-0061-2). This was done within each level of both IV (i.e., by Source Valence condition [positive vs. negative], and by Video Content [Genuine vs. Deepfaked]). As such, the beta estimates obtained from the Bayesian models (see research questions and data analysis plans below) therefore represent standardized beta values ($\beta$ rather than $B$). More importantly, the nature of this standardization makes these estimates somewhat comparable to the frequentist standardized effect size metric Cohen's $d$, as both are a differences in (estimated) means as a proportion of SD although they should not be treated as equivalent. Effect size magnitude here can therefore be thought of along comparable scales as Cohen's $d$. As such, to aid interpretability, the point estimates of effect size will be reported as $\delta$ (delta).
+	
 ```{r}
 
 # full data
@@ -223,7 +221,7 @@ results_reliability_bi %>%
 
 ```
 
-# Establishing evaluations
+# Can you establish evaluations via genuine and Deepfaked online content?
 
 - Analyses employ Bayesian multilevel models with experiment employed as a random (Group level) intercept, and source_valence, experiment_condition and their interaction as IVs. This could therefore be described as akin to a Bayesian multilevel ANOVA.
 - DVs were standardize as noted above, and as such fitted model estimates represent standardized beta values (which due to the specifics of the standardization have comparable [but not exact] interpretation as Cohen's d values). 
@@ -248,6 +246,8 @@ data_after_exclusions %>%
 
 ## Self-reported evaluations
 
+### Fit model
+
 ```{r}
 
 fit_selfreport <-
@@ -261,12 +261,22 @@ fit_selfreport <-
       chains  = 4,
       cores   = parallel::detectCores())
 
-# # inspect convergence
-# fit_selfreport
-# plot(fit_selfreport, ask = FALSE)
+```
+
+### Inspect convergence
+
+```{r}
+
+summary(fit_selfreport)
+plot(fit_selfreport, ask = FALSE)
+
+```
+
+### Interpret posteriors
+
+```{r}
 
 # plot_model(fit_selfreport)
-# plot_model(fit_selfreport, type = "re")
 plot_model(fit_selfreport, type = "pred", terms = c("source_valence", "experiment_condition"))
 
 # percent moderation
@@ -358,6 +368,8 @@ Change in self-reported evaluations (i.e., between Source Valence conditions) in
 
 ## Implicit
 
+### Fit model
+
 ```{r}
 
 fit_implicit <-
@@ -371,9 +383,20 @@ fit_implicit <-
       chains  = 4,
       cores   = parallel::detectCores())
 
-# # inspect convergence
-# fit_implicit
-# plot(fit_implicit, ask = FALSE)
+```
+
+### Inspect convergence
+
+```{r}
+
+summary(fit_implicit)
+plot(fit_implicit, ask = FALSE)
+
+```
+
+### Interpret posteriors
+
+```{r}
 
 #plot_model(fit_implicit)
 plot_model(fit_implicit, type = "pred", terms = c("source_valence", "experiment_condition"))
@@ -466,6 +489,8 @@ Change in IAT D2 scores (i.e., between Source Valence conditions) induced by Dee
 
 ## Behavioural intentions
 
+### Fit model
+
 ```{r}
 
 fit_intentions <-
@@ -479,9 +504,20 @@ fit_intentions <-
       chains  = 4,
       cores   = parallel::detectCores())
 
-# # inspect convergence
-# fit_intentions
-# plot(fit_intentions, ask = FALSE)
+```
+
+### Inspect convergence
+
+```{r}
+
+summary(fit_intentions)
+plot(fit_intentions, ask = FALSE)
+
+```
+
+### Interpret posteriors
+
+```{r}
 
 #plot_model(fit_intentions)
 plot_model(fit_intentions, type = "pred", terms = c("source_valence", "experiment_condition"))
@@ -572,7 +608,7 @@ Change in behavioral intentions (i.e., between Source Valence conditions) induce
 
 - Result: `r H2c`. `r comparison_string_intentions`.
 
-# Detection
+# How good are people at detecting deepfakes?
 
 ## Inter-rater relibility
 
@@ -605,7 +641,12 @@ Interpretation of Kappa (Altman 1999, Landis JR, 1977):
 - 0.61 - 0.80	Substantial
 - 0.81 - 1.00	Almost perfect
 
-## Sample sizes
+## Can people accurately detect deepfakes?
+
+- Youden's J = sensitivity + specificity - 1, aka informedness, aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions"
+- 95% CIs were bootstrapped via case removal and the percentile method. 
+
+### Sample size
 
 ```{r}
 
@@ -619,10 +660,7 @@ data_after_exclusions %>%
  
 ```
 
-## Can people accurately detect deepfakes?
-
-- Youden's J = sensitivity + specificity - 1, aka informedness, aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions"
-- 95% CIs were bootstrapped via case removal and the percentile method. 
+### Bootstrapped classification stats
 
 ```{r}
 
@@ -724,7 +762,109 @@ We expect participants to be poor at making accurate decisions about whether con
 
 We expect participants to make poorly informed decisions about whether content is genuine or not (i.e., informedness/Youden’s J ≲ .25). 
 
-# Does detecting it matter?
+## Even the subset of participants who were aware of the concept of deepfakes before the study?
+
+### Sample size
+
+```{r}
+
+data_after_exclusions %>%
+  filter(deepfake_concept_check == TRUE) %>%
+  count(experiment_condition,
+        deepfake_detected) %>%
+  drop_na() %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+ 
+```
+
+### Bootstrapped classification stats
+
+```{r}
+
+if(file.exists("models/fit_classification_bootstraps_subset.rds")){
+
+  fit_classification_bootstraps_subset <- read_rds("models/fit_classification_bootstraps_subset.rds")
+
+} else {
+
+  # create bootstraps using out of bag method. makes a df with values that are collapsed dfs.
+  boots <- data_after_exclusions %>%
+    filter(deepfake_concept_check == TRUE) %>%
+    select(experiment_condition, deepfake_detected) %>%
+    drop_na() %>%
+    bootstraps(times = 2000)
+
+  # generalize to a summarize function ------
+  bootstrap_categorization_stats <- function(split) {
+
+    data_counts <- analysis(split) %>%
+      count(experiment_condition, deepfake_detected)
+
+    TP <- pull(filter(data_counts, experiment_condition == "deepfaked" & deepfake_detected == TRUE),  n)
+    FP <- pull(filter(data_counts, experiment_condition == "genuine"   & deepfake_detected == TRUE),  n)
+    FN <- pull(filter(data_counts, experiment_condition == "deepfaked" & deepfake_detected == FALSE), n)
+    TN <- pull(filter(data_counts, experiment_condition == "genuine"   & deepfake_detected == FALSE), n)
+
+    #accuracy <- (TP+TN)/(TP+TN+FP+FN)
+    sensitivity <- TP / (TP+FN)
+    false_negative_rate <- 1 - sensitivity
+    specificity <- TN / (TN+FP)
+    false_positive_rate <- 1 - specificity
+
+    # Youden's J statistic aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions". a zero value when a diagnostic test gives the same proportion of positive results for groups with and without the disease, i.e the test is useless.
+    informedness <- sensitivity + specificity - 1
+
+    balanced_accuracy <- (sensitivity + specificity)/2
+
+    results <-
+      tibble(variable = c(
+        #"accuracy",
+        "balanced_accuracy",
+        "informedness",
+        #"sensitivity",
+        "false_negative_rate",
+        #"specificity",
+        "false_positive_rate"
+      ),
+      value = c(
+        #accuracy,
+        balanced_accuracy,
+        informedness,
+        #sensitivity,
+        false_negative_rate,
+        #specificity,
+        false_positive_rate
+      ))
+
+    return(results)
+  }
+
+  # apply to each bootstrap
+  fit_classification_bootstraps_subset <- boots %>%
+    mutate(categorization_stats = map(splits, bootstrap_categorization_stats)) %>%
+    select(-splits) %>%
+    unnest(categorization_stats)
+
+  write_rds(fit_classification_bootstraps_subset, "models/fit_classification_bootstraps_subset.rds")
+
+}
+
+fit_classification_bootstraps_subset %>%
+  group_by(variable) %>%
+  summarize(median = quantile(value, 0.500),
+            ci_lower = quantile(value, 0.025),
+            ci_upper = quantile(value, 0.975),
+            .groups = "drop") %>%
+  mutate_if(is.numeric, round, digits = 2) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+```
+
+# Does detecting a deepfake make you immune to it?
 
 Subset who received deepfaked videos but also detected them. Same Bayesian multilevel models as employed above, using only source_valence as IV, i.e., to detect whether learning effects are credibly non-zero in this subset. 
 
@@ -756,6 +896,8 @@ Intentions DV present only in exp 6. N is particularly low for this analysis, so
 
 ## Self-reported evaluations
 
+### Fit model
+
 ```{r}
 
 fit_selfreport_deepfaked_detected <-
@@ -769,9 +911,20 @@ fit_selfreport_deepfaked_detected <-
       chains  = 4,
       cores   = parallel::detectCores())
 
-# # inspect convergence
-# fit_selfreport_deepfaked_detected
-# plot(fit_selfreport_deepfaked_detected, ask = FALSE)
+```
+
+### Inspect convergence
+
+```{r}
+
+summary(fit_selfreport_deepfaked_detected)
+plot(fit_selfreport_deepfaked_detected, ask = FALSE)
+
+```
+
+### Interpret posteriors
+
+```{r}
 
 #plot_model(fit_selfreport_deepfaked_detected)
 plot_model(fit_selfreport_deepfaked_detected, type = "pred", terms = "source_valence")
@@ -826,6 +979,8 @@ In the subset of participants who were shown a Deepfaked video and accurately de
 
 ## Implicit
 
+### Fit model
+
 ```{r}
 
 fit_implicit_deepfaked_detected <-
@@ -839,9 +994,20 @@ fit_implicit_deepfaked_detected <-
       chains  = 4,
       cores   = parallel::detectCores())
 
-# # inspect convergence
-# fit_implicit_deepfaked_detected
-# plot(fit_implicit_deepfaked_detected, ask = FALSE)
+```
+
+### Inspect convergence
+
+```{r}
+
+summary(fit_implicit_deepfaked_detected)
+plot(fit_implicit_deepfaked_detected, ask = FALSE)
+
+```
+
+### Interpret posteriors
+
+```{r}
 
 #plot_model(fit_implicit_deepfaked_detected)
 plot_model(fit_implicit_deepfaked_detected, type = "pred", terms = "source_valence")
@@ -896,6 +1062,8 @@ In the subset of participants who were shown a Deepfaked video and accurately de
 
 ## Behavioural intentions
 
+### Fit model
+
 ```{r}
 
 fit_intentions_deepfaked_detected <-
@@ -909,9 +1077,20 @@ fit_intentions_deepfaked_detected <-
       chains  = 4,
       cores   = parallel::detectCores())
 
-# # inspect convergence
-# fit_intentions_deepfaked_detected
-# plot(fit_intentions_deepfaked_detected, ask = FALSE)
+```
+
+### Inspect convergence
+
+```{r}
+
+summary(fit_intentions_deepfaked_detected)
+plot(fit_intentions_deepfaked_detected, ask = FALSE)
+
+```
+
+### Interpret posteriors
+
+```{r}
 
 #plot_model(fit_intentions_deepfaked_detected)
 plot_model(fit_intentions_deepfaked_detected, type = "pred", terms = "source_valence")
