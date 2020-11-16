@@ -1,5 +1,29 @@
+---
+title: "Power analyses for Experiment 7"
+subtitle: "Using data from the previous experiments"
+author: "Ian Hussey"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
 
+# To do
 
+- add tests of H4
+- explicate that power analyses not conducted for H3
+- add other DVs
+
+```{r include=FALSE}
+knitr::opts_chunk$set(message=FALSE,
+                      warning=FALSE)
+```
+
+# Dependencies
 
 ```{r}
 
@@ -10,25 +34,37 @@ library(tidyverse)
 library(simglm)
 library(brms)
 library(bayestestR)
+library(future)
+library(furrr)
 
-# set seed
-set.seed(42) 
+# run furrr:::future_map in parallel
+plan(multiprocess)
+
+# create necessary folder
+dir.create("models")
+
+```
+
+# Data
+
+```{r}
 
 fit_selfreport <- read_rds("models/fit_selfreport.rds")
 fit_implicit   <- read_rds("models/fit_implicit.rds")
 fit_intentions <- read_rds("models/fit_intentions.rds")
 
-# data_after_exclusions %>%
-#   select(mean_self_reported_evaluation, source_valence, experiment_condition) %>%
-#   pivot_longer(cols = c("source_valence", "experiment_condition"),
-#                names_to = "IV",
-#                values_to = "level") %>%
-#   group_by(IV) %>%
-#   summarize(mean = mean(mean_self_reported_evaluation),
-#             sd = sd(mean_self_reported_evaluation)) %>%
-#   mutate_if(is.numeric, round, digits = 2)
+```
+
+# Global parameters
+
+```{r}
+
+N_participants <- 400
+N_simulations <- 1000
 
 ```
+
+# Functions
 
 ```{r}
 
@@ -73,18 +109,10 @@ simulate_data <- function(fitted_empirical_model, N){
   
 }
 
-data_simulated_sr <- simulate_data(fit_selfreport, N = 500)
 
-```
-
-Remember to change fit_initial saved file to be DV specific
-
-```{r}
-
-# NB it is faster to simulate and fit the model once, then use update() this fit, rather than generating the STAN code for the model at every iteration. I'll refer to this first model as fit_initial.
-
-
-fit_initial_model <- function(fitted_empirical_model, N){
+fit_initial_model <- function(fitted_empirical_model, N, filename){
+  
+  # NB it is faster to simulate and fit the model once, then use update() this fit, rather than generating the STAN code for the model at every iteration. 
   
   # simulate data using fitted model
   simulated_data <- simulate_data(fitted_empirical_model, N = N)
@@ -98,10 +126,14 @@ fit_initial_model <- function(fitted_empirical_model, N){
         warmup  = 3000,
         control = list(adapt_delta = 0.99),  # to avoid divergent transitions
         chains  = 4,
-        cores   = parallel::detectCores())
+        cores   = parallel::detectCores(),
+        file    = paste0("models/", filename))
   
   # sanity check: can we recover comparable parameters that we built the model with?
   # e.g., the fixed effect estimates should be close to the reg_weights used above.
+  # get point estimates from fitted data
+  results_empirical <- as_tibble(map_estimate(fitted_empirical_model))
+  
   results_comparison <- results_empirical %>%
     mutate(Parameter = case_when(Parameter == "b_source_valencepositive" ~ "b_source_valence",
                                  Parameter == "b_experiment_conditiondeepfaked" ~ "b_experiment_condition",
@@ -115,82 +147,179 @@ fit_initial_model <- function(fitted_empirical_model, N){
     mutate_if(is.numeric, round, digits = 2)
   
   return(list(fitted_empirical_model = fitted_empirical_model,
+              N = N,
               fit_initial = fit_initial,
               results_comparison = results_comparison))
   
 }
 
-x <- fit_initial_model(fitted_empirical_model = fit_selfreport, N = 500)
 
-x$results_comparison
-
-```
-
-```{r}
-
-updated_initial_model <- function(){
+simulate_and_hypothesis_test <- function(fit_initial_model_object, seed){
   
+  # set seed
+  set.seed(seed)
   
+  # simulate data using fitted model
+  simulated_data <- simulate_data(fitted_empirical_model = fit_initial_model_object$fitted_empirical_model, 
+                                  N = fit_initial_model_object$N)
+  
+  # find a new (updated) fit using the newly simulated data
+  fit_updated <- update(fit_initial_model_object$fit_initial, newdata = simulated_data)
+  
+  # manipulate posterior distributions
+  draws_fit_updated <-
+    bind_cols(select(spread_draws(fit_updated, b_Intercept),            b_Intercept),
+              select(spread_draws(fit_updated, b_source_valence),       b_source_valence),
+              select(spread_draws(fit_updated, b_experiment_condition), b_experiment_condition),
+              select(spread_draws(fit_updated, b_interaction),          b_interaction)) %>%
+    mutate(effect_genuine   = b_source_valence,
+           effect_deepfaked = b_source_valence + b_experiment_condition + b_interaction)
+  
+  # parameterize posteriors
+  estimates_fit_updated <-
+    # 95% CIs
+    (bayestestR::hdi(draws_fit_updated, ci = .95) %>% 
+       rename(CI_95_lower = CI_low) %>%
+       as_tibble()) %>%
+    # 90% CIs (for non-inferiority test)
+    full_join(bayestestR::hdi(draws_fit_updated, ci = .90) %>%
+                as_tibble() %>%
+                rename(CI_90_lower = CI_low),
+              by = "Parameter") %>%
+    select(Parameter, CI_95_lower, CI_90_lower)
+  
+  # lower CI estimates hypothesis tests
+  effect_genuine_95_CI_lower   <- estimates_fit_updated %>% filter(Parameter == "effect_genuine")   %>% pull(CI_95_lower)
+  effect_deepfaked_95_CI_lower <- estimates_fit_updated %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_95_lower)
+  effect_deepfaked_90_CI_lower <- estimates_fit_updated %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_90_lower)
+  
+  ## non-zero effect in genuine condition
+  H1_genuine <- ifelse(effect_genuine_95_CI_lower > 0, 1, 0)
+  ## non-zero effect in deepfake condition
+  H1_deepfaked <- ifelse(effect_deepfaked_95_CI_lower > 0, 1, 0)
+  ## non-inferiority of deepfakes compared to genuine
+  H2_noninferiority <- ifelse(effect_genuine_95_CI_lower < effect_deepfaked_90_CI_lower, 1, 0)
+  
+  # binary hypothesis tests
+  results_simulation <- tibble(effect_genuine_95_CI_lower = effect_genuine_95_CI_lower,
+                               effect_deepfaked_95_CI_lower = effect_deepfaked_95_CI_lower,
+                               effect_deepfaked_90_CI_lower = effect_deepfaked_90_CI_lower,
+                               H1_genuine = H1_genuine,
+                               H1_deepfaked = H1_deepfaked,
+                               H2_noninferiority = H2_noninferiority)
+  
+  return(results_simulation)
   
 }
 
-# simulate data to refit the model (via updating) using the initial model and newly simulated data
-data_simulated <- simulation_arguments %>%
-  simulate_fixed(data = NULL, .) %>%
-  simulate_error(simulation_arguments) %>%
-  generate_response(simulation_arguments)
 
-# find a new (updated) fit using the newly simulated data
-fit_updated <- update(fit_initial, newdata = data_simulated)
+simulation <- function(fit_initial_model_object, n_sim){
+  
+  results <- 
+    tibble(seed = 1:n_sim) %>% 
+    mutate(tidy = future_map(seed, simulate_and_hypothesis_test, 
+                             .options = furrr_options(seed = TRUE),
+                             .progress = TRUE,
+                             fit_initial_model_object = fit_initial_model_object)) %>%
+    unnest(tidy) 
+  
+  return(results)
+  
+}
 
-# [NB below hypothesis testing code adapted from analysis code]
 
-# manipulate posterior distributions
-draws_fit_updated <-
-  bind_cols(select(spread_draws(fit_updated, b_Intercept),            b_Intercept),
-            select(spread_draws(fit_updated, b_source_valence),       b_source_valence),
-            select(spread_draws(fit_updated, b_experiment_condition), b_experiment_condition),
-            select(spread_draws(fit_updated, b_interaction),          b_interaction)) %>%
-  mutate(effect_genuine   = b_source_valence,
-         effect_deepfaked = b_source_valence + b_experiment_condition + b_interaction)
-
-# parameterize posteriors
-estimates_fit_updated <-
-  # 95% CIs
-  (bayestestR::hdi(draws_fit_updated, ci = .95) %>% 
-     rename(CI_95_lower = CI_low) %>%
-              as_tibble()) %>%
-  # 90% CIs (for non-inferiority test)
-  full_join(bayestestR::hdi(draws_fit_updated, ci = .90) %>%
-              as_tibble() %>%
-              rename(CI_90_lower = CI_low),
-            by = "Parameter") %>%
-  select(Parameter, CI_95_lower, CI_90_lower)
-
-# lower CI estimates hypothesis tests
-effect_genuine_95_CI_lower   <- estimates_fit_updated %>% filter(Parameter == "effect_genuine")   %>% pull(CI_95_lower)
-effect_deepfaked_95_CI_lower <- estimates_fit_updated %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_95_lower)
-effect_deepfaked_90_CI_lower <- estimates_fit_updated %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_90_lower)
-
-## non-zero effect in genuine condition
-H1ace <- ifelse(effect_genuine_95_CI_lower > 0, 1, 0)
-## non-zero effect in deepfake condition
-H1bdf <- ifelse(effect_deepfaked_95_CI_lower > 0, 1, 0)
-## non-inferiority of deepfakes compared to genuine
-H2abc <- ifelse(effect_genuine_95_CI_lower < effect_deepfaked_90_CI_lower, 1, 0)
-
-# binary hypothesis tests
-results_simulation <- tibble(effect_genuine_95_CI_lower = effect_genuine_95_CI_lower,
-                             effect_deepfaked_95_CI_lower = effect_deepfaked_95_CI_lower,
-                             effect_deepfaked_90_CI_lower = effect_deepfaked_90_CI_lower,
-                             H1ace = H1ace,
-                             H1bdf = H1bdf,
-                             H2abc = H2abc)
-
-# print
-results_simulation
+summarize_simulation <- function(simulation_results){
+  
+  table <- simulation_results %>%
+    select(H1_genuine, H1_deepfaked, H2_noninferiority) %>%
+    gather(hypotheses, detected) %>%
+    group_by(hypotheses) %>%
+    summarize(power = mean(detected), .groups = "drop") 
+  
+  plot1 <- simulation_results %>%
+    select(Genuine = effect_genuine_95_CI_lower,
+           Deepfaked = effect_deepfaked_95_CI_lower) %>%
+    gather(Condition, value) %>%
+    ggplot(aes(value, color = Condition, fill = Condition)) +
+    geom_density(alpha = 0.2) +
+    scale_color_viridis_d(begin = 0.3, end = 0.7) +
+    scale_fill_viridis_d(begin = 0.3, end = 0.7) +
+    xlab("Lower bound 95% CI") 
+  
+  plot2 <- simulation_results %>%
+    mutate(Inference = ifelse(effect_genuine_95_CI_lower < effect_deepfaked_90_CI_lower, 
+                              "Evidence of non-inferiority", 
+                              "No evidence of non-inferior")) %>%
+    ggplot(aes(effect_genuine_95_CI_lower, effect_deepfaked_90_CI_lower, color = Inference)) +
+    geom_point() +
+    geom_abline(slope = 1, linetype = "dashed") +
+    scale_color_viridis_d(begin = 0.3, end = 0.7) +
+    xlab("Lower bound 95% CI for genuine condition") +
+    ylab("Lower bound 90% CI for Deepfaked condition")
+  
+  return(list(table = table,
+              plot1 = plot1,
+              plot2 = plot2))
+  
+}
 
 ```
+
+# Check parameter recovery
+
+As a sanity check to ensure that (1) models are being extracted correctly from the original (meta analytic) empirical fits, (2) data fitting these models is being simulated correctly, and (3) (fixed effect) models are being fit to these simulated data correctly, ensure that parameters from the empirical models are being recovered.
+
+```{r}
+
+parameter_recovery_self_report <- fit_initial_model(fitted_empirical_model = fit_selfreport, 
+                                                    filename = "fit_simulation_selfreport",
+                                                    N = N_participants)
+
+parameter_recovery_self_report$results_comparison %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+```
+
+# Run simulations
+
+```{r}
+
+# for self report DV
+if(file.exists("models/simulation_iterations_self_report.csv")){
+  simulation_iterations_self_report <- read_csv("models/simulation_iterations_self_report.csv")
+} else {
+  # run simulations
+  simulation_iterations_self_report <- fit_selfreport %>%
+    fit_initial_model(fitted_empirical_model = ., filename = "fit_simulation_selfreport", N = N_participants) %>%
+    simulation(fit_initial_model_object = ., n_sim = N_simulations)
+  # write to disk
+  simulation_iterations_self_report %>% write_csv("models/simulation_iterations_self_report.csv")
+}
+
+```
+
+# Results
+
+```{r fig.height=5, fig.width=5}
+
+# summarize simulations
+simulation_results_self_report <- summarize_simulation(simulation_iterations_self_report)
+
+# print table
+simulation_results_self_report$table %>%
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+# print H1 plots
+simulation_results_self_report$plot1
+
+# print H2 plot
+simulation_results_self_report$plot2
+
+```
+
 
 
 
