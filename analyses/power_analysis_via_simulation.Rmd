@@ -66,12 +66,12 @@ fit_intentions <- read_rds("models/fit_intentions.rds")
 
 ```
 
-# Hyper parameters
+# Parameters
 
 ```{r}
 
 N_participants <- 400
-N_simulations <- 1000
+N_simulations <- 100
 
 ```
 
@@ -113,11 +113,10 @@ simulate_data <- function(fitted_empirical_model, N){
   
   # set parameters of model to be simulated using point estimates
   simulation_arguments <- 
-    list(formula     = DV ~ 1 + source_valence + experiment_condition + interaction,
+    list(formula     = DV ~ 1 + source_valence * experiment_condition,
          reg_weights = c(beta_Intercept, beta_source_valence, beta_experiment_condition, beta_interaction),
-         fixed       = list(source_valence       = list(var_type = "continuous", mean = 0, sd = 2),
-                            experiment_condition = list(var_type = "continuous", mean = 0, sd = 2),
-                            interaction          = list(var_type = "continuous", mean = 0, sd = 2)),
+         fixed       = list(source_valence       = list(var_type = "factor", levels = c("negative", "positive")),
+                            experiment_condition = list(var_type = "factor", levels = c("genuine", "deepfaked"))),
          sample_size = N)
   
   # simulate data to fit_initial model
@@ -140,7 +139,7 @@ fit_initial_model <- function(fitted_empirical_model, N, filename){
   
   # fit the same model to the simulated data
   fit_initial <- 
-    brm(formula = DV ~ 1 + source_valence + experiment_condition + interaction,
+    brm(formula = DV ~ 1 + source_valence * experiment_condition,
         data    = simulated_data,
         prior   = prior(normal(0, 10)),
         iter    = 10000,
@@ -153,20 +152,25 @@ fit_initial_model <- function(fitted_empirical_model, N, filename){
   # sanity check: can we recover comparable parameters that we built the model with?
   # e.g., the fixed effect estimates should be close to the reg_weights used above.
   # get point estimates from fitted data
-  results_empirical <- as_tibble(map_estimate(fitted_empirical_model))
+  results_empirical <- as_tibble(map_estimate(fitted_empirical_model)) %>%
+    mutate(Parameter = case_when(
+      Parameter == "b_source_valencepositive" ~ "b_source_valence",
+      Parameter == "b_experiment_conditiondeepfaked" ~ "b_experiment_condition",
+      Parameter == "b_source_valencepositive.experiment_conditiondeepfaked" ~ "b_interaction",
+      TRUE ~ Parameter)
+    )
   
-  results_comparison <- results_empirical %>%
-    mutate(Parameter = case_when(Parameter == "b_source_valencepositive" ~ "b_source_valence",
-                                 Parameter == "b_experiment_conditiondeepfaked" ~ "b_experiment_condition",
-                                 Parameter == "b_source_valencepositive.experiment_conditiondeepfaked" ~ "b_interaction",
-                                 TRUE ~ Parameter)) %>%
-    rename(empirical = MAP_Estimate) %>%
-    full_join(fit_initial %>%
-                map_estimate() %>%
-                as_tibble() %>%
-                rename(simulated = MAP_Estimate), by = "Parameter") %>%
-    mutate_if(is.numeric, round, digits = 2)
-  
+  results_simulated <- fit_initial %>%
+    map_estimate() %>%
+    as_tibble() %>%
+    mutate(Parameter = case_when(
+      Parameter == "b_source_valence.experiment_condition" ~ "b_interaction",
+      TRUE ~ Parameter)
+    ) %>%
+    rename(simulated = MAP_Estimate)
+    
+  results_comparison <- full_join(results_empirical, results_simulated, by = "Parameter") 
+
   return(list(fitted_empirical_model = fitted_empirical_model,
               N = N,
               fit_initial = fit_initial,
@@ -261,6 +265,7 @@ parameter_recovery_self_report <- fit_initial_model(fitted_empirical_model = fit
                                                     N = N_participants)
 
 parameter_recovery_self_report$results_comparison %>%
+  mutate_if(is.numeric, round, digits = 2) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
