@@ -17,6 +17,7 @@ output:
 - add tests of H4
 - explicate that power analyses not conducted for H3
 - add other DVs
+- dont forget exclusion rate when calculating necessary N
 
 ```{r include=FALSE}
 knitr::opts_chunk$set(message=FALSE,
@@ -287,9 +288,10 @@ parameter_recovery_self_report$results_comparison %>%
 
 # Run simulations
 
+## Self-reports
+
 ```{r}
 
-# for self report DV
 if(file.exists("models/simulation_iterations_self_report.csv")){
   simulation_iterations_self_report <- read_csv("models/simulation_iterations_self_report.csv")
 } else {
@@ -302,12 +304,56 @@ if(file.exists("models/simulation_iterations_self_report.csv")){
                n_sim = N_simulations)
   # write to disk
   simulation_iterations_self_report %>% 
-    pwrite_csv("models/simulation_iterations_self_report.csv")
+    write_csv("models/simulation_iterations_self_report.csv")
+}
+
+```
+
+## Implicit
+
+```{r}
+
+if(file.exists("models/simulation_iterations_implicit.csv")){
+  simulation_iterations_implicit <- read_csv("models/simulation_iterations_implicit.csv")
+} else {
+  # run simulations
+  simulation_iterations_implicit <- fit_implicit %>%
+    fit_initial_model(fitted_empirical_model = ., 
+                      filename = "fit_simulation_implicit", 
+                      N = N_participants) %>%
+    simulation(fit_initial_model_object = ., 
+               n_sim = N_simulations)
+  # write to disk
+  simulation_iterations_implicit %>% 
+    write_csv("models/simulation_iterations_implicit.csv")
+}
+
+```
+
+## Behavioral intentions
+
+```{r}
+
+if(file.exists("models/simulation_iterations_intentions.csv")){
+  simulation_iterations_intentions <- read_csv("models/simulation_iterations_intentions.csv")
+} else {
+  # run simulations
+  simulation_iterations_intentions <- fit_intentions %>%
+    fit_initial_model(fitted_empirical_model = ., 
+                      filename = "fit_simulation_intentions", 
+                      N = N_participants) %>%
+    simulation(fit_initial_model_object = ., 
+               n_sim = N_simulations)
+  # write to disk
+  simulation_iterations_intentions %>% 
+    write_csv("models/simulation_iterations_intentions.csv")
 }
 
 ```
 
 # Results
+
+## Self-report
 
 ```{r fig.height=5, fig.width=7}
 
@@ -327,7 +373,45 @@ simulation_results_self_report$plot2
 
 ```
 
+## Implicit
 
+```{r fig.height=5, fig.width=7}
+
+# summarize simulations
+simulation_results_implicit <- summarize_simulation(simulation_iterations_implicit)
+
+# print table
+simulation_results_implicit$table %>%
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+# print H1 plots
+simulation_results_implicit$plot1
+
+# print H2 plot
+simulation_results_implicit$plot2
+
+```
+
+## Behavioral intentions
+
+```{r fig.height=5, fig.width=7}
+
+# summarize simulations
+simulation_results_intentions <- summarize_simulation(simulation_iterations_intentions)
+
+# print table
+simulation_results_intentions$table %>%
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+# print H1 plots
+simulation_results_intentions$plot1
+
+# print H2 plot
+simulation_results_intentions$plot2
+
+```
 
 
 
