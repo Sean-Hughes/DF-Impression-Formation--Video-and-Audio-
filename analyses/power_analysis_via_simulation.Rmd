@@ -302,14 +302,14 @@ if(file.exists("models/simulation_iterations_self_report.csv")){
                n_sim = N_simulations)
   # write to disk
   simulation_iterations_self_report %>% 
-    write_csv("models/simulation_iterations_self_report.csv")
+    pwrite_csv("models/simulation_iterations_self_report.csv")
 }
 
 ```
 
 # Results
 
-```{r fig.height=5, fig.width=5}
+```{r fig.height=5, fig.width=7}
 
 # summarize simulations
 simulation_results_self_report <- summarize_simulation(simulation_iterations_self_report)
