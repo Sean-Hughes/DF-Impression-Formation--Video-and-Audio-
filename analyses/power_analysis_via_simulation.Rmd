@@ -66,7 +66,7 @@ fit_intentions <- read_rds("models/fit_intentions.rds")
 
 ```
 
-# Global parameters
+# Hyper parameters
 
 ```{r}
 
