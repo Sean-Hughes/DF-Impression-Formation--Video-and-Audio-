@@ -16,19 +16,15 @@ output:
 
 - add tests of H4
 - explicate that power analyses not conducted for H3
-- add other DVs
-- dont forget exclusion rate when calculating necessary N
 
 ```{r include=FALSE}
 knitr::opts_chunk$set(message=FALSE,
                       warning=FALSE)
 ```
 
-# Dependencies
+# Setup
 
 ```{r}
-
-# see https://cran.r-project.org/web/packages/simglm/vignettes/tidy_simulation.html
 
 # dependencies
 library(tidyverse)
@@ -41,7 +37,7 @@ library(furrr)
 library(knitr)
 library(kableExtra)
 
-# run furrr:::future_map in parallel
+# set up parallelization 
 plan(multiprocess)
 
 # create necessary folder
@@ -51,8 +47,19 @@ dir.create("models")
 
 # Data
 
+- Calculate empirical exclusion rate from existing data.
+- Load fitted meta-analyses models of existing data (fitted in the exploratory analyses script).
+
 ```{r}
 
+# exclusion rate
+data_exclusion_rate <- read.csv("../data/processed/4_data_participant_level_with_hand_scoring.csv") %>%
+  # set factor levels for t test comparisons
+  mutate(exclude = ifelse(exclude_subject == FALSE & exclude_implausible_intervention_linger == FALSE, FALSE, TRUE)) %>%
+  summarize(percent_excluded = mean(exclude)) %>%
+  pull(percent_excluded)
+
+# empirical fits (created by exploratory analyses script)
 fit_selfreport <- read_rds("models/fit_selfreport.rds")
 fit_implicit   <- read_rds("models/fit_implicit.rds")
 fit_intentions <- read_rds("models/fit_intentions.rds")
@@ -68,7 +75,17 @@ N_simulations <- 1000
 
 ```
 
+- N participants to be simulated = `r N_participants`
+- N simulation iterations run = `r N_simulations`
+
 # Functions
+
+Define the functions used to run the simulations.
+
+- simulate_data(): Simulate data that mimics to the empirical data, using the fitted empirical models.
+- fit_initial_model(): Fit the model to this newly simulated data, check for parameter recovery. 
+- fit_and_hypothesis_test(): Repeatedly (1) simulate new data again (calling the above function), (2) fit the model to this simulated data (by updating the fit_initial model above, in order to reuse its STAN code and therefore save a lot of run time), and (3) apply our hypothesis tests to the results of these fits.
+- run_simulation(): Run fit_and_hypothesis_test() a large number of times, append and tidy its results into a tibble.
 
 ```{r}
 
@@ -158,7 +175,7 @@ fit_initial_model <- function(fitted_empirical_model, N, filename){
 }
 
 
-simulate_and_hypothesis_test <- function(fit_initial_model_object, seed){
+fit_and_hypothesis_test <- function(fit_initial_model_object, seed){
   
   # set seed
   set.seed(seed)
@@ -217,53 +234,17 @@ simulate_and_hypothesis_test <- function(fit_initial_model_object, seed){
 }
 
 
-simulation <- function(fit_initial_model_object, n_sim){
+run_simulation <- function(fit_initial_model_object, n_sim){
   
   results <- 
     tibble(seed = 1:n_sim) %>% 
-    mutate(tidy = future_map(seed, simulate_and_hypothesis_test, 
+    mutate(tidy = future_map(seed, fit_and_hypothesis_test, 
                              .options = furrr_options(seed = TRUE),
                              .progress = TRUE,
                              fit_initial_model_object = fit_initial_model_object)) %>%
     unnest(tidy) 
   
   return(results)
-  
-}
-
-
-summarize_simulation <- function(simulation_results){
-  
-  table <- simulation_results %>%
-    select(H1_genuine, H1_deepfaked, H2_noninferiority) %>%
-    gather(hypotheses, detected) %>%
-    group_by(hypotheses) %>%
-    summarize(power = mean(detected), .groups = "drop") 
-  
-  plot1 <- simulation_results %>%
-    select(Genuine = effect_genuine_95_CI_lower,
-           Deepfaked = effect_deepfaked_95_CI_lower) %>%
-    gather(Condition, value) %>%
-    ggplot(aes(value, color = Condition, fill = Condition)) +
-    geom_density(alpha = 0.2) +
-    scale_color_viridis_d(begin = 0.3, end = 0.7) +
-    scale_fill_viridis_d(begin = 0.3, end = 0.7) +
-    xlab("Lower bound 95% CI") 
-  
-  plot2 <- simulation_results %>%
-    mutate(Inference = ifelse(effect_genuine_95_CI_lower < effect_deepfaked_90_CI_lower, 
-                              "Evidence of non-inferiority", 
-                              "No evidence of non-inferior")) %>%
-    ggplot(aes(effect_genuine_95_CI_lower, effect_deepfaked_90_CI_lower, color = Inference)) +
-    geom_point() +
-    geom_abline(slope = 1, linetype = "dashed") +
-    scale_color_viridis_d(begin = 0.3, end = 0.7) +
-    xlab("Lower bound 95% CI for genuine condition") +
-    ylab("Lower bound 90% CI for Deepfaked condition")
-  
-  return(list(table = table,
-              plot1 = plot1,
-              plot2 = plot2))
   
 }
 
@@ -288,10 +269,11 @@ parameter_recovery_self_report$results_comparison %>%
 
 # Run simulations
 
-## Self-reports
+For each DV and their hypothesis. Run time of an hour or more on good hardware, depending on parameters.
 
 ```{r}
 
+# self report
 if(file.exists("models/simulation_iterations_self_report.csv")){
   simulation_iterations_self_report <- read_csv("models/simulation_iterations_self_report.csv")
 } else {
@@ -300,19 +282,14 @@ if(file.exists("models/simulation_iterations_self_report.csv")){
     fit_initial_model(fitted_empirical_model = ., 
                       filename = "fit_simulation_selfreport", 
                       N = N_participants) %>%
-    simulation(fit_initial_model_object = ., 
-               n_sim = N_simulations)
+    run_simulation(fit_initial_model_object = ., 
+                   n_sim = N_simulations)
   # write to disk
   simulation_iterations_self_report %>% 
     write_csv("models/simulation_iterations_self_report.csv")
 }
 
-```
-
-## Implicit
-
-```{r}
-
+# implicit
 if(file.exists("models/simulation_iterations_implicit.csv")){
   simulation_iterations_implicit <- read_csv("models/simulation_iterations_implicit.csv")
 } else {
@@ -321,19 +298,14 @@ if(file.exists("models/simulation_iterations_implicit.csv")){
     fit_initial_model(fitted_empirical_model = ., 
                       filename = "fit_simulation_implicit", 
                       N = N_participants) %>%
-    simulation(fit_initial_model_object = ., 
-               n_sim = N_simulations)
+    run_simulation(fit_initial_model_object = ., 
+                   n_sim = N_simulations)
   # write to disk
   simulation_iterations_implicit %>% 
     write_csv("models/simulation_iterations_implicit.csv")
 }
 
-```
-
-## Behavioral intentions
-
-```{r}
-
+# behavioral intentions
 if(file.exists("models/simulation_iterations_intentions.csv")){
   simulation_iterations_intentions <- read_csv("models/simulation_iterations_intentions.csv")
 } else {
@@ -342,8 +314,8 @@ if(file.exists("models/simulation_iterations_intentions.csv")){
     fit_initial_model(fitted_empirical_model = ., 
                       filename = "fit_simulation_intentions", 
                       N = N_participants) %>%
-    simulation(fit_initial_model_object = ., 
-               n_sim = N_simulations)
+    run_simulation(fit_initial_model_object = ., 
+                   n_sim = N_simulations)
   # write to disk
   simulation_iterations_intentions %>% 
     write_csv("models/simulation_iterations_intentions.csv")
@@ -353,63 +325,86 @@ if(file.exists("models/simulation_iterations_intentions.csv")){
 
 # Results
 
-## Self-report
+Based on the meta-analyses of our experiments so far, and taking the exclusion rate into account (i.e., `r round(data_exclusion_rate*100, 1)`%), a sample size of $N \geq$ `r ceiling(N_participants / (1 - data_exclusion_rate))` would provide the following degree of statistical power to test each hypothesis:
 
-```{r fig.height=5, fig.width=7}
+NB hypothesis labels follow the preregistration document and the analysis script.
 
-# summarize simulations
-simulation_results_self_report <- summarize_simulation(simulation_iterations_self_report)
+```{r fig.height=5, fig.width=12}
 
-# print table
-simulation_results_self_report$table %>%
+# combine 
+simuations_iterations <- 
+  bind_rows(simulation_iterations_self_report %>% mutate(DV = "Self report"),
+            simulation_iterations_implicit %>% mutate(DV = "Implicit"),
+            simulation_iterations_intentions %>% mutate(DV = "Intentions")) %>%
+  mutate(DV = fct_relevel(DV, "Self report", "Implicit", "Intentions"))
+
+# table
+simuations_iterations %>%
+  select(DV, H1_genuine, H1_deepfaked, H2_noninferiority) %>%
+  pivot_longer(cols = c(H1_genuine, H1_deepfaked, H2_noninferiority),
+               names_to = "detail",
+               values_to = "detected") %>%
+  group_by(DV, detail) %>%
+  summarize(power = mean(detected), .groups = "drop") %>%
+  mutate(hypothesis = paste(DV, detail, sep = "_"),
+         hypothesis = case_when(hypothesis == "Self report_H1_genuine" ~ "H1a",
+                                hypothesis == "Self report_H1_deepfaked" ~ "H1b",
+                                hypothesis == "Self report_H2_noninferiority" ~ "H2a",
+                                hypothesis == "Implicit_H1_genuine" ~ "H1c",
+                                hypothesis == "Implicit_H1_deepfaked" ~ "H1d",
+                                hypothesis == "Implicit_H2_noninferiority" ~ "H2b",
+                                hypothesis == "Intentions_H1_genuine" ~ "H1e",
+                                hypothesis == "Intentions_H1_deepfaked" ~ "H1f",
+                                hypothesis == "Intentions_H2_noninferiority" ~ "H2c")) %>%
+  select(hypothesis, DV, detail, power) %>%
+  arrange(hypothesis) %>%
   kable() %>% 
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 
-# print H1 plots
-simulation_results_self_report$plot1
+# H1 plot
+simuations_iterations %>%
+  select(DV, 
+         Genuine   = effect_genuine_95_CI_lower,
+         Deepfaked = effect_deepfaked_95_CI_lower) %>%
+  pivot_longer(cols      = c(Genuine, Deepfaked),
+               names_to  = "Condition",
+               values_to = "value") %>%
+  ggplot(aes(value, color = Condition, fill = Condition)) +
+  geom_density(alpha = 0.2) +
+  scale_color_viridis_d(begin = 0.3, end = 0.7) +
+  scale_fill_viridis_d(begin = 0.3, end = 0.7) +
+  xlab("Lower bound 95% CI") +
+  facet_wrap(~ DV, scales = "free") + 
+  theme(legend.position = "bottom") +
+  ggtitle("H1")
 
-# print H2 plot
-simulation_results_self_report$plot2
+# H2 plot
+simuations_iterations %>%
+  select(DV, 
+         Genuine   = effect_genuine_95_CI_lower,
+         Deepfaked = effect_deepfaked_90_CI_lower) %>%
+  mutate(Inference = ifelse(Genuine < Deepfaked, "Evidence of non-inferiority", "No evidence of non-inferiority")) %>%
+  ggplot(aes(Genuine, Deepfaked, color = Inference)) +
+  geom_point(alpha = 0.6) +
+  geom_abline(slope = 1, linetype = "dashed") +
+  scale_color_viridis_d(begin = 0.3, end = 0.7, direction = -1) +
+  xlab("Lower bound 95% CI for genuine condition") +
+  ylab("Lower bound 90% CI\nfor Deepfaked condition") +
+  facet_wrap(~ DV, scales = "free") + 
+  theme(legend.position = "bottom") +
+  ggtitle("H2")
 
 ```
 
-## Implicit
+# Resources
 
-```{r fig.height=5, fig.width=7}
+I used the [{simglm} package's vignette](https://cran.r-project.org/web/packages/simglm/vignettes/tidy_simulation.html) and [Solomon Kurz's blog post on Bayesian power analysis using {tidyverse} and {brms}](https://solomonkurz.netlify.app/post/bayesian-power-analysis-part-i/) to create this simulation: many thanks to both.
 
-# summarize simulations
-simulation_results_implicit <- summarize_simulation(simulation_iterations_implicit)
+# Session info
 
-# print table
-simulation_results_implicit$table %>%
-  kable() %>% 
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```{r}
 
-# print H1 plots
-simulation_results_implicit$plot1
-
-# print H2 plot
-simulation_results_implicit$plot2
-
-```
-
-## Behavioral intentions
-
-```{r fig.height=5, fig.width=7}
-
-# summarize simulations
-simulation_results_intentions <- summarize_simulation(simulation_iterations_intentions)
-
-# print table
-simulation_results_intentions$table %>%
-  kable() %>% 
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
-
-# print H1 plots
-simulation_results_intentions$plot1
-
-# print H2 plot
-simulation_results_intentions$plot2
+sessionInfo()
 
 ```
 

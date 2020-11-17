@@ -71,7 +71,7 @@ data_processed <- read.csv("../data/processed/4_data_participant_level_with_hand
 data_after_exclusions <- data_processed %>%
   filter(exclude_subject == FALSE & 
            exclude_implausible_intervention_linger == FALSE) %>%
-  # standardize by experiment and conditions
+  # standardize DVs by 1SD within each experiment and their conditions
   group_by(experiment, experiment_condition, source_valence) %>%
   mutate(mean_self_reported_evaluation = mean_self_reported_evaluation/sd(mean_self_reported_evaluation),
          IAT_D2 = IAT_D2/sd(IAT_D2),
