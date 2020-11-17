@@ -71,7 +71,7 @@ fit_intentions <- read_rds("models/fit_intentions.rds")
 ```{r}
 
 N_participants <- 400
-N_simulations <- 100
+N_simulations <- 1000
 
 ```
 
@@ -152,13 +152,16 @@ fit_initial_model <- function(fitted_empirical_model, N, filename){
   # sanity check: can we recover comparable parameters that we built the model with?
   # e.g., the fixed effect estimates should be close to the reg_weights used above.
   # get point estimates from fitted data
-  results_empirical <- as_tibble(map_estimate(fitted_empirical_model)) %>%
+  results_empirical <- fitted_empirical_model %>%
+    map_estimate() %>%
+    as_tibble() %>%
     mutate(Parameter = case_when(
       Parameter == "b_source_valencepositive" ~ "b_source_valence",
       Parameter == "b_experiment_conditiondeepfaked" ~ "b_experiment_condition",
       Parameter == "b_source_valencepositive.experiment_conditiondeepfaked" ~ "b_interaction",
       TRUE ~ Parameter)
-    )
+    ) %>%
+    rename(empirical = MAP_Estimate)
   
   results_simulated <- fit_initial %>%
     map_estimate() %>%
@@ -196,7 +199,8 @@ fit_and_hypothesis_test <- function(fit_initial_model_object, seed){
     bind_cols(select(spread_draws(fit_updated, b_Intercept),            b_Intercept),
               select(spread_draws(fit_updated, b_source_valence),       b_source_valence),
               select(spread_draws(fit_updated, b_experiment_condition), b_experiment_condition),
-              select(spread_draws(fit_updated, b_interaction),          b_interaction)) %>%
+              select(spread_draws(fit_updated, `b_source_valence:experiment_condition`),
+                     b_interaction = `b_source_valence:experiment_condition`)) %>%
     mutate(effect_genuine   = b_source_valence,
            effect_deepfaked = b_source_valence + b_experiment_condition + b_interaction)
   
@@ -214,9 +218,17 @@ fit_and_hypothesis_test <- function(fit_initial_model_object, seed){
     select(Parameter, CI_95_lower, CI_90_lower)
   
   # lower CI estimates hypothesis tests
-  effect_genuine_95_CI_lower   <- estimates_fit_updated %>% filter(Parameter == "effect_genuine")   %>% pull(CI_95_lower)
-  effect_deepfaked_95_CI_lower <- estimates_fit_updated %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_95_lower)
-  effect_deepfaked_90_CI_lower <- estimates_fit_updated %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_90_lower)
+  effect_genuine_95_CI_lower <- estimates_fit_updated %>% 
+    filter(Parameter == "effect_genuine") %>% 
+    pull(CI_95_lower)
+  
+  effect_deepfaked_95_CI_lower <- estimates_fit_updated %>% 
+    filter(Parameter == "effect_deepfaked") %>% 
+    pull(CI_95_lower)
+  
+  effect_deepfaked_90_CI_lower <- estimates_fit_updated %>% 
+    filter(Parameter == "effect_deepfaked") %>% 
+    pull(CI_90_lower)
   
   ## non-zero effect in genuine condition
   H1_genuine <- ifelse(effect_genuine_95_CI_lower > 0, 1, 0)
@@ -226,12 +238,12 @@ fit_and_hypothesis_test <- function(fit_initial_model_object, seed){
   H2_noninferiority <- ifelse(effect_genuine_95_CI_lower < effect_deepfaked_90_CI_lower, 1, 0)
   
   # binary hypothesis tests
-  results_simulation <- tibble(effect_genuine_95_CI_lower = effect_genuine_95_CI_lower,
+  results_simulation <- tibble(effect_genuine_95_CI_lower   = effect_genuine_95_CI_lower,
                                effect_deepfaked_95_CI_lower = effect_deepfaked_95_CI_lower,
                                effect_deepfaked_90_CI_lower = effect_deepfaked_90_CI_lower,
-                               H1_genuine = H1_genuine,
-                               H1_deepfaked = H1_deepfaked,
-                               H2_noninferiority = H2_noninferiority)
+                               H1_genuine                   = H1_genuine,
+                               H1_deepfaked                 = H1_deepfaked,
+                               H2_noninferiority            = H2_noninferiority)
   
   return(results_simulation)
   
@@ -260,11 +272,26 @@ As a sanity check to ensure that (1) models are being extracted correctly from t
 
 ```{r}
 
-parameter_recovery_self_report <- fit_initial_model(fitted_empirical_model = fit_selfreport, 
-                                                    filename = "fit_simulation_selfreport",
-                                                    N = N_participants)
+parameter_recovery_self_report <- 
+  fit_initial_model(fitted_empirical_model = fit_selfreport, 
+                    filename = "fit_simulation_selfreport",
+                    N = N_participants)
 
-parameter_recovery_self_report$results_comparison %>%
+parameter_recovery_implicit <- 
+  fit_initial_model(fitted_empirical_model = fit_implicit, 
+                    filename = "fit_simulation_implicit",
+                    N = N_participants)
+
+parameter_recovery_intentions <- 
+  fit_initial_model(fitted_empirical_model = fit_intentions, 
+                    filename = "fit_simulation_intentions",
+                    N = N_participants)
+
+bind_rows(mutate(parameter_recovery_self_report$results_comparison, DV = "self report"),
+          mutate(parameter_recovery_self_report$results_comparison, DV = "implicit"),
+          mutate(parameter_recovery_self_report$results_comparison, DV = "intentions")) %>%
+  mutate(difference = empirical - simulated) %>%
+  select(DV, Parameter, empirical, simulated, difference) %>%
   mutate_if(is.numeric, round, digits = 2) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
@@ -339,8 +366,8 @@ NB hypothesis labels follow the preregistration document and the analysis script
 # combine 
 simuations_iterations <- 
   bind_rows(simulation_iterations_self_report %>% mutate(DV = "Self report"),
-            simulation_iterations_implicit %>% mutate(DV = "Implicit"),
-            simulation_iterations_intentions %>% mutate(DV = "Intentions")) %>%
+            simulation_iterations_implicit    %>% mutate(DV = "Implicit"),
+            simulation_iterations_intentions  %>% mutate(DV = "Intentions")) %>%
   mutate(DV = fct_relevel(DV, "Self report", "Implicit", "Intentions"))
 
 # table
