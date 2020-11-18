@@ -252,6 +252,7 @@ data_after_exclusions %>%
 
 fit_selfreport <-
   brm(formula = mean_self_reported_evaluation ~ source_valence * experiment_condition + (1 | experiment),
+      family = gaussian(),
       data    = data_after_exclusions,
       file    = "models/fit_selfreport",
       prior   = prior(normal(0, 10)),
@@ -269,6 +270,19 @@ fit_selfreport <-
 
 summary(fit_selfreport)
 plot(fit_selfreport, ask = FALSE)
+
+```
+
+### Check informativeness of prior
+
+Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-each-parameter-or-other-qoi-compare-the-posterior-sd-to-the-prior-sd-if-the-posterior-sd-for-any-parameter-or-qoi-is-more-than-0-1-times-the-prior-sd-then-print-out-a-note-the-prior-dist/) simple heuristic: For each parameter, compare the posterior sd to the prior sd. If the posterior sd for any parameter is more than 0.1 times the prior sd, then note that the prior was informative.
+
+```{r}
+
+check_prior(fit_selfreport) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
@@ -374,6 +388,7 @@ Change in self-reported evaluations (i.e., between Source Valence conditions) in
 
 fit_implicit <-
   brm(formula = IAT_D2 ~ source_valence * experiment_condition + (1 | experiment),
+      family = gaussian(),
       data    = data_after_exclusions,
       file    = "models/fit_implicit",
       prior   = prior(normal(0, 10)),
@@ -391,6 +406,19 @@ fit_implicit <-
 
 summary(fit_implicit)
 plot(fit_implicit, ask = FALSE)
+
+```
+
+### Check informativeness of prior
+
+Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-each-parameter-or-other-qoi-compare-the-posterior-sd-to-the-prior-sd-if-the-posterior-sd-for-any-parameter-or-qoi-is-more-than-0-1-times-the-prior-sd-then-print-out-a-note-the-prior-dist/) simple heuristic: For each parameter, compare the posterior sd to the prior sd. If the posterior sd for any parameter is more than 0.1 times the prior sd, then note that the prior was informative.
+
+```{r}
+
+check_prior(fit_implicit) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
@@ -495,6 +523,7 @@ Change in IAT D2 scores (i.e., between Source Valence conditions) induced by Dee
 
 fit_intentions <-
   brm(formula = mean_intentions ~ source_valence * experiment_condition, # no random effect for experiment as only exp 6 assessed intentions
+      family = gaussian(),
       data    = data_after_exclusions,
       file    = "models/fit_intentions",
       prior   = prior(normal(0, 10)),
@@ -512,6 +541,19 @@ fit_intentions <-
 
 summary(fit_intentions)
 plot(fit_intentions, ask = FALSE)
+
+```
+
+### Check informativeness of prior
+
+Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-each-parameter-or-other-qoi-compare-the-posterior-sd-to-the-prior-sd-if-the-posterior-sd-for-any-parameter-or-qoi-is-more-than-0-1-times-the-prior-sd-then-print-out-a-note-the-prior-dist/) simple heuristic: For each parameter, compare the posterior sd to the prior sd. If the posterior sd for any parameter is more than 0.1 times the prior sd, then note that the prior was informative.
+
+```{r}
+
+check_prior(fit_intentions) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
@@ -902,6 +944,7 @@ Intentions DV present only in exp 6. N is particularly low for this analysis, so
 
 fit_selfreport_deepfaked_detected <-
   brm(formula = mean_self_reported_evaluation ~ source_valence + (1 | experiment),
+      family  = gaussian(),
       data    = data_detectors_subset,
       file    = "models/fit_selfreport_deepfaked_detected",
       prior   = prior(normal(0, 10)),
@@ -919,6 +962,19 @@ fit_selfreport_deepfaked_detected <-
 
 summary(fit_selfreport_deepfaked_detected)
 plot(fit_selfreport_deepfaked_detected, ask = FALSE)
+
+```
+
+### Check informativeness of prior
+
+Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-each-parameter-or-other-qoi-compare-the-posterior-sd-to-the-prior-sd-if-the-posterior-sd-for-any-parameter-or-qoi-is-more-than-0-1-times-the-prior-sd-then-print-out-a-note-the-prior-dist/) simple heuristic: For each parameter, compare the posterior sd to the prior sd. If the posterior sd for any parameter is more than 0.1 times the prior sd, then note that the prior was informative.
+
+```{r}
+
+check_prior(fit_selfreport_deepfaked_detected) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
@@ -985,6 +1041,7 @@ In the subset of participants who were shown a Deepfaked video and accurately de
 
 fit_implicit_deepfaked_detected <-
   brm(formula = IAT_D2 ~ source_valence + (1 | experiment),
+      family  = gaussian(),
       data    = data_detectors_subset,
       file    = "models/fit_implicit_deepfaked_detected",
       prior   = prior(normal(0, 10)),
@@ -1002,6 +1059,19 @@ fit_implicit_deepfaked_detected <-
 
 summary(fit_implicit_deepfaked_detected)
 plot(fit_implicit_deepfaked_detected, ask = FALSE)
+
+```
+
+### Check informativeness of prior
+
+Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-each-parameter-or-other-qoi-compare-the-posterior-sd-to-the-prior-sd-if-the-posterior-sd-for-any-parameter-or-qoi-is-more-than-0-1-times-the-prior-sd-then-print-out-a-note-the-prior-dist/) simple heuristic: For each parameter, compare the posterior sd to the prior sd. If the posterior sd for any parameter is more than 0.1 times the prior sd, then note that the prior was informative.
+
+```{r}
+
+check_prior(fit_implicit_deepfaked_detected) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
@@ -1068,6 +1138,7 @@ In the subset of participants who were shown a Deepfaked video and accurately de
 
 fit_intentions_deepfaked_detected <-
   brm(formula = mean_intentions ~ source_valence, # no random effect for experiment as only exp 6 assessed intentions
+      family  = gaussian(),
       data    = data_detectors_subset,
       file    = "models/fit_intentions_deepfaked_detected",
       prior   = prior(normal(0, 10)),
@@ -1085,6 +1156,19 @@ fit_intentions_deepfaked_detected <-
 
 summary(fit_intentions_deepfaked_detected)
 plot(fit_intentions_deepfaked_detected, ask = FALSE)
+
+```
+
+### Check informativeness of prior
+
+Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-each-parameter-or-other-qoi-compare-the-posterior-sd-to-the-prior-sd-if-the-posterior-sd-for-any-parameter-or-qoi-is-more-than-0-1-times-the-prior-sd-then-print-out-a-note-the-prior-dist/) simple heuristic: For each parameter, compare the posterior sd to the prior sd. If the posterior sd for any parameter is more than 0.1 times the prior sd, then note that the prior was informative.
+
+```{r}
+
+check_prior(fit_intentions_deepfaked_detected) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
