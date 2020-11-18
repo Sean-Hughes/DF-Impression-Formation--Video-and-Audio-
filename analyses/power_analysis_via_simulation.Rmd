@@ -264,6 +264,25 @@ run_simulation <- function(fit_initial_model_object, n_sim){
   
 }
 
+
+simulation <- function(results_file, empirical_model_fit, N_simulated_participants, iterations){
+  if(file.exists(paste0("models/", results_file, ".csv"))){
+    simulation_iterations <- read.csv(paste0("models/", results_file, ".csv"))
+  } else {
+    # run simulations
+    simulation_iterations <- empirical_model_fit %>%
+      fit_initial_model(fitted_empirical_model = ., 
+                        filename = "fit_simulation_selfreport", 
+                        N = N_simulated_participants) %>%
+      run_simulation(fit_initial_model_object = ., 
+                     n_sim = iterations)
+    # write to disk
+    simulation_iterations %>% 
+      write_csv(paste0("models/", results_file, ".csv"))
+  }
+  return(simulation_iterations)
+}
+
 ```
 
 # Check parameter recovery
@@ -305,53 +324,23 @@ For each DV and their hypothesis. Run time of an hour or more on good hardware, 
 
 ```{r message=TRUE, warning=TRUE}
 
-# self report
-if(file.exists("models/simulation_iterations_self_report.csv")){
-  simulation_iterations_self_report <- read.csv("models/simulation_iterations_self_report.csv")
-} else {
-  # run simulations
-  simulation_iterations_self_report <- fit_selfreport %>%
-    fit_initial_model(fitted_empirical_model = ., 
-                      filename = "fit_simulation_selfreport", 
-                      N = N_participants) %>%
-    run_simulation(fit_initial_model_object = ., 
-                   n_sim = N_simulations)
-  # write to disk
-  simulation_iterations_self_report %>% 
-    write_csv("models/simulation_iterations_self_report.csv")
-}
+simulation_iterations_self_report <- 
+  simulation(results_file             = "simulation_iterations_self_report",
+             empirical_model_fit      = fit_selfreport, 
+             N_simulated_participants = N_participants, 
+             iterations               = N_simulations)
 
-# implicit
-if(file.exists("models/simulation_iterations_implicit.csv")){
-  simulation_iterations_implicit <- read.csv("models/simulation_iterations_implicit.csv")
-} else {
-  # run simulations
-  simulation_iterations_implicit <- fit_implicit %>%
-    fit_initial_model(fitted_empirical_model = ., 
-                      filename = "fit_simulation_implicit", 
-                      N = N_participants) %>%
-    run_simulation(fit_initial_model_object = ., 
-                   n_sim = N_simulations)
-  # write to disk
-  simulation_iterations_implicit %>% 
-    write_csv("models/simulation_iterations_implicit.csv")
-}
+simulation_iterations_implicit <- 
+  simulation(results_file             = "simulation_iterations_implicit",
+             empirical_model_fit      = fit_implicit, 
+             N_simulated_participants = N_participants, 
+             iterations               = N_simulations)
 
-# behavioral intentions
-if(file.exists("models/simulation_iterations_intentions.csv")){
-  simulation_iterations_intentions <- read.csv("models/simulation_iterations_intentions.csv")
-} else {
-  # run simulations
-  simulation_iterations_intentions <- fit_intentions %>%
-    fit_initial_model(fitted_empirical_model = ., 
-                      filename = "fit_simulation_intentions", 
-                      N = N_participants) %>%
-    run_simulation(fit_initial_model_object = ., 
-                   n_sim = N_simulations)
-  # write to disk
-  simulation_iterations_intentions %>% 
-    write_csv("models/simulation_iterations_intentions.csv")
-}
+simulation_iterations_intentions <- 
+  simulation(results_file             = "simulation_iterations_intentions",
+             empirical_model_fit      = fit_intentions, 
+             N_simulated_participants = N_participants, 
+             iterations               = N_simulations)
 
 ```
 
