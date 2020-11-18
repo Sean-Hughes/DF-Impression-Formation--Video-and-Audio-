@@ -70,7 +70,7 @@ fit_intentions <- read_rds("models/fit_intentions.rds")
 
 ```{r}
 
-N_participants <- 400
+N_participants <- 500
 N_simulations <- 1000
 
 ```
@@ -268,7 +268,7 @@ run_simulation <- function(fit_initial_model_object, n_sim){
 
 # Check parameter recovery
 
-As a sanity check to ensure that (1) models are being extracted correctly from the original (meta analytic) empirical fits, (2) data fitting these models is being simulated correctly, and (3) (fixed effect) models are being fit to these simulated data correctly, ensure that parameters from the empirical models are being recovered.
+As a sanity check to ensure that (1) models are being extracted correctly from the original (meta analytic) empirical fits, (2) data fitting these models is being simulated correctly, and (3) (fixed effect) models are being fit to these simulated data correctly, ensure that parameters from the empirical models are being recovered. Given that it's just a single simulated dataset, some degree of difference is to be expected of course.
 
 ```{r}
 
@@ -303,11 +303,11 @@ bind_rows(mutate(parameter_recovery_self_report$results_comparison, DV = "self r
 
 For each DV and their hypothesis. Run time of an hour or more on good hardware, depending on parameters.
 
-```{r}
+```{r message=TRUE, warning=TRUE}
 
 # self report
 if(file.exists("models/simulation_iterations_self_report.csv")){
-  simulation_iterations_self_report <- read_csv("models/simulation_iterations_self_report.csv")
+  simulation_iterations_self_report <- read.csv("models/simulation_iterations_self_report.csv")
 } else {
   # run simulations
   simulation_iterations_self_report <- fit_selfreport %>%
@@ -323,7 +323,7 @@ if(file.exists("models/simulation_iterations_self_report.csv")){
 
 # implicit
 if(file.exists("models/simulation_iterations_implicit.csv")){
-  simulation_iterations_implicit <- read_csv("models/simulation_iterations_implicit.csv")
+  simulation_iterations_implicit <- read.csv("models/simulation_iterations_implicit.csv")
 } else {
   # run simulations
   simulation_iterations_implicit <- fit_implicit %>%
@@ -339,7 +339,7 @@ if(file.exists("models/simulation_iterations_implicit.csv")){
 
 # behavioral intentions
 if(file.exists("models/simulation_iterations_intentions.csv")){
-  simulation_iterations_intentions <- read_csv("models/simulation_iterations_intentions.csv")
+  simulation_iterations_intentions <- read.csv("models/simulation_iterations_intentions.csv")
 } else {
   # run simulations
   simulation_iterations_intentions <- fit_intentions %>%
