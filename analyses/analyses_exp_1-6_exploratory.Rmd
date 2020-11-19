@@ -39,6 +39,7 @@ library(purrr)
 library(IATscores)
 library(lavaan)
 library(semTools)
+library(modelr)
 
 options(knitr.kable.NA = "/")
 
@@ -905,6 +906,168 @@ fit_classification_bootstraps_subset %>%
                 full_width = FALSE)
 
 ```
+
+# Does prior knowledge of deepfakes make people better at detecting them?
+
+Putting aside true negatives and false positive, does prior awareness of the concept of deepfaking at least make people better at detecting deepfakes
+
+It would of course be possible include data from both experiment_conditions and add it to the model, however interpreting the two and three way interactions is less intuitive. Given this question is of secondary importance, I we therefore elected for the simpler analysis focusing on awareness and the FNR/TPR.
+
+```{r}
+
+# convert data to counts
+data_counts <- data_after_exclusions %>%
+  filter(experiment_condition == "deepfaked") %>%
+  dplyr::select(deepfake_concept_check, deepfake_detected) %>%
+  drop_na() %>%
+  count(deepfake_concept_check, deepfake_detected) %>%
+  mutate(counts = n,
+         awareness = as.factor(deepfake_concept_check),
+         detection = as.factor(deepfake_detected),
+         proportion = counts/sum(counts)) %>%
+  dplyr::select(awareness, detection, counts, proportion)
+
+# total counts is needed later to convert to proportions
+total_counts <- data_counts %>%
+  summarize(total = sum(counts)) %>%
+  pull(total)
+
+# fit poisson model
+fit_poisson_detection_awareness <- 
+  brm(formula = counts ~ 1 + awareness * detection,
+      family  = poisson(),
+      data    = data_counts,
+      file    = "models/fit_poisson_detection_awareness",
+      prior   = prior(normal(0, 10)),
+      iter    = 10000,
+      warmup  = 3000,
+      control = list(adapt_delta = 0.99,
+                     max_treedepth = 15),  # to avoid divergent transitions
+      chains  = 4,
+      cores   = parallel::detectCores())
+
+```
+
+## Inspect convergence
+
+```{r}
+
+pp_check(fit_poisson_detection_awareness, nsamples = 100)
+summary(fit_poisson_detection_awareness)
+plot(fit_poisson_detection_awareness, ask = FALSE)
+
+```
+
+## Check informativeness of prior
+
+Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-each-parameter-or-other-qoi-compare-the-posterior-sd-to-the-prior-sd-if-the-posterior-sd-for-any-parameter-or-qoi-is-more-than-0-1-times-the-prior-sd-then-print-out-a-note-the-prior-dist/) simple heuristic: For each parameter, compare the posterior sd to the prior sd. If the posterior sd for any parameter is more than 0.1 times the prior sd, then note that the prior was informative.
+
+```{r}
+
+check_prior(fit_poisson_detection_awareness) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+```
+
+## Interpret posteriors
+
+### Plots
+
+```{r}
+
+plot_model(fit_poisson_detection_awareness)
+# plot(conditional_effects(fit_poisson_detection_awareness), ask = FALSE)
+
+```
+
+### Table
+
+#### Parameter estimates
+
+```{r}
+
+# posterior draws for parameters (for results table)
+draws_detection_awareness <- posterior_samples(fit_poisson_detection_awareness) %>%
+  dplyr::select(awarenessTRUE = b_awarenessTRUE, 
+                detectionTRUE = b_detectionTRUE, 
+                interaction = `b_awarenessTRUE:detectionTRUE`) 
+
+full_join(as_tibble(map_estimate(draws_detection_awareness)),
+          as.tibble(bayestestR::hdi(draws_detection_awareness, ci = .95)), 
+          by = "Parameter") %>%
+  mutate_if(is.numeric, exp) %>%
+  dplyr::select(Parameter, incidence_rate_ratio_MAP = MAP_Estimate, CI_95_lower = CI_low, CI_95_upper = CI_high) %>%
+  # convert from odds to probability
+  # mutate_if(is.numeric, function(x){x/(1+x)}) %>%
+  mutate_if(is.numeric, round, digits = 2) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+```
+
+- Evidence non-zero interaction effect: incident rate ratio was > 1.  
+- Results therefore suggest that aware participants were 2.6 times more likely to detect a deepfake than those who were not.
+- Predicted percentage changes of detecting are below:
+
+#### Predicted probabilities
+
+```{r}
+
+posterior_predictions_detection_awareness <-
+  tibble(awareness = c("TRUE", "FALSE"),
+         detection = c("TRUE", "FALSE")) %>%
+  data_grid(awareness, detection) %>%
+  add_predicted_draws(model = fit_poisson_detection_awareness) %>%
+  rename(predicted_count = .prediction) %>%
+  mutate(predicted_probabiity = predicted_count/total_counts) %>%
+  ungroup() %>%
+  dplyr::select(awareness, detection, predicted_probabiity) 
+  
+posterior_predictions_detection_awareness_aT_dT <- posterior_predictions_detection_awareness %>% 
+  filter(awareness == "TRUE" & detection == "TRUE")
+posterior_predictions_detection_awareness_aT_dF <- posterior_predictions_detection_awareness %>% 
+  filter(awareness == "TRUE" & detection == "FALSE")
+posterior_predictions_detection_awareness_aF_dT <- posterior_predictions_detection_awareness %>% 
+  filter(awareness == "FALSE" & detection == "TRUE")
+posterior_predictions_detection_awareness_aF_dF <- posterior_predictions_detection_awareness %>% 
+  filter(awareness == "FALSE" & detection == "FALSE")
+
+
+results_detection_probabilities <- 
+  rbind(
+    bind_cols(as_tibble(map_estimate(posterior_predictions_detection_awareness_aT_dT$predicted_probabiity)),
+              as.tibble(bayestestR::hdi(posterior_predictions_detection_awareness_aT_dT$predicted_probabiity, 
+                                        ci = .95))) %>%
+      mutate(awareness = "TRUE", detection = "TRUE"),
+    bind_cols(as_tibble(map_estimate(posterior_predictions_detection_awareness_aT_dF$predicted_probabiity)),
+              as.tibble(bayestestR::hdi(posterior_predictions_detection_awareness_aT_dF$predicted_probabiity, 
+                                        ci = .95))) %>%
+      mutate(awareness = "TRUE", detection = "FALSE"),
+    bind_cols(as_tibble(map_estimate(posterior_predictions_detection_awareness_aF_dT$predicted_probabiity)),
+              as.tibble(bayestestR::hdi(posterior_predictions_detection_awareness_aF_dT$predicted_probabiity, 
+                                        ci = .95))) %>%
+      mutate(awareness = "FALSE", detection = "TRUE"),
+    bind_cols(as_tibble(map_estimate(posterior_predictions_detection_awareness_aF_dF$predicted_probabiity)),
+              as.tibble(bayestestR::hdi(posterior_predictions_detection_awareness_aF_dF$predicted_probabiity, 
+                                        ci = .95))) %>%
+      mutate(awareness = "FALSE", detection = "FALSE")
+  ) %>%
+  dplyr::select(awareness, detection, detection_probability_MAP = value, 
+                CI_95_lower = CI_low, CI_95_upper = CI_high) %>%
+  mutate_if(is.numeric, round, digits = 3) 
+
+results_detection_probabilities %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+```
+
+- Probability of detecting deepfake if unaware: `r results_detection_probabilities %>% filter(awareness == "FALSE" & detection == "TRUE") %>% pull(detection_probability_MAP) %>% as.numeric()`
+- Probability of detecting deepfake if aware: `r results_detection_probabilities %>% filter(awareness == "TRUE" & detection == "TRUE") %>% pull(detection_probability_MAP) %>% as.numeric()`
 
 # Does detecting a deepfake make you immune to it?
 

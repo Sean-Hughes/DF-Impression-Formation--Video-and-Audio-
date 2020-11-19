@@ -12,6 +12,10 @@ Would it be possible to add this in?
 
 ### Analyses
 
+### poisson model needs hypothesis codes in analysis and prereg
+
+
+
 #### Check correspondence with preregistrations [sean]
 
 We also said we would run the following analyses: 
