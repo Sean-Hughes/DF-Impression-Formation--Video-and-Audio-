@@ -53,3 +53,15 @@ when *truth discernment* is added to data processing, should it be added somewhe
 D2 used throughout where prereg said D3 score in Experiment 1, D1 in Experiment 2,  D2 in Experiments 3,4, 5, 6.
 
 We said we would include employment in the correlations but we do not because its categorical rather than continuous or binary, and so not suitable for a correlation. 
+
+
+
+
+
+# To do
+
+- add tests of H6 (or whatever we call robustness to awareness/both awareness and detection)
+- explicate that power analyses not conducted for H3 or H5 (or whatever we call poisson model)
+
+
+
