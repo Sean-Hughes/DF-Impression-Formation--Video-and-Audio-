@@ -12,11 +12,6 @@ output:
     toc_float: yes
 ---
 
-# To do
-
-- add tests of H4
-- explicate that power analyses not conducted for H3
-
 ```{r include=FALSE}
 knitr::opts_chunk$set(message=FALSE,
                       warning=FALSE)
@@ -45,28 +40,42 @@ dir.create("models")
 
 ```
 
-# Data
+# Data and fitted models
 
 - Calculate empirical exclusion rate from existing data.
 - Load fitted meta-analyses models of existing data (fitted in the exploratory analyses script).
 
 ```{r}
 
-# exclusion rate
-data_exclusion_rate <- read.csv("../data/processed/4_data_participant_level_with_hand_scoring.csv") %>%
-  # set factor levels for t test comparisons
-  mutate(exclude = ifelse(exclude_subject == FALSE & exclude_implausible_intervention_linger == FALSE, FALSE, TRUE)) %>%
+# empirical data
+data_processed <- read.csv("../data/processed/4_data_participant_level_with_hand_scoring.csv") 
+
+empirical_exclusion_rate <- data_processed %>%
+  mutate(exclude = ifelse(exclude_subject == FALSE & 
+                            exclude_implausible_intervention_linger == FALSE, FALSE, TRUE)) %>%
   summarize(percent_excluded = mean(exclude)) %>%
   pull(percent_excluded)
+
+empirical_detection_rate <- data_processed %>%
+  filter(exclude_subject == FALSE & 
+           exclude_implausible_intervention_linger == FALSE &
+           !is.na(deepfake_detected)) %>%
+  summarize(percent_detected = mean(deepfake_detected)) %>%
+  pull(percent_detected) 
 
 # empirical fits (created by exploratory analyses script)
 fit_selfreport <- read_rds("models/fit_selfreport.rds")
 fit_implicit   <- read_rds("models/fit_implicit.rds")
 fit_intentions <- read_rds("models/fit_intentions.rds")
+fit_selfreport_detected <- read_rds("models/fit_selfreport_deepfaked_detected.rds")
+fit_implicit_detected   <- read_rds("models/fit_implicit_deepfaked_detected.rds")
+fit_intentions_detected <- read_rds("models/fit_intentions_deepfaked_detected.rds")
 
 ```
 
 # Parameters
+
+Note that total N_participants is intended to represent the total sample after exclusions. This number is later adjusted upwards for the empirical exclusion rate to make a data collection sample size recommendation. It is also adjusted downward for the empirical deepfake detection and deepfake concept awareness rates when simulating power for the tests that will be run in these subsets. That is, only one sample size has to be set here, necessary adjustments to this are later done in code.  
 
 ```{r}
 
@@ -324,6 +333,7 @@ For each DV and their hypothesis. Run time of an hour or more on good hardware, 
 
 ```{r message=TRUE, warning=TRUE}
 
+# full sample
 simulation_iterations_self_report <- 
   simulation(results_file             = "simulation_iterations_self_report",
              empirical_model_fit      = fit_selfreport, 
@@ -342,11 +352,30 @@ simulation_iterations_intentions <-
              N_simulated_participants = N_participants, 
              iterations               = N_simulations)
 
+# subsets
+simulation_iterations_self_report_detected <- 
+  simulation(results_file             = "simulation_iterations_self_report_detected",
+             empirical_model_fit      = fit_selfreport_detected, 
+             N_simulated_participants = N_participants, 
+             iterations               = floor(N_simulations*empirical_detection_rate))
+
+simulation_iterations_implicit_detected <- 
+  simulation(results_file             = "simulation_iterations_implicit_detected",
+             empirical_model_fit      = fit_implicit_detected, 
+             N_simulated_participants = N_participants, 
+             iterations               = floor(N_simulations*empirical_detection_rate))
+
+simulation_iterations_intentions_detected <- 
+  simulation(results_file             = "simulation_iterations_intentions_detected",
+             empirical_model_fit      = fit_intentions_detected, 
+             N_simulated_participants = N_participants, 
+             iterations               = floor(N_simulations*empirical_detection_rate))
+
 ```
 
 # Results
 
-Based on the meta-analyses of our experiments so far, and taking the exclusion rate into account (i.e., `r round(data_exclusion_rate*100, 1)`%), a sample size of $N \geq$ `r ceiling(N_participants / (1 - data_exclusion_rate))` would provide the following degree of statistical power to test each hypothesis:
+Based on the meta-analyses of our experiments so far, and taking the exclusion rate into account (i.e., `r round(empirical_exclusion_rate*100, 1)`%), a sample size of $N \geq$ `r ceiling(N_participants / (1 - empirical_exclusion_rate))` would provide the following degree of statistical power to test each hypothesis:
 
 NB hypothesis labels follow the preregistration document and the analysis script.
 
