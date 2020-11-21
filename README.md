@@ -56,6 +56,10 @@ We said we would include employment in the correlations but we do not because it
 
 
 
+## Methods
+
+Possibly restructure the experiment files - images seem to be duplicated etc. clarify which folders/copies are actually called by the script. when material is acrually pulled from youtube etc, include these files in a stimuli folder and note that they must be uploaded, and where the URL can be edited.
+
 
 
 # To do

@@ -1,0 +1,1209 @@
+---
+title: "Data processing"
+author: "Sean Hughes & Ian Hussey"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes 
+    toc_float: yes
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(message=FALSE,
+                      warning=FALSE)
+```
+
+# Functions and dependencies
+
+```{r}
+
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(IATscores)
+
+```
+
+# Get raw data
+
+```{r}
+
+data_preprocessed <- read_rds("processed/1_data_preprocessed.rds")
+
+# str_detect(colnames(data_preprocessed), "experimental_condition")
+
+```
+
+# Trial-level data 
+
+Bring data into 'tidy' format, apply IAT block labeling corrections, drop rows and columns that aren't used to score the tasks, etc.
+
+NB no attempt to remove duplicate participants is made at this stage - that is done below in the participant level data where exclusions are made based on completeness.
+
+```{r}
+
+data_trial_level <- data_preprocessed %>%
+  
+  rename(task = sender) %>%
+  mutate(task = tolower(task),
+         task = case_when(task == "stimulus" ~ "iat",
+                          task == "demographics_1" ~ "demographics",
+                          task == "demographics_2" ~ "demographics",
+                          str_detect(task, "deepfake_check") ~ "deepfake_check",
+                          # trials representing the intervention (audio/video)
+                          task == "video_positive_baseline" ~ "intervention",
+                          task == "video_negative_baseline" ~ "intervention",
+                          task == "video_positive_genuine" ~ "intervention",
+                          task == "video_negative_genuine" ~ "intervention",
+                          task == "video_positive_df" ~ "intervention",
+                          task == "video_negative_df" ~ "intervention",
+                          task == "audio_positive_baseline" ~ "intervention",
+                          task == "audio_negative_baseline" ~ "intervention",
+                          task == "audio_positive_deepfake" ~ "intervention",
+                          task == "audio_negative_deepfake" ~ "intervention",
+                          task == "audio_positive_genuine" ~ "intervention",
+                          task == "audio_negative_genuine" ~ "intervention",
+                          task == "audio_positive_deepfaked" ~ "intervention",
+                          task == "audio_negative_deepfaked" ~ "intervention",
+                          TRUE ~ task)) %>%
+  
+  # retain only rows with useful information used to score the tasks
+  filter(task %in% c("demographics",
+                     "intervention",
+                     "iat",
+                     "ratings_good_bad",
+                     "ratings_like_dislike",
+                     "ratings_negative_positive",
+                     "behavioral_intentions",
+                     "deepfake_check",
+                     "memory questions",
+                     "exploratory questions",
+                     "actively_openminded_thinking",
+                     "bcti (conspiratorial thinking)",
+                     "crt (cognitive ability)",
+                     "ocq (overclaiming)",
+                     "religious_affiliation_scale",
+                     "rei (cognitive preference)",
+                     "media_trials",
+                     "memory questions",
+                     "news_evaluation_task",
+                     "issues")) %>%
+  
+  
+  # wrangle ratings
+  mutate(ratings_item = case_when(task == "ratings_good_bad"          ~ "ratings_bad_good",
+                                  task == "ratings_like_dislike"      ~ "ratings_dislike_like",
+                                  task == "ratings_negative_positive" ~ "ratings_negative_positive"),
+         task = ifelse(task %in% c("ratings_good_bad",
+                                   "ratings_like_dislike",
+                                   "ratings_negative_positive"), "self-reported ratings", task),
+         ratings_response = case_when(!is.na(pos_neg) ~ pos_neg,
+                                      !is.na(good_bad) ~ good_bad,
+                                      !is.na(like_dislike) ~ like_dislike)) %>%
+  
+  
+  # wrangle methods variables
+  mutate(condition_number = case_when(str_detect(condition, "C1") ~ 1, 
+                                      str_detect(condition, "C2") ~ 2, 
+                                      str_detect(condition, "C3") ~ 3, 
+                                      str_detect(condition, "C4") ~ 4, 
+                                      str_detect(condition, "C5") ~ 5, 
+                                      str_detect(condition, "C6") ~ 6, 
+                                      str_detect(condition, "C7") ~ 7, 
+                                      str_detect(condition, "C8") ~ 8),
+         source_valence = case_when(str_detect(condition, "Positive_") ~ "positive", 
+                                    str_detect(condition, "Negative_") ~ "negative"),
+         intervention_medium = case_when(str_detect(condition, "Video_") ~ "video", 
+                                         str_detect(condition, "Audio_") ~ "audio"),
+         task_order = case_when(str_detect(condition, "IAT_First") ~ "IAT first", 
+                                str_detect(condition, "SR_First") ~ "self-report ratings first"),
+         # IAT block order was natively coded in different ways between the experiments. In exp 1 it was con/incon first based on stimulus identity, but in later studies was coded as con/inconsistent with the learning in the training phase. Parse this variable, but then adjust it based on the condition numbers, which differed slightly between experiments. 
+         # note that this variable is calculated here but is not used to invert IAT D scores for block order later on - that is done by relabeling the blocks themselves, again by using the condition numbers.
+         iat_block_order = case_when(str_detect(condition, "Incon B") ~ "training-inconsistent block first", 
+                                     str_detect(condition, "Con B") ~ "training-consistent block first",
+                                     TRUE ~ condition),
+         iat_block_order = case_when(condition_number %in% c(3, 4) ~ "training-inconsistent block first",
+                                     condition_number %in% c(7, 8) ~ "training-consistent block first",
+                                     TRUE ~ iat_block_order)) %>%
+  
+  
+  # wrangle IAT
+  # rename
+  rename(iat_stimulus = name) %>%
+  # round reaction time to millisecond 
+  mutate(latency = round(as.numeric(duration), 0)) %>%
+  # recode the TRUE/FALSE values from the correct column to 1,0 
+  mutate(correct = as.numeric(as.logical(correct))) %>%
+  
+  # create block and trial columns. Do so by renaming values from the 'sender_id' column to terms that the IAT scoring package will work with when applied later (e.g., block 1,2,3,4,5,6,7)
+  separate(sender_id, into = c("temp_1", "temp_2", "temp_3", "block", "trial"), sep = "_", remove = FALSE) %>%
+  
+  # recode trial numbers so that they begin at 1 and run to 16 or 32
+  mutate(block = as.numeric(block),
+         trial = ifelse(!is.na(trial), as.numeric(trial) + 1, trial)) %>%
+  
+  # recode block
+  # for participants in Conditions 1-4 the 'sender_id' variable corresponds to the following block order (this can be seen by inspecting the name and corr variables in the raw data):
+  
+  # _3_0_0   = block 1 (Bob Chris)
+  # _5_0_0   = block 2 (Bad Good)
+  # _7_0_0   = block 3 (Bob Bad Chris Good)
+  # _9_0_0   = block 4 (Bob Bad Chris Good)
+  # _11_0_0  = block 5 (Chris Bob)
+  # _13_0_0  = block 6 (Chris Bad Bob Good)
+  # _15_0_0  = block 7 (Chris Bad Bob Good)
+
+  # for participants in Conditions 5-8 the 'sender_id' variable corresponds to the following block order:
+  
+  # _3_0_0   = block 5 (Chris Bob)
+  # _5_0_0   = block 2 (Bad Good)
+  # _7_0_0   = block 6 (Chris Bad Bob Good)
+  # _9_0_0   = block 7 (Chris Bad Bob Good)
+  # _11_0_0  = block 1 (Bob Chris)
+  # _13_0_0  = block 3 (Bob Bad Chris Good)
+  # _15_0_0  = block 4 (Bob Bad Chris Good)
+  
+  # update block numbering so that it is correct following the above
+  mutate(block = ifelse(condition_number %in% c(1, 2, 3, 4), 
+                        case_when(block == 3 ~ 1,
+                                  block == 5 ~ 2,
+                                  block == 7 ~ 3,
+                                  block == 9 ~ 4,
+                                  block == 11 ~ 5,
+                                  block == 13 ~ 6,
+                                  block == 15 ~ 7), 
+                        ifelse(condition_number %in% c(5, 6, 7, 8), 
+                               case_when(block == 3 ~ 5,
+                                         block == 5 ~ 2,
+                                         block == 7 ~ 6,
+                                         block == 9 ~ 7,
+                                         block == 11 ~ 1,
+                                         block == 13 ~ 3,
+                                         block == 15 ~ 4), 
+                               NA))) %>%
+  
+  #  retain only the practice and critical test blocks that are used for scoring the task (i.e., block_number = 3, 4, 6, 7)
+  filter((task == "iat" & block %in% c(3, 4, 6, 7)) |
+           task != "iat") %>%
+  
+  # label block types in the way the IATScores package will later need to D score the IAT data. 
+  # compatible vs incompatible refers to congruence with learning in training phase
+  mutate(blockcode = ifelse(block %in% c(3, 4), "pair1", 
+                            ifelse(block %in% c(6, 7), "pair2", NA)),
+         praccrit = ifelse(block %in% c(3, 6), "prac", 
+                           ifelse(block %in% c(4, 7), "crit", NA))) %>%
+  
+  
+  # select variables needed for data processing and analysis
+  select(subject,
+         
+         # experiment
+         experiment,
+         experiment_condition, 
+         task,
+         #condition_number,
+         source_valence,
+         intervention_medium,
+         task_order,
+         iat_block_order,
+         
+         # demographics
+         age,
+         gender,
+         gender_self_describe,
+         ethnicity,
+         ethnicity_self_describe,
+         location,
+         education,
+         employment,
+         income,
+         political_ideology_identity = political_ideology_identity_1,
+         political_ideology_social_issues,
+         political_ideology_economic_issues,
+         religious_affiliation_general,
+         
+         # self reported evaluations
+         ratings_item,
+         ratings_response,
+         
+         # IAT
+         block,
+         trial,
+         iat_stimulus,
+         correct,
+         latency, ## also used for intervention viewing time (task == "intervention")
+         blockcode,
+         praccrit,
+         
+         # intentions
+         intentions_q1, 
+         intentions_q2, 
+         intentions_q3,
+         
+         # intervention
+         memory_of_video_content,
+         memory_of_audio_content,
+         
+         # detection
+         deepfake_check,
+         deepfake_video_check,
+         deepfake_audio_check,
+         deepfake_concept_check,
+         
+         # individual differences
+         ends_with("_aot_e"),
+         ends_with("_bcti"), 
+         starts_with("crt_"), 
+         starts_with("ocq_"),
+         starts_with("ras_"),
+         ends_with("_rei"),
+         starts_with("fn_"), 
+         starts_with("rn_"),
+         
+         # exploratory questions
+         diagnosticity_question,
+         demand,
+         reactance,
+         hypothesis_awareness,
+         influence_awareness,
+         issues_with_study) %>%
+  
+  # guess appropriate data types
+  type_convert()
+
+```
+
+## Write to disk
+
+data_trial_level.csv contains participant level data in tidy format.
+
+```{r}
+
+write_rds(data_trial_level, "processed/2.1_data_trial_level.rds", compress = "gz")
+# data_trial_level <- read_rds("processed/2.1_data_trial_level.rds")
+
+```
+
+# Participant-level data
+
+## Study conditions, demographics and method variables
+
+```{r}
+
+data_conditions_and_demographics <- data_trial_level %>% 
+  select(subject, 
+         experiment, 
+         intervention_medium,
+         task_order,
+         iat_block_order,
+         source_valence,
+         experiment_condition,
+         age, 
+         gender,
+         gender_self_describe,
+         ethnicity,
+         ethnicity_self_describe,
+         location,
+         education, 
+         employment, 
+         income, 
+         political_ideology_identity, 
+         political_ideology_social_issues, 
+         political_ideology_economic_issues, 
+         religious_affiliation_general) %>%
+  group_by(subject) %>%
+  summarise_all(~ first(na.omit(.))) %>%
+  ungroup() %>%
+  
+  # recode some variables for easier analysis
+  mutate(education_recoded = 
+           case_when(grepl("Less than high school", education) ~ 1,
+                     grepl("High school", education) ~ 2,
+                     grepl("Some college", education) ~ 3,
+                     grepl("Associate degree", education) ~ 4,
+                     grepl("Bachelor", education) ~ 5,
+                     grepl("Masters", education) ~ 6,
+                     grepl("Doctoral degree", education) ~ 7,
+                     grepl("Professional degree", education) ~ 7),
+         # employment_recoded was mentioned in prereg but the groupings dont make a huge amount of sense to me, so I haven't included in processing.
+         # employment_recoded = 
+         #   case_when(grepl("full time", employment) ~ "Currently Employed",
+         #             grepl("part-time", employment) ~ "Currently Employed",
+         #             grepl("Self-", employment) ~ "Currently Employed",
+         #             grepl("looking", employment) ~ "Not Currently Employed",
+         #             grepl("not looking", employment) ~ "Not Currently Employed",
+         #             grepl("Retired", employment) ~ "Not Currently Employed",
+         #             grepl("Unable to work", employment) ~ "Not Currently Employed",
+         #             grepl("Homemaker", employment) ~ "Vocational Occupation",
+         #             grepl("Student", employment) ~ "Vocational Occupation",
+         #             grepl("Military", employment) ~ "Vocational Occupation",
+         #             grepl("responding", employment) ~ "Prefer Not to Say"),
+         income_recoded = 
+           case_when(grepl("Less than", income) ~ "1",
+                     grepl("34,999", income) ~ "2",
+                     grepl("49,999", income) ~ "3",
+                     grepl("74,999", income) ~ "4",
+                     grepl("99,999", income) ~ "5",
+                     grepl("149,999", income) ~ "6",
+                     grepl("199,999", income) ~ "7",
+                     grepl("200,000", income) ~ "8"),
+         political_ideology_identity = 
+           case_when(grepl("Strongly Agree", political_ideology_identity) ~ 3,
+                     grepl("Moderately Agree", political_ideology_identity) ~ 2,
+                     grepl("Somewhat Agree", political_ideology_identity) ~ 1,
+                     grepl("Neither", political_ideology_identity) ~ 0,
+                     grepl("Somewhat disagree", political_ideology_identity) ~ -1,
+                     grepl("Moderately disagree", political_ideology_identity) ~ -2,
+                     grepl("Strongly disagree", political_ideology_identity) ~ -3),
+         political_ideology_social_issues = 
+           case_when(grepl("Strongly Liberal", political_ideology_social_issues) ~ -2,
+                     grepl("Somewhat Liberal", political_ideology_social_issues) ~ -1,
+                     grepl("Moderate", political_ideology_social_issues) ~ 0,
+                     grepl("Somewhat Conservative", political_ideology_social_issues) ~ 1,
+                     grepl("Strongly Conservative", political_ideology_social_issues) ~ 2),
+         political_ideology_economic_issues = 
+           case_when(grepl("Strongly Liberal", political_ideology_economic_issues) ~ -2,
+                     grepl("Somewhat Liberal", political_ideology_economic_issues) ~ -1,
+                     grepl("Moderate", political_ideology_economic_issues) ~ 0,
+                     grepl("Somewhat Conservative", political_ideology_economic_issues) ~ 1,
+                     grepl("Strongly Conservative", political_ideology_economic_issues) ~ 2),
+         religious_affiliation_general_recoded = 
+           case_when(grepl("Agnostic", religious_affiliation_general) ~ "Agnostic",
+                     grepl("Atheist", religious_affiliation_general) ~ "Atheist",
+                     grepl("Christian", religious_affiliation_general) ~ "Religious",
+                     grepl("Hindu", religious_affiliation_general) ~ "Religious",
+                     grepl("Humanist", religious_affiliation_general) ~ "Religious",
+                     grepl("Jewish", religious_affiliation_general) ~ "Religious",
+                     grepl("Muslim", religious_affiliation_general) ~ "Religious",
+                     grepl("No religion", religious_affiliation_general) ~ "Atheist",
+                     grepl("Other not listed", religious_affiliation_general) ~ "Religious",
+                     grepl("Sikh", religious_affiliation_general) ~ "Religious")
+         
+  )
+
+```
+
+## Intervention (video/audio)
+
+### Viewing time
+
+```{r}
+
+data_induction_linger_time <- data_trial_level %>%
+  filter(task == "intervention") %>%
+  select(subject, 
+         latency) %>%
+  mutate(intervention_linger_minutes = round(as.numeric(latency)/(1000*60), 3),
+         exclude_implausible_intervention_linger = ifelse(intervention_linger_minutes <= 1.5 |
+                                                            intervention_linger_minutes >= 4.5, 
+                                                          TRUE, FALSE)) %>%
+  drop_na()
+
+```
+
+### Open ended description of video/audio
+
+Participants were asked to describe what they saw in the video. Nothing was done with these responses but notionally they could be inspected or hand coded.
+
+```{r}
+
+data_induction_video <- data_trial_level %>% 
+  select(subject, 
+         memory_of_intervention_content = memory_of_video_content) %>% 
+  drop_na()
+
+data_induction_audio <- data_trial_level %>% 
+  select(subject, 
+         memory_of_intervention_content = memory_of_audio_content) %>% 
+  drop_na()
+
+data_induction_description <- bind_rows(data_induction_video, data_induction_audio)
+
+```
+
+## IAT
+
+### Subset
+
+Subset variables and rows
+
+```{r}
+
+data_trial_level_iat <- data_trial_level %>%
+  filter(task == "iat") %>%
+  select(subject, 
+         block,
+         trial,
+         correct, 
+         latency, 
+         blockcode,
+         praccrit) 
+
+```
+
+### Completeness
+
+```{r}
+
+data_completeness_iat <- data_trial_level_iat %>%
+  count(subject) %>%
+  mutate(complete_iat = case_when(n == 128 ~ "complete", 
+                                  n > 128 ~ "excess", 
+                                  n < 128 ~"partial")) %>%
+  select(-n)
+
+# print
+data_completeness_iat %>%
+  count(complete_iat) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+### Performance
+
+Mark participants for exclusion if their total error rate is >30%, their error rate in any one block is >40%, or if >10% RTs are <300ms.
+
+```{r}
+
+# exclude if total error rate > 30% 
+data_iat_accuracy_overall <- data_trial_level_iat %>% 
+  group_by(subject) %>% 
+  summarise(iat_accuracy_overall = mean(correct)) %>%
+  ungroup() %>%
+  mutate(passed_iat_accuracy_overall = ifelse(iat_accuracy_overall >= .70, TRUE, FALSE)) %>%
+  select(subject, passed_iat_accuracy_overall)
+
+# exclude if error rate on any one block > 40% 
+data_iat_accuracy_by_block <- data_trial_level_iat %>% 
+  group_by(subject, block) %>% 
+  summarise(iat_accuracy_by_block = mean(correct)) %>%
+  ungroup() %>%
+  mutate(passed_iat_accuracy_by_block = ifelse(iat_accuracy_by_block >= .60, TRUE, FALSE)) %>%
+  group_by(subject) %>%
+  summarise(passed_iat_accuracy_by_block = as.logical(min(passed_iat_accuracy_by_block))) %>%
+  ungroup()
+
+# exclude if > 10% trials are <300ms 
+data_iat_fast_responding <- data_trial_level_iat %>% 
+  mutate(fast_response = ifelse(latency < 300, 1, 0)) %>%
+  group_by(subject) %>% 
+  summarise(iat_percent_fast_responses = mean(fast_response)) %>%
+  ungroup() %>%
+  mutate(passed_iat_percent_fast_responses = ifelse(iat_percent_fast_responses <= .10, TRUE, FALSE)) %>%
+  select(subject, passed_iat_percent_fast_responses)
+
+# combine
+data_performance_iat <- data_iat_accuracy_overall %>%
+  full_join(data_iat_accuracy_by_block, by = "subject") %>%
+  full_join(data_iat_fast_responding, by = "subject") %>%
+  rowwise() %>%
+  mutate(passed_iat_performance = as.logical(min(c(passed_iat_accuracy_overall, 
+                                                   passed_iat_accuracy_by_block,   
+                                                   passed_iat_percent_fast_responses), na.rm = TRUE))) %>%
+  ungroup() %>%
+  select(subject, passed_iat_performance)
+
+rm(data_iat_accuracy_overall, data_iat_accuracy_by_block, data_iat_fast_responding)
+
+
+# print
+data_performance_iat %>%
+  count(passed_iat_performance) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+### D2 scoring
+
+```{r}
+
+data_trial_level_iat_dummy_subjects <- data_trial_level_iat %>%
+  distinct(subject) %>%
+  mutate(subject_original = subject,
+         subject = row_number()) 
+
+data_iat_item_level <- data_trial_level_iat %>%
+  rename(subject_original = subject) %>%
+  left_join(data_trial_level_iat_dummy_subjects, by = "subject_original") 
+
+data_iat_D2_scores <- data_iat_item_level %>%
+  # parameters are identical to those the package lists in the D2 wrapper function
+  IATscores::RobustScores(IATdata = .,
+                          P1 = "fxtrim",  # Trim values < 400ms
+                          P2 = "ignore",  # do not trim errors
+                          P3 = "dscore",  # calculate d2 scores
+                          P4 = "dist",    # distinguish between the prac and test blocks
+                          verbose = FALSE,
+                          autoremove = TRUE) %>%
+  left_join(data_trial_level_iat_dummy_subjects, by = "subject") %>%
+  select(-subject) %>%
+  rename(subject = subject_original,
+         IAT_D2 = p2112) %>%
+  mutate(IAT_D2 = ifelse(abs(IAT_D2) > 2, NA, round(IAT_D2, 3))) # if D2 score is beyond theoretical limits, drop it. Otherwise round.
+
+```
+
+## Self-Reported Ratings 
+
+### Subset 
+
+Subset variables and rows
+
+```{r}
+
+data_trial_level_self_reported_evaluations <- data_trial_level %>%
+  filter(task == "self-reported ratings") %>%
+  select(subject, 
+         ratings_item,
+         ratings_response) 
+
+```
+
+### Completeness
+
+```{r}
+
+data_completeness_self_reported_evaluations <- data_trial_level_self_reported_evaluations %>%
+  count(subject) %>%
+  mutate(complete_selfreport = case_when(n == 3 ~ "complete", 
+                                         n > 3 ~ "excess", 
+                                         n < 3 ~ "partial")) %>%
+  select(-n)
+
+# print
+data_completeness_self_reported_evaluations %>%
+  count(complete_selfreport) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+### Mean scoring
+
+```{r}
+
+data_self_reported_evaluations_mean_scores <- data_trial_level_self_reported_evaluations %>%
+  group_by(subject) %>%
+  summarize(mean_self_reported_evaluation = round(mean(ratings_response), 2), .groups = "drop") 
+
+```
+
+### Item level data
+
+```{r}
+
+data_self_reported_evaluations_item_level <- data_trial_level_self_reported_evaluations %>%
+  pivot_wider(names_from = ratings_item, 
+              values_from = ratings_response,
+              values_fn = {mean}) 
+
+```
+
+## Behavioural intentions
+
+Mean scoring, completeness, and item level data
+
+```{r}
+
+data_behavioural_intentions_item_level <- data_trial_level %>%
+  select(subject, 
+         behavioral_intentions_share     = intentions_q1, 
+         behavioral_intentions_subscribe = intentions_q2, 
+         behavioral_intentions_recommend = intentions_q3) %>%
+  drop_na() 
+
+data_behavioural_intentions <- data_behavioural_intentions_item_level %>%  
+  gather(intentions_item, intentions_response, c("behavioral_intentions_share", 
+                                                 "behavioral_intentions_subscribe", 
+                                                 "behavioral_intentions_recommend")) %>%
+  # rescore from 1-to-5 to -2-to-+2 to make inversion easier
+  mutate(intentions_response = intentions_response - 3) %>%
+  group_by(subject) %>%
+  summarize(n = n(),
+            mean_intentions = round(mean(intentions_response), 2), .groups = "drop") %>%
+  mutate(complete_intentions = case_when(n == 3 ~ "complete", 
+                                         n > 3 ~ "excess", 
+                                         n < 3 ~ "partial")) %>%
+  select(-n)
+
+# print
+data_behavioural_intentions %>%
+  count(complete_intentions) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+```
+
+## Deep faking detection
+
+raw responses to be hand coded 
+
+```{r}
+
+data_detection_1 <- data_trial_level %>%
+  select(subject, 
+         deepfake_check) %>%
+  drop_na()
+
+data_detection_2 <- data_trial_level %>%
+  select(subject, 
+         deepfake_check = deepfake_video_check) %>%
+  drop_na()
+
+data_detection_3 <- data_trial_level %>%
+  select(subject, 
+         deepfake_check = deepfake_audio_check) %>%
+  drop_na()
+
+data_detection_4 <- data_trial_level %>%
+  select(subject, 
+         deepfake_concept_check) %>%
+  drop_na()
+
+data_detection <- 
+  bind_rows(data_detection_1,
+            data_detection_2,
+            data_detection_3) %>%
+  full_join(data_detection_4, by = "subject")
+
+```
+
+## Exploratory Questions
+
+```{r}
+
+data_exploratory_questions <- data_trial_level %>% 
+  select(subject, 
+         diagnosticity_question, 
+         demand, 
+         reactance, 
+         hypothesis_awareness, 
+         influence_awareness, 
+         issues_with_study) %>% 
+  group_by(subject) %>%
+  summarise_all(~ first(na.omit(.))) %>%
+  ungroup() %>%
+  mutate(diagnosticity = case_when(grepl("Not", diagnosticity_question) ~ 0,
+                                   grepl("Slight", diagnosticity_question) ~ 1,
+                                   grepl("Moderate", diagnosticity_question) ~ 2,
+                                   grepl("Strong", diagnosticity_question) ~ 3),
+         demand = case_when(grepl("No", demand) ~ FALSE,
+                            grepl("I", demand) ~ FALSE,
+                            grepl("Demand", demand) ~ TRUE),
+         reactance = case_when(grepl("No", reactance) ~ FALSE,
+                               grepl("I", reactance) ~ FALSE,
+                               grepl("React", reactance) ~ TRUE),
+         hypothesis_awareness = case_when(grepl("Yes", hypothesis_awareness) ~ TRUE,
+                                          grepl("No", hypothesis_awareness) ~ FALSE),
+         influence_awareness = case_when(grepl("Yes", influence_awareness) ~ TRUE,
+                                         grepl("No", influence_awareness) ~ FALSE))
+
+```
+
+## Individual differenced measures
+
+```{r}
+
+data_individual_differences_temp <- data_preprocessed %>%  # ideally this would use data_trial_level so as not to return to using the raw data, but wrangling trial_level would need to be reworked. These variables aren't of centrla interest so I haven't done it.
+  select(subject, 
+         ends_with("_bcti"), 
+         starts_with("crt_"), 
+         starts_with("ocq_"),
+         starts_with("ras_"),
+         ends_with("_rei"),
+         ends_with("_aot_e"),
+         starts_with("fn_"), 
+         starts_with("rn_")) %>% 
+  group_by(subject) %>%
+  summarise_all(funs(first(na.omit(.)))) %>%
+  ungroup()
+
+# define n items, min and max possible item level data. this is used for completeness exclusions below, and also for POMP scores further down. 
+master_aot_n_items = 8
+master_bcti_n_items = 15
+master_crt_n_items = 7
+master_ocq_n_items = 30
+master_ras_n_items = 8
+master_rei_n_items = 20
+master_me_n_items = 12
+
+aot_min_item = 1
+bcti_min_item = 1
+crt_min_item = 0
+ocq_min_item = 0
+ras_min_item = 1
+rei_min_item = 1
+me_awareness_min_item = 1
+me_accuracy_min_item = 1  
+me_sharing_min_item = 1
+
+aot_max_item = 6
+bcti_max_item = 9
+crt_max_item = 1
+ocq_max_item = 6
+ras_max_item = 5
+rei_max_item = 7
+me_awareness_max_item = 3
+me_accuracy_max_item = 4 
+me_sharing_max_item = 3
+
+```
+
+### AOT Actively openminded thinking
+
+```{r}
+
+data_aot <- data_individual_differences_temp %>%
+  select(subject, ends_with("_aot_e")) %>%
+  gather(aote_item, aote_score, ends_with("_aot_e")) %>%
+  drop_na() %>%
+  # reverse score some items
+  mutate(aote_score = ifelse(aote_item %in% c("q3_aot_e", "q4_aot_e", "q5_aot_e", "q8_aot_e"), 7 - as.numeric(aote_score), as.numeric(aote_score))) %>%
+  group_by(subject) %>%
+  summarize(aot_actively_openminded_thinking_sum = sum(aote_score, na.rm = TRUE),
+            aot_n_items = n(),
+            .groups = "drop") %>%
+  mutate(aot_actively_openminded_thinking_sum = ifelse(aot_n_items == master_aot_n_items,
+                                                       aot_actively_openminded_thinking_sum, NA)) %>%
+  select(-aot_n_items)
+
+```
+
+### BCTI Belief in consipiracy theories inventory
+
+```{r}
+
+data_bcti <- data_individual_differences_temp %>%
+  select(subject, ends_with("_bcti")) %>%
+  gather(bcti_item, bcti_score, ends_with("_bcti")) %>%
+  drop_na() %>%
+  group_by(subject) %>%
+  summarize(bcti_belief_in_conspiracy_sum = sum(as.numeric(bcti_score), na.rm = TRUE),
+            bcti_n_items = n(),
+            .groups = "drop") %>%
+  mutate(bcti_belief_in_conspiracy_sum = ifelse(bcti_n_items == master_bcti_n_items, 
+                                                bcti_belief_in_conspiracy_sum, NA)) %>%
+  select(-bcti_n_items)
+
+```
+
+### CRT Cognitive reflection test
+
+Open ended responses mean that scoring of this scale below was done iteratively to ensure that the below implementation correctly scores the extant responses. If applied to new data, scoring would need to be checked and updated.
+
+```{r}
+
+data_crt <- data_individual_differences_temp %>%
+  select(subject, starts_with("crt_")) %>%
+  mutate(crt_q1 = ifelse(crt_q1 == 4, 1, 0),
+         crt_q2 = ifelse(str_detect(crt_q2, "10"), 1, 0),
+         crt_q3 = ifelse(str_detect(crt_q3, "39"), 1, 0),
+         crt_q4 = ifelse(str_detect(crt_q4, "2") | str_detect(crt_q4, tolower("second")), 1, 0),
+         crt_q5 = ifelse(str_sub(crt_q5, 1, 1) == "8", 1, 0),
+         crt_q6 = ifelse(str_detect(tolower(crt_q6), "emily"), 1 ,0),
+         crt_q7 = ifelse(str_sub(crt_q7, 1, 2) == 27, 1, 0)) %>%
+  # two items are not used for the sum score
+  select(-crt_q8, -crt_q9) %>%
+  gather(crt_item, crt_score, starts_with("crt_")) %>%
+  drop_na() %>%
+  group_by(subject) %>%
+  summarize(crt_analytic_thinking_sum = sum(crt_score, na.rm = TRUE),
+            crt_n_items = n(),
+            .groups = "drop") %>%
+  mutate(crt_analytic_thinking_sum = ifelse(crt_n_items == master_crt_n_items, 
+                                            crt_analytic_thinking_sum, NA)) %>%
+  select(-crt_n_items)
+
+```
+
+### ME Media endoresement
+
+```{r}
+
+# awareness
+data_me_awareness <- data_individual_differences_temp %>%
+  select(subject, starts_with("fn_"), starts_with("rn_")) %>%
+  select(subject, contains("awareness")) %>%
+  gather(me_item, me_score, contains("n_s")) %>%
+  drop_na() %>%
+  mutate(me_score = case_when((me_score %in% c(2, 3)) ~ 0,
+                              (me_score == 1) ~ 1),
+         me_subscale = ifelse(str_detect(me_item, "rn_"), "me_fake_news", "me_real_news")) %>%
+  spread(me_subscale, me_score) %>%
+  group_by(subject) %>%
+  summarize(me_fake_news_awareness_sum = sum(me_fake_news, na.rm = TRUE),
+            me_real_news_awareness_sum = sum(me_real_news, na.rm = TRUE),
+            me_n_items = n(),
+            .groups = "drop") %>%
+  mutate(me_fake_news_awareness_sum = ifelse(me_n_items == master_me_n_items, me_fake_news_awareness_sum, NA),
+         me_real_news_awareness_sum = ifelse(me_n_items == master_me_n_items, me_real_news_awareness_sum, NA)) %>%
+  select(-me_n_items)
+
+# accuracy
+data_me_accuracy <- data_individual_differences_temp %>%
+  select(subject, starts_with("fn_"), starts_with("rn_")) %>%
+  select(subject, contains("accuracy")) %>%
+  gather(me_item, me_score, contains("n_s")) %>%
+  drop_na() %>%
+  mutate(me_subscale = ifelse(str_detect(me_item, "rn_"), "me_fake_news", "me_real_news")) %>%
+  spread(me_subscale, me_score) %>%
+  group_by(subject) %>%
+  summarize(me_fake_news_accuracy_sum = sum(as.numeric(me_fake_news), na.rm = TRUE),
+            me_real_news_accuracy_sum = sum(as.numeric(me_real_news), na.rm = TRUE),
+            me_n_items = n(),
+            .groups = "drop") %>%
+  mutate(me_fake_news_accuracy_sum = ifelse(me_n_items == master_me_n_items, me_fake_news_accuracy_sum, NA),
+         me_real_news_accuracy_sum = ifelse(me_n_items == master_me_n_items, me_real_news_accuracy_sum, NA)) %>%
+  select(-me_n_items)
+
+# sharing
+data_me_sharing <- data_individual_differences_temp %>%
+  select(subject, starts_with("fn_"), starts_with("rn_")) %>%
+  select(subject, contains("sharing")) %>%
+  gather(me_item, me_score, contains("n_s")) %>%
+  drop_na() %>%
+  mutate(me_score = case_when((me_score %in% c(1, 3)) ~ 1,
+                              (me_score == 2) ~ 0),
+         me_subscale = ifelse(str_detect(me_item, "rn_"), "me_fake_news", "me_real_news")) %>%
+  spread(me_subscale, me_score) %>%
+  group_by(subject) %>%
+  summarize(me_fake_news_sharing_sum = sum(me_fake_news, na.rm = TRUE),
+            me_real_news_sharing_sum = sum(me_real_news, na.rm = TRUE),
+            me_n_items = n(),
+            .groups = "drop") %>%
+  mutate(me_fake_news_sharing_sum = ifelse(me_n_items == master_me_n_items, me_fake_news_sharing_sum, NA),
+         me_real_news_sharing_sum = ifelse(me_n_items == master_me_n_items, me_real_news_sharing_sum, NA)) %>%
+  select(-me_n_items)
+
+data_me <- data_me_awareness %>%
+  full_join(data_me_accuracy, by = "subject") %>%
+  full_join(data_me_sharing, by = "subject")
+
+```
+
+### OCQ Overclaiming
+
+```{r}
+
+data_ocq <- data_individual_differences_temp %>%
+  select(subject, starts_with("ocq_")) %>%
+  gather(ocq_item, ocq_score, starts_with("ocq_")) %>%
+  drop_na() %>%
+  mutate(ocq_score = as.numeric(ocq_score)) %>%
+  group_by(subject) %>%
+  summarize(ocq_overclaiming_sum = sum(ocq_score),
+            ocq_n_items = n(),
+            .groups = "drop") %>%
+  mutate(ocq_overclaiming_sum = ifelse(ocq_n_items == master_ocq_n_items, 
+                                       ocq_overclaiming_sum, NA)) %>%
+  select(-ocq_n_items)
+
+```
+
+### RAS Relgious affliation scale
+
+```{r}
+
+data_ras <- data_individual_differences_temp %>%
+  select(subject, starts_with("ras_")) %>%
+  gather(ras_item, ras_score, starts_with("ras_")) %>%
+  drop_na() %>%
+  mutate(ras_score = case_when(grepl("I strongly disagree", ras_score) ~ 1,
+                               grepl("I disagree", ras_score) ~ 2,
+                               grepl("I don't know", ras_score) ~ 3,
+                               grepl("I agree", ras_score) ~ 4,
+                               grepl("I strongly agree", ras_score) ~ 5)) %>%
+  group_by(subject) %>%
+  summarize(ras_relgious_affliation_sum = sum(ras_score, na.rm = TRUE),
+            ras_n_items = n(),
+            .groups = "drop") %>%
+  mutate(ras_relgious_affliation_sum = ifelse(ras_n_items == master_ras_n_items, 
+                                              ras_relgious_affliation_sum, NA)) %>%
+  select(-ras_n_items)
+
+```
+
+### REI Rational experiential inventory
+
+```{r}
+
+data_rei <- data_individual_differences_temp %>%
+  select(subject, ends_with("_rei")) %>%
+  gather(rei_item, rei_score, ends_with("_rei")) %>%
+  drop_na() %>%
+  # reverse score items
+  mutate(rei_score = ifelse(rei_item %in% c("q1_rei", "q4_rei", "q6_rei", "q7_rei", "q10_rei", 
+                                            "q13_rei", "q15_rei", "q18_rei", "q19_rei", "q20_rei"),
+                            8-as.numeric(rei_score), as.numeric(rei_score)),
+         rei_subscale = ifelse(rei_item %in% c("q1_rei", "q2_rei", "q6_rei", "q7_rei", "q10_rei", 
+                                               "q11_rei", "q13_rei", "q15_rei", "q19_rei", "q20_rei"),
+                               "rei_rational_scale", "rei_experiential_scale")) %>%
+  spread(rei_subscale, rei_score) %>%
+  group_by(subject) %>%
+  summarize(rei_rational_sum = sum(rei_rational_scale, na.rm = TRUE),
+            rei_experiential_sum = sum(rei_experiential_scale, na.rm = TRUE),
+            rei_n_items = n(),
+            .groups = "drop") %>%
+  mutate(rei_rational_sum = ifelse(rei_n_items == master_rei_n_items, 
+                                   rei_rational_sum, NA),
+         rei_experiential_sum = ifelse(rei_n_items == master_rei_n_items, 
+                                       rei_experiential_sum, NA)) %>%
+  select(-rei_n_items)
+
+```
+
+### Combine individual differences
+
+```{r}
+
+pomp <- function(raw_sum_score, n_items, min_item_score, max_item_score, digits = 0) {
+  round( 
+    (raw_sum_score-(n_items*min_item_score))/((n_items*max_item_score)-(n_items*min_item_score))*100,
+    digits
+  )
+}
+
+data_individual_differences <- data_aot %>%
+  full_join(data_bcti, by = "subject") %>%
+  full_join(data_crt,  by = "subject") %>%
+  full_join(data_me,   by = "subject") %>%
+  full_join(data_ocq,  by = "subject") %>%
+  full_join(data_ras,  by = "subject") %>%
+  full_join(data_rei,  by = "subject") %>%
+  
+  # calculate POMP score (percent of maximum possible)
+  mutate(aot_actively_openminded_thinking_pomp = pomp(aot_actively_openminded_thinking_sum,
+                                                      master_aot_n_items,
+                                                      aot_min_item,
+                                                      aot_max_item),
+         bcti_belief_in_conspiracy_pomp        = pomp(bcti_belief_in_conspiracy_sum, 
+                                                      master_bcti_n_items, 
+                                                      bcti_min_item,
+                                                      bcti_max_item),
+         crt_analytic_thinking_pomp            = pomp(crt_analytic_thinking_sum,
+                                                      master_crt_n_items, 
+                                                      crt_min_item, 
+                                                      crt_max_item),
+         ocq_overclaiming_pomp                 = pomp(ocq_overclaiming_sum,
+                                                      master_ocq_n_items, 
+                                                      ocq_min_item,
+                                                      ocq_max_item),
+         me_fake_news_awareness_pomp           = pomp(me_fake_news_awareness_sum,
+                                                      master_me_n_items, 
+                                                      me_awareness_min_item,
+                                                      me_awareness_max_item),
+         me_real_news_awareness_pomp           = pomp(me_real_news_awareness_sum,
+                                                      master_me_n_items, 
+                                                      me_awareness_min_item,
+                                                      me_awareness_max_item),
+         me_fake_news_accuracy_pomp            = pomp(me_fake_news_accuracy_sum,
+                                                      master_me_n_items, 
+                                                      me_accuracy_min_item,
+                                                      me_accuracy_max_item),
+         me_real_news_accuracy_pomp            = pomp(me_real_news_accuracy_sum,
+                                                      master_me_n_items, 
+                                                      me_accuracy_min_item,
+                                                      me_accuracy_max_item),
+         me_fake_news_sharing_pomp             = pomp(me_fake_news_sharing_sum,
+                                                      master_me_n_items, 
+                                                      me_sharing_min_item,
+                                                      me_sharing_max_item),
+         me_real_news_sharing_pomp             = pomp(me_real_news_sharing_sum, 
+                                                      master_me_n_items, 
+                                                      me_sharing_min_item,
+                                                      me_sharing_max_item),
+         ocq_overclaiming_pomp                 = pomp(ocq_overclaiming_sum,
+                                                      master_ocq_n_items, 
+                                                      ocq_min_item,
+                                                      ocq_max_item),
+         ras_relgious_affliation_pomp          = pomp(ras_relgious_affliation_sum, 
+                                                      master_ras_n_items, 
+                                                      ras_min_item, 
+                                                      ras_max_item),
+         rei_rational_pomp                     = pomp(rei_rational_sum, 
+                                                      master_rei_n_items, 
+                                                      rei_min_item,
+                                                      rei_max_item),
+         rei_experiential_pomp                 = pomp(rei_experiential_sum, 
+                                                      master_rei_n_items, 
+                                                      rei_min_item,
+                                                      rei_max_item)) %>%
+  select(subject, contains("_pomp"), contains("_sum"))
+
+```
+
+## Combine and add transformations
+
+```{r}
+
+data_participant_level <- data_conditions_and_demographics %>% 
+  full_join(data_completeness_iat,                       by = "subject") %>% 
+  full_join(data_performance_iat,                        by = "subject") %>%
+  full_join(data_iat_D2_scores,                          by = "subject") %>% 
+  full_join(data_completeness_self_reported_evaluations, by = "subject") %>%
+  full_join(data_self_reported_evaluations_mean_scores,  by = "subject") %>%
+  full_join(data_behavioural_intentions,                 by = "subject") %>% 
+  full_join(data_detection,                              by = "subject") %>% 
+  full_join(data_induction_linger_time,                  by = "subject") %>%
+  full_join(data_induction_description,                  by = "subject") %>% 
+  full_join(data_exploratory_questions,                  by = "subject") %>%
+  full_join(data_individual_differences,                 by = "subject") %>%
+  full_join(data_self_reported_evaluations_item_level,   by = "subject") %>%
+  full_join(data_behavioural_intentions_item_level,      by = "subject") %>%
+  arrange(experiment, experiment_condition) %>%
+  
+  # recode IAT and self reported evaluations for stimulus identity 
+  mutate(mean_self_reported_evaluation_recoded_for_source_valence = ifelse(source_valence == "negative", 
+                                                                              mean_self_reported_evaluation*-1, 
+                                                                              mean_self_reported_evaluation),
+         IAT_D2_recoded_for_source_valence = ifelse(source_valence == "negative", 
+                                                       IAT_D2*-1, 
+                                                       IAT_D2),
+         mean_intentions_recoded_for_source_valence = ifelse(source_valence == "negative", 
+                                                                mean_intentions*-1, 
+                                                                mean_intentions)) %>%
+  
+  # compound exclusions
+  mutate(exclude_subject = ifelse(complete_iat == "complete" &
+                                    complete_selfreport == "complete" & 
+                                    (complete_intentions == "complete" | is.na(complete_intentions)) & # measure not used in all studies, so NA also acceptable
+                                    passed_iat_performance == TRUE, FALSE, TRUE),
+         exclude_subject = ifelse(is.na(exclude_subject), TRUE, exclude_subject)) %>%
+  
+  # retain only distinct rows, remove duplications
+  distinct() %>%
+  
+  select(subject, 
+         experiment, 
+         intervention_medium, 
+         source_valence, 
+         experiment_condition, 
+         exclude_subject,
+         exclude_implausible_intervention_linger,
+         intervention_linger_minutes,
+         age, 
+         gender,
+         IAT_D2, 
+         mean_self_reported_evaluation, 
+         mean_intentions,
+         deepfake_check,
+         deepfake_concept_check,
+         
+         # intervention
+         memory_of_intervention_content,
+         
+         # item level data
+         ratings_bad_good,
+         ratings_dislike_like,
+         ratings_negative_positive,
+         behavioral_intentions_share,
+         behavioral_intentions_subscribe,
+         behavioral_intentions_recommend,
+         ## NB IAT item level data is written to disk as a separate file
+         
+         # exploratory measures
+         diagnosticity, 
+         demand, 
+         reactance, 
+         hypothesis_awareness, 
+         influence_awareness, 
+         issues_with_study, 
+         
+         aot_actively_openminded_thinking_sum, 
+         bcti_belief_in_conspiracy_sum, 
+         crt_analytic_thinking_sum, 
+         ocq_overclaiming_sum, 
+         ras_relgious_affliation_sum, 
+         rei_rational_sum, 
+         rei_experiential_sum, 
+         me_fake_news_awareness_sum, 
+         me_real_news_awareness_sum, 
+         me_fake_news_accuracy_sum, 
+         me_real_news_accuracy_sum, 
+         me_fake_news_sharing_sum, 
+         me_real_news_sharing_sum,
+         
+         me_fake_news_awareness_sum, 
+         me_real_news_awareness_sum, 
+         me_fake_news_accuracy_sum, 
+         me_real_news_accuracy_sum, 
+         me_fake_news_sharing_sum, 
+         me_real_news_sharing_sum,  
+         
+         aot_actively_openminded_thinking_pomp, 
+         bcti_belief_in_conspiracy_pomp, 
+         crt_analytic_thinking_pomp, 
+         ocq_overclaiming_pomp, 
+         ras_relgious_affliation_pomp, 
+         rei_rational_pomp, 
+         rei_experiential_pomp, 
+         me_fake_news_awareness_pomp, 
+         me_real_news_awareness_pomp, 
+         me_fake_news_accuracy_pomp, 
+         me_real_news_accuracy_pomp, 
+         me_fake_news_sharing_pomp, 
+         me_real_news_sharing_pomp,
+         
+         # recoded DVs - mentioned in preregistrations but not used in my (more appropriate) reworked analyses. 
+         IAT_D2_recoded_for_source_valence,
+         mean_self_reported_evaluation_recoded_for_source_valence,
+         mean_intentions_recoded_for_source_valence,
+         
+         # additional demographics
+         gender_self_describe,
+         ethnicity,
+         ethnicity_self_describe,
+         location,
+         education, 
+         employment, 
+         education_recoded, 
+         income, 
+         income_recoded, 
+         political_ideology_identity, 
+         political_ideology_social_issues, 
+         political_ideology_economic_issues, 
+         religious_affiliation_general, 
+         religious_affiliation_general_recoded,
+         
+         # component exclusion variables
+         passed_iat_performance, 
+         complete_iat, 
+         complete_selfreport,
+         complete_intentions,
+         
+         # methods variables
+         task_order, 
+         iat_block_order)
+
+```
+
+## Write to disk
+
+data_participant_level.csv contains trial level data in tidy format.
+
+data_detection_responses.csv contains just the open ended responses to the detection questions. After being written to disk, these were hand scored and then integrated back into the data (in a subsequent script) for analyses. 
+
+```{r}
+
+# full data file
+write_csv(data_participant_level, "processed/2.2_data_participant_level.csv")
+
+# subset of columns for hand scoring
+data_participant_level %>%
+  # exclude participants who did not provide responses on either question (or were not delivered the question, in earlier experiments) 
+  filter(!is.na(deepfake_check) | !is.na(deepfake_concept_check)) %>%
+  # exclude participants with partial or excess data who met exclusion criteria
+  filter(exclude_subject == FALSE) %>%
+  select(subject, experiment, deepfake_check, deepfake_concept_check) %>%
+  write_csv("processed/2.3_data_participant_level_for_hand_scoring.csv")
+
+# item level IAT for internal reliability analysis
+write_csv(data_iat_item_level, "processed/2.4_data_iat_item_level.csv")
+
+```
+
