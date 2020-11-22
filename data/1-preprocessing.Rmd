@@ -65,6 +65,7 @@ unzip("raw/experiment_5_DF_data.zip",      exdir = "raw")
 unzip("raw/experiment_5_Genuine_data.zip", exdir = "raw")
 unzip("raw/experiment_6_DF_data.zip",      exdir = "raw")
 unzip("raw/experiment_6_Genuine_data.zip", exdir = "raw")
+unzip("raw/experiment_7_data.zip",         exdir = "raw")
 
 ```
 
@@ -83,6 +84,8 @@ connection_exp_5_df      <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Exp
 connection_exp_5_genuine <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Experiment_5_Genuine_data.sqlite")
 connection_exp_6_df      <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Experiment_6_DF_data.sqlite")
 connection_exp_6_genuine <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Experiment_6_Genuine_data.sqlite")
+connection_exp_7         <- dbConnect(drv = RSQLite::SQLite(), dbname = "raw/Experiment_7_data.sqlite")
+
 # extract main table
 data_database_exp_1         <- dbGetQuery(conn = connection_exp_1,         statement = 'SELECT * FROM labjs')
 data_database_exp_2         <- dbGetQuery(conn = connection_exp_2,         statement = 'SELECT * FROM labjs')
@@ -94,6 +97,7 @@ data_database_exp_5_df      <- dbGetQuery(conn = connection_exp_5_df,      state
 data_database_exp_5_genuine <- dbGetQuery(conn = connection_exp_5_genuine, statement = 'SELECT * FROM labjs')
 data_database_exp_6_df      <- dbGetQuery(conn = connection_exp_6_df,      statement = 'SELECT * FROM labjs')
 data_database_exp_6_genuine <- dbGetQuery(conn = connection_exp_6_genuine, statement = 'SELECT * FROM labjs')
+data_database_exp_7         <- dbGetQuery(conn = connection_exp_7,         statement = 'SELECT * FROM labjs')
 
 # close connection
 dbDisconnect(conn = connection_exp_1)
@@ -106,6 +110,7 @@ dbDisconnect(conn = connection_exp_5_df)
 dbDisconnect(conn = connection_exp_5_genuine)
 dbDisconnect(conn = connection_exp_6_df)
 dbDisconnect(conn = connection_exp_6_genuine)
+dbDisconnect(conn = connection_exp_7)
 
 # discard connection
 rm(connection_exp_1)
@@ -118,6 +123,7 @@ rm(connection_exp_5_df)
 rm(connection_exp_5_genuine)
 rm(connection_exp_6_df)
 rm(connection_exp_6_genuine)
+rm(connection_exp_7)
 
 ```
 
@@ -135,6 +141,7 @@ file.remove("raw/Experiment_5_DF_data.sqlite")
 file.remove("raw/Experiment_5_Genuine_data.sqlite")
 file.remove("raw/Experiment_6_DF_data.sqlite")
 file.remove("raw/Experiment_6_Genuine_data.sqlite")
+file.remove("raw/Experiment_7_data.sqlite")
 
 ```
 
@@ -153,6 +160,7 @@ data_meta_data_exp_5_df      <- future_map_dfr(data_database_exp_5_df$metadata, 
 data_meta_data_exp_5_genuine <- future_map_dfr(data_database_exp_5_genuine$metadata, fromJSON) %>% dplyr::rename(subject = id)
 data_meta_data_exp_6_df      <- future_map_dfr(data_database_exp_6_df$metadata, fromJSON)      %>% dplyr::rename(subject = id)
 data_meta_data_exp_6_genuine <- future_map_dfr(data_database_exp_6_genuine$metadata, fromJSON) %>% dplyr::rename(subject = id)
+data_meta_data_exp_7         <- future_map_dfr(data_database_exp_7$metadata, fromJSON)         %>% dplyr::rename(subject = id)
 
 # remove metadata column
 data_database_exp_1          <- data_database_exp_1         %>% bind_cols(data_meta_data_exp_1)         %>% select(-metadata)
@@ -165,18 +173,24 @@ data_database_exp_5_df       <- data_database_exp_5_df      %>% bind_cols(data_m
 data_database_exp_5_genuine  <- data_database_exp_5_genuine %>% bind_cols(data_meta_data_exp_5_genuine) %>% select(-metadata)
 data_database_exp_6_df       <- data_database_exp_6_df      %>% bind_cols(data_meta_data_exp_6_df)      %>% select(-metadata)
 data_database_exp_6_genuine  <- data_database_exp_6_genuine %>% bind_cols(data_meta_data_exp_6_genuine) %>% select(-metadata)
+data_database_exp_7          <- data_database_exp_7         %>% bind_cols(data_meta_data_exp_7)         %>% select(-metadata)
 
-# # remove temporary data frame
-# rm(data_meta_data_exp_1)
-# rm(data_meta_data_exp_2)
-# rm(data_meta_data_exp_3_df)
-# rm(data_meta_data_exp_3_genuine)
-# rm(data_meta_data_exp_4_df)
-# rm(data_meta_data_exp_4_genuine)
-# rm(data_meta_data_exp_5_df)
-# rm(data_meta_data_exp_5_genuine)
-# rm(data_meta_data_exp_6_df)
-# rm(data_meta_data_exp_6_genuine)
+# remove temporary data frame
+rm(data_meta_data_exp_1)
+rm(data_meta_data_exp_2)
+rm(data_meta_data_exp_3_df)
+rm(data_meta_data_exp_3_genuine)
+rm(data_meta_data_exp_4_df)
+rm(data_meta_data_exp_4_genuine)
+rm(data_meta_data_exp_5_df)
+rm(data_meta_data_exp_5_genuine)
+rm(data_meta_data_exp_6_df)
+rm(data_meta_data_exp_6_genuine)
+rm(data_meta_data_exp_7)
+
+colnames(data_database_exp_7)
+
+head(data_database_exp_7)
 
 ```
 
@@ -190,27 +204,31 @@ NB experiment_condition (i.e., genuine or deepfaked) is created from the file th
 ```{r}
 
 data_database_combined <- 
-  bind_rows(mutate(data_database_exp_1,         experiment = 1, experiment_condition = "genuine"),
-            mutate(data_database_exp_2,         experiment = 2, experiment_condition = "genuine"),
-            mutate(data_database_exp_3_df,      experiment = 3, experiment_condition = "deepfaked"),
-            mutate(data_database_exp_3_genuine, experiment = 3, experiment_condition = "genuine"),
-            mutate(data_database_exp_4_df,      experiment = 4, experiment_condition = "deepfaked"),
-            mutate(data_database_exp_4_genuine, experiment = 4, experiment_condition = "genuine"),
-            mutate(data_database_exp_5_df,      experiment = 5, experiment_condition = "deepfaked"),
-            mutate(data_database_exp_5_genuine, experiment = 5, experiment_condition = "genuine"),
-            mutate(data_database_exp_6_df,      experiment = 6, experiment_condition = "deepfaked"),
-            mutate(data_database_exp_6_genuine, experiment = 6, experiment_condition = "genuine"))
+  bind_rows(
+    mutate(data_database_exp_1,         experiment = 1, experiment_condition = "genuine"),
+    mutate(data_database_exp_2,         experiment = 2, experiment_condition = "genuine"),
+    mutate(data_database_exp_3_df,      experiment = 3, experiment_condition = "deepfaked"),
+    mutate(data_database_exp_3_genuine, experiment = 3, experiment_condition = "genuine"),
+    mutate(data_database_exp_4_df,      experiment = 4, experiment_condition = "deepfaked"),
+    mutate(data_database_exp_4_genuine, experiment = 4, experiment_condition = "genuine"),
+    mutate(data_database_exp_5_df,      experiment = 5, experiment_condition = "deepfaked"),
+    mutate(data_database_exp_5_genuine, experiment = 5, experiment_condition = "genuine"),
+    mutate(data_database_exp_6_df,      experiment = 6, experiment_condition = "deepfaked"),
+    mutate(data_database_exp_6_genuine, experiment = 6, experiment_condition = "genuine"),
+    mutate(data_database_exp_7,         experiment = 7, experiment_condition = NA) # needs to be parsed later
+  )
 
-# rm(data_database_exp_1,
-#    data_database_exp_2,
-#    data_database_exp_3_df,
-#    data_database_exp_3_genuine,
-#    data_database_exp_4_df,
-#    data_database_exp_4_genuine,
-#    data_database_exp_5_df,
-#    data_database_exp_5_genuine,
-#    data_database_exp_6_df,
-#    data_database_exp_6_genuine)
+rm(data_database_exp_1,
+   data_database_exp_2,
+   data_database_exp_3_df,
+   data_database_exp_3_genuine,
+   data_database_exp_4_df,
+   data_database_exp_4_genuine,
+   data_database_exp_5_df,
+   data_database_exp_5_genuine,
+   data_database_exp_6_df,
+   data_database_exp_6_genuine,
+   data_database_exp_7)
 
 ```
 

@@ -47,27 +47,55 @@ data_trial_level <- data_preprocessed %>%
   
   rename(task = sender) %>%
   mutate(task = tolower(task),
+         # tidy up the various naming conventions between studies
+         task = case_when(task == "video_positive_baseline"  ~ "video_positive_genuine",
+                          task == "video_negative_baseline"  ~ "video_negative_genuine",
+                          task == "video_positive_genuine"   ~ "video_positive_genuine",
+                          task == "video_negative_genuine"   ~ "video_negative_genuine",
+                          task == "video_positive_genuine"   ~ "video_positive_genuine",
+                          task == "video_negative_genuine"   ~ "video_negative_genuine",
+                          task == "video_positive_df"        ~ "video_positive_deepfaked",
+                          task == "video_negative_df"        ~ "video_negative_deepfaked",
+                          task == "video_positive_deepfaked" ~ "video_positive_deepfaked",
+                          task == "video_negative_deepfaked" ~ "video_negative_deepfaked",
+                          task == "audio_positive_baseline"  ~ "audio_positive_genuine",
+                          task == "audio_negative_baseline"  ~ "audio_negative_genuine",
+                          task == "audio_positive_genuine"   ~ "audio_positive_genuine",
+                          task == "audio_negative_genuine"   ~ "audio_negative_genuine",
+                          task == "audio_positive_deepfaked" ~ "audio_positive_deepfaked",
+                          task == "audio_negative_deepfaked" ~ "audio_negative_deepfaked",
+                          task == "audio_positive_deepfake"  ~ "audio_positive_deepfaked",
+                          task == "audio_negative_deepfake"  ~ "audio_negative_deepfaked",
+                          TRUE ~ task),
+         experiment_condition2 = case_when(task %in% c("video_positive_deepfaked",
+                                                       "video_negative_deepfaked",
+                                                       "audio_positive_deepfaked",
+                                                       "audio_negative_deepfaked") ~ "deepfaked",
+                                           task %in% c("video_positive_genuine",
+                                                       "video_negative_genuine",
+                                                       "audio_positive_genuine",
+                                                       "audio_negative_genuine") ~ "genuine"),
          task = case_when(task == "stimulus" ~ "iat",
                           task == "demographics_1" ~ "demographics",
                           task == "demographics_2" ~ "demographics",
                           str_detect(task, "deepfake_check") ~ "deepfake_check",
                           # trials representing the intervention (audio/video)
-                          task == "video_positive_baseline" ~ "intervention",
-                          task == "video_negative_baseline" ~ "intervention",
-                          task == "video_positive_genuine" ~ "intervention",
-                          task == "video_negative_genuine" ~ "intervention",
-                          task == "video_positive_df" ~ "intervention",
-                          task == "video_negative_df" ~ "intervention",
-                          task == "audio_positive_baseline" ~ "intervention",
-                          task == "audio_negative_baseline" ~ "intervention",
-                          task == "audio_positive_deepfake" ~ "intervention",
-                          task == "audio_negative_deepfake" ~ "intervention",
-                          task == "audio_positive_genuine" ~ "intervention",
-                          task == "audio_negative_genuine" ~ "intervention",
-                          task == "audio_positive_deepfaked" ~ "intervention",
-                          task == "audio_negative_deepfaked" ~ "intervention",
+                          task %in% c("video_positive_genuine",
+                                      "video_negative_genuine",
+                                      "video_positive_deepfaked",
+                                      "video_negative_deepfaked",
+                                      "audio_positive_genuine",
+                                      "audio_negative_genuine",
+                                      "audio_positive_deepfaked",
+                                      "audio_negative_deepfaked") ~ "intervention",
                           TRUE ~ task)) %>%
   
+  # propagate exp condition up and down rows within each participant
+  group_by(subject) %>%
+  fill(matches("experiment_condition2"), .direction = "down") %>%
+  fill(matches("experiment_condition2"), .direction = "up") %>%
+  ungroup() %>%
+
   # retain only rows with useful information used to score the tasks
   filter(task %in% c("demographics",
                      "intervention",
@@ -90,7 +118,6 @@ data_trial_level <- data_preprocessed %>%
                      "news_evaluation_task",
                      "issues")) %>%
   
-  
   # wrangle ratings
   mutate(ratings_item = case_when(task == "ratings_good_bad"          ~ "ratings_bad_good",
                                   task == "ratings_like_dislike"      ~ "ratings_dislike_like",
@@ -101,7 +128,6 @@ data_trial_level <- data_preprocessed %>%
          ratings_response = case_when(!is.na(pos_neg) ~ pos_neg,
                                       !is.na(good_bad) ~ good_bad,
                                       !is.na(like_dislike) ~ like_dislike)) %>%
-  
   
   # wrangle methods variables
   mutate(condition_number = case_when(str_detect(condition, "C1") ~ 1, 
@@ -201,6 +227,7 @@ data_trial_level <- data_preprocessed %>%
          # experiment
          experiment,
          experiment_condition, 
+         experiment_condition2,
          task,
          #condition_number,
          source_valence,
@@ -686,20 +713,20 @@ data_exploratory_questions <- data_trial_level %>%
   group_by(subject) %>%
   summarise_all(~ first(na.omit(.))) %>%
   ungroup() %>%
-  mutate(diagnosticity = case_when(grepl("Not", diagnosticity_question) ~ 0,
-                                   grepl("Slight", diagnosticity_question) ~ 1,
-                                   grepl("Moderate", diagnosticity_question) ~ 2,
-                                   grepl("Strong", diagnosticity_question) ~ 3),
-         demand = case_when(grepl("No", demand) ~ FALSE,
-                            grepl("I", demand) ~ FALSE,
-                            grepl("Demand", demand) ~ TRUE),
-         reactance = case_when(grepl("No", reactance) ~ FALSE,
-                               grepl("I", reactance) ~ FALSE,
-                               grepl("React", reactance) ~ TRUE),
-         hypothesis_awareness = case_when(grepl("Yes", hypothesis_awareness) ~ TRUE,
-                                          grepl("No", hypothesis_awareness) ~ FALSE),
-         influence_awareness = case_when(grepl("Yes", influence_awareness) ~ TRUE,
-                                         grepl("No", influence_awareness) ~ FALSE))
+  mutate(diagnosticity        = case_when(grepl("Not",      diagnosticity_question) ~ 0,
+                                          grepl("Slight",   diagnosticity_question) ~ 1,
+                                          grepl("Moderate", diagnosticity_question) ~ 2,
+                                          grepl("Strong",   diagnosticity_question) ~ 3),
+         demand               = case_when(grepl("No",       demand) ~ FALSE,
+                                          grepl("I",        demand) ~ FALSE,
+                                          grepl("Demand",   demand) ~ TRUE),
+         reactance            = case_when(grepl("No",       reactance) ~ FALSE,
+                                          grepl("I",        reactance) ~ FALSE,
+                                          grepl("React",    reactance) ~ TRUE),
+         hypothesis_awareness = case_when(grepl("Yes",      hypothesis_awareness) ~ TRUE,
+                                          grepl("No",       hypothesis_awareness) ~ FALSE),
+         influence_awareness  = case_when(grepl("Yes",      influence_awareness) ~ TRUE,
+                                          grepl("No",       influence_awareness) ~ FALSE))
 
 ```
 
