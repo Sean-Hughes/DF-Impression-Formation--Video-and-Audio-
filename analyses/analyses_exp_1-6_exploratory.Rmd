@@ -59,6 +59,8 @@ All dependent variables (self-reported evaluations and IAT D2 scores) were stand
 
 # full data
 data_processed <- read.csv("../data/processed/4_data_participant_level_with_hand_scoring.csv") %>%
+  # include only experiments 1-6
+  filter(experiment %in% c(1, 2, 3, 4, 5, 6)) %>%
   # set factor levels for t test comparisons
   mutate(source_valence = fct_relevel(source_valence,
                                       "negative",
