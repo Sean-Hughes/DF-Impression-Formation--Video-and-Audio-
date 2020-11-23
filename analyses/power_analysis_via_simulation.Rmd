@@ -373,6 +373,9 @@ simulation_iterations_intentions_detected <-
 
 ```
 
+NB FURTHER SIMULATIONS NEED TO BE ADDED FOR AWARENESS EXCLUSION SUBSET, AND POSSIBLE FOR COMBINED DETECTION AND AWARENESS SUBSETS. TBD BASED ON FEEDBACK FROM PREREG. IN EITHER CASE, THE SAME LOGIC OF THE EXISTING POWER ANANALYSES WOULD APPLY
+
+
 # Results
 
 Based on the meta-analyses of our experiments so far, and taking the exclusion rate into account (i.e., `r round(empirical_exclusion_rate*100, 1)`%), a sample size of $N \geq$ `r ceiling(N_participants / (1 - empirical_exclusion_rate))` would provide the following degree of statistical power to test each hypothesis:
