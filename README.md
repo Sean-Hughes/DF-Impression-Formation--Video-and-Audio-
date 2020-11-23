@@ -12,10 +12,6 @@ Would it be possible to add this in?
 
 ### Analyses
 
-### poisson model needs hypothesis codes in analysis and prereg
-
-
-
 #### Check correspondence with preregistrations [sean]
 
 We also said we would run the following analyses: 
@@ -64,7 +60,6 @@ Possibly restructure the experiment files - images seem to be duplicated etc. cl
 
 # To do
 
-- add tests of H6 (or whatever we call robustness to awareness/both awareness and detection)
 - explicate that power analyses not conducted for H3 or H5 (or whatever we call poisson model)
 
 
