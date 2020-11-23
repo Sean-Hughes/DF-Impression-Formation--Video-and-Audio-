@@ -475,19 +475,19 @@ results_correlations_int %>%
 
 Uses the subset of participants in the deepfaked condition. 
 
-NB deepfake_detected (LHS variable) is binary but we apply Pearson's r correlations. 
+NB deepfake_detection_open_recoded (LHS variable) is binary but we apply Pearson's r correlations. 
 
 ```{r}
 
 data_subset_detectors <- data_after_exclusions %>%
-  filter(experiment_condition == "deepfaked" & !is.na(deepfake_detected))
+  filter(experiment_condition == "deepfaked" & !is.na(deepfake_detection_open_recoded))
 
 data_subset_detectors %>%
-  count(deepfake_detected)
+  count(deepfake_detection_open_recoded)
 
 results_correlations_df_detection <- 
   corr.test(x = data_subset_detectors %>%
-              select(sr = deepfake_detected),
+              select(sr = deepfake_detection_open_recoded),
             y = data_subset_detectors %>%
               select(ends_with("_pomp")), 
             use = "pairwise", 
