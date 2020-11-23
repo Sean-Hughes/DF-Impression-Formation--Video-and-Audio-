@@ -16,6 +16,7 @@ knitr::opts_chunk$set(message=FALSE,
                       warning=FALSE)
 ```
 
+
 # Functions and dependencies
 
 ```{r}
@@ -47,26 +48,56 @@ data_trial_level <- data_preprocessed %>%
   
   rename(task = sender) %>%
   mutate(task = tolower(task),
+         # tidy up the various naming conventions between studies
+         task = case_when(task == "video_positive_baseline"  ~ "video_positive_genuine",
+                          task == "video_negative_baseline"  ~ "video_negative_genuine",
+                          task == "video_positive_genuine"   ~ "video_positive_genuine",
+                          task == "video_negative_genuine"   ~ "video_negative_genuine",
+                          task == "video_positive_genuine"   ~ "video_positive_genuine",
+                          task == "video_negative_genuine"   ~ "video_negative_genuine",
+                          task == "video_positive_df"        ~ "video_positive_deepfaked",
+                          task == "video_negative_df"        ~ "video_negative_deepfaked",
+                          task == "video_positive_deepfaked" ~ "video_positive_deepfaked",
+                          task == "video_negative_deepfaked" ~ "video_negative_deepfaked",
+                          task == "audio_positive_baseline"  ~ "audio_positive_genuine",
+                          task == "audio_negative_baseline"  ~ "audio_negative_genuine",
+                          task == "audio_positive_genuine"   ~ "audio_positive_genuine",
+                          task == "audio_negative_genuine"   ~ "audio_negative_genuine",
+                          task == "audio_positive_deepfaked" ~ "audio_positive_deepfaked",
+                          task == "audio_negative_deepfaked" ~ "audio_negative_deepfaked",
+                          task == "audio_positive_deepfake"  ~ "audio_positive_deepfaked",
+                          task == "audio_negative_deepfake"  ~ "audio_negative_deepfaked",
+                          TRUE ~ task),
+         experiment_condition_alt = case_when(task %in% c("video_positive_deepfaked",
+                                                          "video_negative_deepfaked",
+                                                          "audio_positive_deepfaked",
+                                                          "audio_negative_deepfaked") ~ "deepfaked",
+                                              task %in% c("video_positive_genuine",
+                                                          "video_negative_genuine",
+                                                          "audio_positive_genuine",
+                                                          "audio_negative_genuine") ~ "genuine"),
          task = case_when(task == "stimulus" ~ "iat",
                           task == "demographics_1" ~ "demographics",
                           task == "demographics_2" ~ "demographics",
                           str_detect(task, "deepfake_check") ~ "deepfake_check",
                           # trials representing the intervention (audio/video)
-                          task == "video_positive_baseline" ~ "intervention",
-                          task == "video_negative_baseline" ~ "intervention",
-                          task == "video_positive_genuine" ~ "intervention",
-                          task == "video_negative_genuine" ~ "intervention",
-                          task == "video_positive_df" ~ "intervention",
-                          task == "video_negative_df" ~ "intervention",
-                          task == "audio_positive_baseline" ~ "intervention",
-                          task == "audio_negative_baseline" ~ "intervention",
-                          task == "audio_positive_deepfake" ~ "intervention",
-                          task == "audio_negative_deepfake" ~ "intervention",
-                          task == "audio_positive_genuine" ~ "intervention",
-                          task == "audio_negative_genuine" ~ "intervention",
-                          task == "audio_positive_deepfaked" ~ "intervention",
-                          task == "audio_negative_deepfaked" ~ "intervention",
+                          task %in% c("video_positive_genuine",
+                                      "video_negative_genuine",
+                                      "video_positive_deepfaked",
+                                      "video_negative_deepfaked",
+                                      "audio_positive_genuine",
+                                      "audio_negative_genuine",
+                                      "audio_positive_deepfaked",
+                                      "audio_negative_deepfaked") ~ "intervention",
                           TRUE ~ task)) %>%
+  
+  # propagate exp condition up and down rows within each participant
+  group_by(subject) %>%
+  fill(matches("experiment_condition_alt"), .direction = "down") %>%
+  fill(matches("experiment_condition_alt"), .direction = "up") %>%
+  ungroup() %>%
+  
+  mutate(experiment_condition = ifelse(is.na(experiment_condition), experiment_condition_alt, experiment_condition)) %>%
   
   # retain only rows with useful information used to score the tasks
   filter(task %in% c("demographics",
@@ -90,7 +121,6 @@ data_trial_level <- data_preprocessed %>%
                      "news_evaluation_task",
                      "issues")) %>%
   
-  
   # wrangle ratings
   mutate(ratings_item = case_when(task == "ratings_good_bad"          ~ "ratings_bad_good",
                                   task == "ratings_like_dislike"      ~ "ratings_dislike_like",
@@ -101,7 +131,6 @@ data_trial_level <- data_preprocessed %>%
          ratings_response = case_when(!is.na(pos_neg) ~ pos_neg,
                                       !is.na(good_bad) ~ good_bad,
                                       !is.na(like_dislike) ~ like_dislike)) %>%
-  
   
   # wrangle methods variables
   mutate(condition_number = case_when(str_detect(condition, "C1") ~ 1, 
@@ -248,8 +277,12 @@ data_trial_level <- data_preprocessed %>%
          # detection
          deepfake_check,
          deepfake_video_check,
+         deepfake_video_check_1,
+         deepfake_video_check_2,
          deepfake_audio_check,
          deepfake_concept_check,
+         deepfake_concept_check_1,
+         deepfake_concept_check_2,
          
          # individual differences
          ends_with("_aot_e"),
@@ -433,6 +466,7 @@ Subset variables and rows
 data_trial_level_iat <- data_trial_level %>%
   filter(task == "iat") %>%
   select(subject, 
+         experiment,
          block,
          trial,
          correct, 
@@ -447,11 +481,16 @@ data_trial_level_iat <- data_trial_level %>%
 ```{r}
 
 data_completeness_iat <- data_trial_level_iat %>%
-  count(subject) %>%
-  mutate(complete_iat = case_when(n == 128 ~ "complete", 
-                                  n > 128 ~ "excess", 
-                                  n < 128 ~"partial")) %>%
-  select(-n)
+  count(experiment, subject) %>%
+  # the number of trials in the IAT changed between experiments
+  mutate(complete_iat = case_when(experiment %in% c("1", "2", "3", "4", "5", "6") & n == 128 ~ "complete", 
+                                  experiment %in% c("1", "2", "3", "4", "5", "6") & n > 128 ~ "excess", 
+                                  experiment %in% c("1", "2", "3", "4", "5", "6") & n < 128 ~"partial",
+                                  experiment == "7" & n == 120 ~ "complete", 
+                                  experiment == "7" & n > 120 ~ "excess", 
+                                  experiment == "7" & n < 120 ~"partial")) %>%
+  ungroup() %>%
+  select(-n, -experiment)
 
 # print
 data_completeness_iat %>%
@@ -639,35 +678,71 @@ data_behavioural_intentions %>%
 
 ## Deep faking detection
 
-raw responses to be hand coded 
+### Open ended responses 
+
+To be hand coded 
 
 ```{r}
 
 data_detection_1 <- data_trial_level %>%
   select(subject, 
-         deepfake_check) %>%
+         deepfake_detection_open = deepfake_check) %>%
   drop_na()
 
 data_detection_2 <- data_trial_level %>%
   select(subject, 
-         deepfake_check = deepfake_video_check) %>%
+         deepfake_detection_open = deepfake_video_check) %>%
   drop_na()
 
 data_detection_3 <- data_trial_level %>%
   select(subject, 
-         deepfake_check = deepfake_audio_check) %>%
+         deepfake_detection_open = deepfake_audio_check) %>%
   drop_na()
 
-data_detection_4 <- data_trial_level %>%
+data_detection_4 <- data_trial_level %>% # exp 7
   select(subject, 
-         deepfake_concept_check) %>%
+         deepfake_detection_open = deepfake_video_check_2) %>%
   drop_na()
 
-data_detection <- 
+
+data_awareness_1 <- data_trial_level %>%
+  select(subject, 
+         deepfake_awareness_open = deepfake_concept_check) %>%
+  drop_na()
+
+data_awareness_2 <- data_trial_level %>% # exp 7
+  select(subject, 
+         deepfake_awareness_open = deepfake_concept_check_2) %>%
+  drop_na()
+
+
+data_detection_and_awareness_open <- 
   bind_rows(data_detection_1,
             data_detection_2,
-            data_detection_3) %>%
-  full_join(data_detection_4, by = "subject")
+            data_detection_3,
+            data_detection_4) %>%
+  full_join(bind_rows(data_awareness_1,
+                      data_awareness_2), by = "subject")
+
+```
+
+### Closed ended responses 
+
+Exp 7
+
+```{r}
+
+data_detection_closed <- data_trial_level %>%
+  select(subject, 
+         deepfake_detection_closed = deepfake_video_check_1) %>%
+  drop_na()
+
+data_awareness_closed <- data_trial_level %>%
+  select(subject, 
+         deepfake_awareness_closed = deepfake_concept_check_1) %>%
+  mutate(deepfake_awareness_closed = case_when(deepfake_awareness_closed == "Yes" ~ "aware",
+                                               deepfake_awareness_closed == "No" ~ "unaware")) %>%
+  drop_na()
 
 ```
 
@@ -686,20 +761,20 @@ data_exploratory_questions <- data_trial_level %>%
   group_by(subject) %>%
   summarise_all(~ first(na.omit(.))) %>%
   ungroup() %>%
-  mutate(diagnosticity = case_when(grepl("Not", diagnosticity_question) ~ 0,
-                                   grepl("Slight", diagnosticity_question) ~ 1,
-                                   grepl("Moderate", diagnosticity_question) ~ 2,
-                                   grepl("Strong", diagnosticity_question) ~ 3),
-         demand = case_when(grepl("No", demand) ~ FALSE,
-                            grepl("I", demand) ~ FALSE,
-                            grepl("Demand", demand) ~ TRUE),
-         reactance = case_when(grepl("No", reactance) ~ FALSE,
-                               grepl("I", reactance) ~ FALSE,
-                               grepl("React", reactance) ~ TRUE),
-         hypothesis_awareness = case_when(grepl("Yes", hypothesis_awareness) ~ TRUE,
-                                          grepl("No", hypothesis_awareness) ~ FALSE),
-         influence_awareness = case_when(grepl("Yes", influence_awareness) ~ TRUE,
-                                         grepl("No", influence_awareness) ~ FALSE))
+  mutate(diagnosticity        = case_when(grepl("Not",      diagnosticity_question) ~ 0,
+                                          grepl("Slight",   diagnosticity_question) ~ 1,
+                                          grepl("Moderate", diagnosticity_question) ~ 2,
+                                          grepl("Strong",   diagnosticity_question) ~ 3),
+         demand               = case_when(grepl("No",       demand) ~ FALSE,
+                                          grepl("I",        demand) ~ FALSE,
+                                          grepl("Demand",   demand) ~ TRUE),
+         reactance            = case_when(grepl("No",       reactance) ~ FALSE,
+                                          grepl("I",        reactance) ~ FALSE,
+                                          grepl("React",    reactance) ~ TRUE),
+         hypothesis_awareness = case_when(grepl("Yes",      hypothesis_awareness) ~ TRUE,
+                                          grepl("No",       hypothesis_awareness) ~ FALSE),
+         influence_awareness  = case_when(grepl("Yes",      influence_awareness) ~ TRUE,
+                                          grepl("No",       influence_awareness) ~ FALSE))
 
 ```
 
@@ -722,33 +797,33 @@ data_individual_differences_temp <- data_preprocessed %>%  # ideally this would 
   ungroup()
 
 # define n items, min and max possible item level data. this is used for completeness exclusions below, and also for POMP scores further down. 
-master_aot_n_items = 8
-master_bcti_n_items = 15
-master_crt_n_items = 7
-master_ocq_n_items = 30
-master_ras_n_items = 8
-master_rei_n_items = 20
-master_me_n_items = 12
+master_aot_n_items <- 8
+master_bcti_n_items <- 15
+master_crt_n_items <- 7
+master_ocq_n_items <- 30
+master_ras_n_items <- 8
+master_rei_n_items <- 20
+master_me_n_items <- 12
 
-aot_min_item = 1
-bcti_min_item = 1
-crt_min_item = 0
-ocq_min_item = 0
-ras_min_item = 1
-rei_min_item = 1
-me_awareness_min_item = 1
-me_accuracy_min_item = 1  
-me_sharing_min_item = 1
+aot_min_item <- 1
+bcti_min_item <- 1
+crt_min_item <- 0
+ocq_min_item <- 0
+ras_min_item <- 1
+rei_min_item <- 1
+me_awareness_min_item <- 1
+me_accuracy_min_item <- 1  
+me_sharing_min_item <- 1
 
-aot_max_item = 6
-bcti_max_item = 9
-crt_max_item = 1
-ocq_max_item = 6
-ras_max_item = 5
-rei_max_item = 7
-me_awareness_max_item = 3
-me_accuracy_max_item = 4 
-me_sharing_max_item = 3
+aot_max_item <- 6
+bcti_max_item <- 9
+crt_max_item <- 1
+ocq_max_item <- 6
+ras_max_item <- 5
+rei_max_item <- 7
+me_awareness_max_item <- 3
+me_accuracy_max_item <- 4 
+me_sharing_max_item <- 3
 
 ```
 
@@ -1046,7 +1121,9 @@ data_participant_level <- data_conditions_and_demographics %>%
   full_join(data_completeness_self_reported_evaluations, by = "subject") %>%
   full_join(data_self_reported_evaluations_mean_scores,  by = "subject") %>%
   full_join(data_behavioural_intentions,                 by = "subject") %>% 
-  full_join(data_detection,                              by = "subject") %>% 
+  full_join(data_detection_and_awareness_open,           by = "subject") %>% 
+  full_join(data_detection_closed,                       by = "subject") %>% 
+  full_join(data_awareness_closed,                       by = "subject") %>%
   full_join(data_induction_linger_time,                  by = "subject") %>%
   full_join(data_induction_description,                  by = "subject") %>% 
   full_join(data_exploratory_questions,                  by = "subject") %>%
@@ -1089,8 +1166,10 @@ data_participant_level <- data_conditions_and_demographics %>%
          IAT_D2, 
          mean_self_reported_evaluation, 
          mean_intentions,
-         deepfake_check,
-         deepfake_concept_check,
+         deepfake_detection_open,
+         deepfake_detection_closed,
+         deepfake_awareness_open,
+         deepfake_awareness_closed,
          
          # intervention
          memory_of_intervention_content,
@@ -1194,10 +1273,10 @@ write_csv(data_participant_level, "processed/2.2_data_participant_level.csv")
 # subset of columns for hand scoring
 data_participant_level %>%
   # exclude participants who did not provide responses on either question (or were not delivered the question, in earlier experiments) 
-  filter(!is.na(deepfake_check) | !is.na(deepfake_concept_check)) %>%
+  filter(!is.na(deepfake_detection_open) | !is.na(deepfake_awareness_open)) %>%
   # exclude participants with partial or excess data who met exclusion criteria
   filter(exclude_subject == FALSE) %>%
-  select(subject, experiment, deepfake_check, deepfake_concept_check) %>%
+  select(subject, experiment, deepfake_detection_open, deepfake_awareness_open) %>%
   write_csv("processed/2.3_data_participant_level_for_hand_scoring.csv")
 
 # item level IAT for internal reliability analysis

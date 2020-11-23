@@ -1,4 +1,4 @@
-subject,experiment,deepfake_check,deepfake_concept_check,deepfake_detected_rater_2,deepfake_concept_check_rater_2
+subject,experiment,deepfake_detection_open,deepfake_awareness_open,deepfake_detection_rater_2,deepfake_awareness_rater_2
 033aae4e-d13c-4203-88d0-286a17ffd630,4,"No, I thought it was a real person speaking.",NA,FALSE,NA
 0348a2aa-6bce-4132-8cc2-6793accdadcd,4,"It didn't sound entirely like a person as the accent constantly changed, which I found suspicious.",NA,FALSE,NA
 042d3853-30a5-44f0-a4b4-4aaa2c38d060,4,I realised it was a voice simulation.,NA,TRUE,NA
