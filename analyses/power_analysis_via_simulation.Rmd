@@ -12,6 +12,8 @@ output:
     toc_float: yes
 ---
 
+Note that this script requires the exploratory analyses script to be run first, so that the /models/ directory has the model fit objects for the empirical data present in it.
+
 ```{r include=FALSE}
 knitr::opts_chunk$set(message=FALSE,
                       warning=FALSE)
@@ -59,17 +61,17 @@ empirical_exclusion_rate <- data_processed %>%
 empirical_detection_rate <- data_processed %>%
   filter(exclude_subject == FALSE & 
            exclude_implausible_intervention_linger == FALSE &
-           !is.na(deepfake_detected)) %>%
-  summarize(percent_detected = mean(deepfake_detected)) %>%
+           !is.na(deepfake_detection_open_recoded)) %>%
+  summarize(percent_detected = mean(deepfake_detection_open_recoded)) %>%
   pull(percent_detected) 
 
 # empirical fits (created by exploratory analyses script)
 fit_selfreport <- read_rds("models/fit_selfreport.rds")
 fit_implicit   <- read_rds("models/fit_implicit.rds")
 fit_intentions <- read_rds("models/fit_intentions.rds")
-fit_selfreport_detected <- read_rds("models/fit_selfreport_deepfaked_detected.rds")
-fit_implicit_detected   <- read_rds("models/fit_implicit_deepfaked_detected.rds")
-fit_intentions_detected <- read_rds("models/fit_intentions_deepfaked_detected.rds")
+# fit_selfreport_deepfaked_detected <- read_rds("models/fit_selfreport_deepfaked_detected.rds")
+# fit_implicit_deepfaked_detected   <- read_rds("models/fit_implicit_deepfaked_detected.rds")
+# fit_intentions_deepfaked_detected <- read_rds("models/fit_intentions_deepfaked_detected.rds")
 
 ```
 
@@ -79,8 +81,8 @@ Note that total N_participants is intended to represent the total sample after e
 
 ```{r}
 
-N_participants <- 500
-N_simulations <- 1000
+N_participants <- 100  # this value is changed across runs to observe its effect on the estimated power. 
+N_simulations  <- 100  # increase to 1000+ after testing
 
 ```
 
@@ -274,14 +276,14 @@ run_simulation <- function(fit_initial_model_object, n_sim){
 }
 
 
-simulation <- function(results_file, empirical_model_fit, N_simulated_participants, iterations){
+simulation <- function(results_file, empirical_model_fit, N_simulated_participants, iterations, initial_fit_filename){
   if(file.exists(paste0("models/", results_file, ".csv"))){
     simulation_iterations <- read.csv(paste0("models/", results_file, ".csv"))
   } else {
     # run simulations
     simulation_iterations <- empirical_model_fit %>%
       fit_initial_model(fitted_empirical_model = ., 
-                        filename = "fit_simulation_selfreport", 
+                        filename = initial_fit_filename, 
                         N = N_simulated_participants) %>%
       run_simulation(fit_initial_model_object = ., 
                      n_sim = iterations)
@@ -302,22 +304,22 @@ As a sanity check to ensure that (1) models are being extracted correctly from t
 
 parameter_recovery_self_report <- 
   fit_initial_model(fitted_empirical_model = fit_selfreport, 
-                    filename = "fit_simulation_selfreport",
+                    filename = "fit_simulation_initial_selfreport",
                     N = N_participants)
 
 parameter_recovery_implicit <- 
   fit_initial_model(fitted_empirical_model = fit_implicit, 
-                    filename = "fit_simulation_implicit",
+                    filename = "fit_simulation_initial_implicit",
                     N = N_participants)
 
 parameter_recovery_intentions <- 
   fit_initial_model(fitted_empirical_model = fit_intentions, 
-                    filename = "fit_simulation_intentions",
+                    filename = "fit_simulation_initial_intentions",
                     N = N_participants)
 
 bind_rows(mutate(parameter_recovery_self_report$results_comparison, DV = "self report"),
-          mutate(parameter_recovery_self_report$results_comparison, DV = "implicit"),
-          mutate(parameter_recovery_self_report$results_comparison, DV = "intentions")) %>%
+          mutate(parameter_recovery_implicit$results_comparison, DV = "implicit"),
+          mutate(parameter_recovery_intentions$results_comparison, DV = "intentions")) %>%
   mutate(difference = empirical - simulated) %>%
   select(DV, Parameter, empirical, simulated, difference) %>%
   mutate_if(is.numeric, round, digits = 2) %>%
@@ -336,45 +338,63 @@ For each DV and their hypothesis. Run time of an hour or more on good hardware, 
 # full sample
 simulation_iterations_self_report <- 
   simulation(results_file             = "simulation_iterations_self_report",
+             initial_fit_filename     = "fit_simulation_initial_selfreport",
              empirical_model_fit      = fit_selfreport, 
              N_simulated_participants = N_participants, 
              iterations               = N_simulations)
 
 simulation_iterations_implicit <- 
   simulation(results_file             = "simulation_iterations_implicit",
+             initial_fit_filename     = "fit_simulation_initial_implicit",
              empirical_model_fit      = fit_implicit, 
              N_simulated_participants = N_participants, 
              iterations               = N_simulations)
 
 simulation_iterations_intentions <- 
   simulation(results_file             = "simulation_iterations_intentions",
+             initial_fit_filename     = "fit_simulation_initial_intentions",
              empirical_model_fit      = fit_intentions, 
              N_simulated_participants = N_participants, 
              iterations               = N_simulations)
 
-# subsets
-simulation_iterations_self_report_detected <- 
-  simulation(results_file             = "simulation_iterations_self_report_detected",
-             empirical_model_fit      = fit_selfreport_detected, 
-             N_simulated_participants = N_participants, 
-             iterations               = floor(N_simulations*empirical_detection_rate))
-
-simulation_iterations_implicit_detected <- 
-  simulation(results_file             = "simulation_iterations_implicit_detected",
-             empirical_model_fit      = fit_implicit_detected, 
-             N_simulated_participants = N_participants, 
-             iterations               = floor(N_simulations*empirical_detection_rate))
-
-simulation_iterations_intentions_detected <- 
-  simulation(results_file             = "simulation_iterations_intentions_detected",
-             empirical_model_fit      = fit_intentions_detected, 
-             N_simulated_participants = N_participants, 
-             iterations               = floor(N_simulations*empirical_detection_rate))
-
 ```
+
+## To do
 
 NB FURTHER SIMULATIONS NEED TO BE ADDED FOR AWARENESS EXCLUSION SUBSET, AND POSSIBLE FOR COMBINED DETECTION AND AWARENESS SUBSETS. TBD BASED ON FEEDBACK FROM PREREG. IN EITHER CASE, THE SAME LOGIC OF THE EXISTING POWER ANANALYSES WOULD APPLY
 
+```{r}
+
+# NB simulation functions must be altered as the subset models dont compare the experiment condition variable, therefore data generation and model fits must be changed.
+
+# # subsets
+# parameter_recovery_self_report <- 
+#   fit_initial_model(fitted_empirical_model = fit_selfreport_deepfaked_detected, 
+#                     filename = "fit_simulation_initial_selfreport_deepfaked_detected",
+#                     N = N_participants)
+# 
+# simulation_iterations_self_report_deefake_detected <-
+#   simulation(results_file             = "simulation_iterations_self_report_deepfaked_detected",
+#              initial_fit_filename     = "fit_simulation_initial_selfreport_deepfaked_detected",
+#              empirical_model_fit      = fit_selfreport_deepfaked_detected,
+#              N_simulated_participants = floor(N_participants*empirical_detection_rate),
+#              iterations               = N_simulations)
+# 
+# simulation_iterations_implicit_deefake_detected <- 
+#   simulation(results_file             = "simulation_iterations_implicit_detected",
+#              initial_fit_filename     = "fit_simulation_initial_implicit",
+#              empirical_model_fit      = fit_implicit_deepfaked_detected, 
+#              N_simulated_participants = floor(N_participants*empirical_detection_rate), 
+#              iterations               = N_simulations)
+# 
+# simulation_iterations_intentions_deefake_detected <- 
+#   simulation(results_file             = "simulation_iterations_intentions_detected",
+#              initial_fit_filename     = "fit_simulation_initial_intentions",
+#              empirical_model_fit      = fit_intentions_deepfaked_detected, 
+#              N_simulated_participants = floor(N_participants*empirical_detection_rate), 
+#              iterations               = N_simulations)
+
+```
 
 # Results
 
