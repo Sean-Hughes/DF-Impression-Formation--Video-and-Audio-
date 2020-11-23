@@ -1764,7 +1764,7 @@ In the subset of participants who were shown a Deepfaked video and accurately de
 - Result: `r H6c`
 
 
-# RQ7: Does both being aware of the concept and correcting diagnosing that content is Deepfaked make you immune to its influence?
+# RQ7: Does both being aware of the concept of Deepfaking and correcting diagnosing that content is Deepfaked make you immune to its influence?
 
 Subset who received deepfaked videos, were aware of the concept before the study, and also detected them. Same Bayesian multilevel models as employed above, using only source_valence as IV, i.e., to detect whether learning effects are credibly non-zero in this subset. 
 
