@@ -38,13 +38,13 @@ data_participant_level <- read.csv("processed/2.2_data_participant_level.csv")
 # hand scored data
 data_hand_scored_rater_1 <- read_csv("processed/3_data_hand_scored_rater_1.csv") %>%
   dplyr::select(subject, 
-                deepfake_detected_rater_1, 
-                deepfake_concept_check_rater_1)
-
+                deepfake_detection_rater_1, 
+                deepfake_awareness_rater_1)
+	
 data_hand_scored_rater_2 <- read_csv("processed/3_data_hand_scored_rater_2.csv") %>%
   dplyr::select(subject, 
-                deepfake_detected_rater_2, 
-                deepfake_concept_check_rater_2)
+                deepfake_detection_rater_2,
+                deepfake_awareness_rater_2)
 
 # join
 data_participant_level_with_hand_scoring <- data_participant_level %>%
@@ -53,13 +53,13 @@ data_participant_level_with_hand_scoring <- data_participant_level %>%
   
   # create single variables between raters. 
   # emphasizes specificity by requiring both raters to score as TRUE, therefore providing a more severe test of learning even in those who were aware.
-  mutate(deepfake_detected = 
-           case_when(deepfake_detected_rater_1 == TRUE & deepfake_detected_rater_2 == TRUE ~ TRUE,
-                     is.na(deepfake_detected_rater_1) & is.na(deepfake_detected_rater_2) ~ NA,
+  mutate(deepfake_detection_open_recoded = 
+           case_when(deepfake_detection_rater_1 == TRUE & deepfake_detection_rater_2 == TRUE ~ TRUE,
+                     is.na(deepfake_detection_rater_1) & is.na(deepfake_detection_rater_2) ~ NA,
                      TRUE ~ FALSE),
-         deepfake_concept_check = 
-           case_when(deepfake_concept_check_rater_1 == TRUE & deepfake_concept_check_rater_2 == TRUE ~ TRUE,
-                     is.na(deepfake_concept_check_rater_1) & is.na(deepfake_concept_check_rater_2) ~ NA,
+         deepfake_awareness_open_recoded = 
+           case_when(deepfake_awareness_rater_1 == TRUE & deepfake_awareness_rater_2 == TRUE ~ TRUE,
+                     is.na(deepfake_awareness_rater_1) & is.na(deepfake_awareness_rater_2) ~ NA,
                      TRUE ~ FALSE)) %>%
   
   # drop open ended text responses now that they've been coded for analysis
@@ -76,7 +76,10 @@ data_participant_level_with_hand_scoring <- data_participant_level %>%
          IAT_D2,
          mean_self_reported_evaluation,
          mean_intentions,
-         deepfake_detected,
+         deepfake_detection_closed,
+         deepfake_detection_open_recoded,
+         deepfake_awareness_closed,
+         deepfake_awareness_open_recoded,
          
          # item level data
          ratings_bad_good,
@@ -128,11 +131,10 @@ data_participant_level_with_hand_scoring <- data_participant_level %>%
          mean_intentions_recoded_for_source_valence,
          
          # individual raters
-         deepfake_concept_check,
-         deepfake_detected_rater_1,
-         deepfake_detected_rater_2,
-         deepfake_concept_check_rater_1,
-         deepfake_concept_check_rater_2,
+         deepfake_detection_rater_1,
+         deepfake_detection_rater_2,
+         deepfake_awareness_rater_1,
+         deepfake_awareness_rater_2,
          
          # additional demographics
          gender_self_describe,
