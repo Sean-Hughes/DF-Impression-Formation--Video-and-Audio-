@@ -95,8 +95,9 @@ Define the functions used to run the simulations.
 
 - simulate_data(): Simulate data that mimics to the empirical data, using the fitted empirical models.
 - fit_initial_model(): Fit the model to this newly simulated data, check for parameter recovery. 
-- fit_and_hypothesis_test(): Repeatedly (1) simulate new data again (calling the above function), (2) fit the model to this simulated data (by updating the fit_initial model above, in order to reuse its STAN code and therefore save a lot of run time), and (3) apply our hypothesis tests to the results of these fits.
-- run_simulation(): Run fit_and_hypothesis_test() a large number of times, append and tidy its results into a tibble.
+- simulate_data_update_fit_and_hypothesis_test(): Repeatedly (1) simulate new data again (calling the above function), (2) fit the model to this simulated data (by updating the fit_initial model above, in order to reuse its STAN code and therefore save a lot of run time), and (3) apply our hypothesis tests to the results of these fits.
+- run_multiple_iterations(): Run simulate_data_update_fit_and_hypothesis_test() a large number of times, append and tidy its results into a tibble.
+- simulate(): Check if results from a previous run of the simulation have been saved to disk and read in if so. If no, run the simulation functions above in order.
 
 ```{r}
 
@@ -182,9 +183,9 @@ fit_initial_model <- function(fitted_empirical_model, N, filename){
       TRUE ~ Parameter)
     ) %>%
     rename(simulated = MAP_Estimate)
-    
+  
   results_comparison <- full_join(results_empirical, results_simulated, by = "Parameter") 
-
+  
   return(list(fitted_empirical_model = fitted_empirical_model,
               N = N,
               fit_initial = fit_initial,
@@ -193,7 +194,7 @@ fit_initial_model <- function(fitted_empirical_model, N, filename){
 }
 
 
-fit_and_hypothesis_test <- function(fit_initial_model_object, seed){
+simulate_data_update_fit_and_hypothesis_test <- function(fit_initial_model_object, seed){
   
   # set seed
   set.seed(seed)
@@ -261,11 +262,11 @@ fit_and_hypothesis_test <- function(fit_initial_model_object, seed){
 }
 
 
-run_simulation <- function(fit_initial_model_object, n_sim){
+run_multiple_iterations <- function(fit_initial_model_object, n_sim){
   
   results <- 
     tibble(seed = 1:n_sim) %>% 
-    mutate(tidy = future_map(seed, fit_and_hypothesis_test, 
+    mutate(tidy = future_map(seed, simulate_data_update_fit_and_hypothesis_test, 
                              .options = furrr_options(seed = TRUE),
                              .progress = TRUE,
                              fit_initial_model_object = fit_initial_model_object)) %>%
@@ -276,7 +277,7 @@ run_simulation <- function(fit_initial_model_object, n_sim){
 }
 
 
-simulation <- function(results_file, empirical_model_fit, N_simulated_participants, iterations, initial_fit_filename){
+simulate <- function(results_file, empirical_model_fit, N_simulated_participants, iterations, initial_fit_filename){
   if(file.exists(paste0("models/", results_file, ".csv"))){
     simulation_iterations <- read.csv(paste0("models/", results_file, ".csv"))
   } else {
@@ -285,8 +286,8 @@ simulation <- function(results_file, empirical_model_fit, N_simulated_participan
       fit_initial_model(fitted_empirical_model = ., 
                         filename = initial_fit_filename, 
                         N = N_simulated_participants) %>%
-      run_simulation(fit_initial_model_object = ., 
-                     n_sim = iterations)
+      run_multiple_iterations(fit_initial_model_object = ., 
+                              n_sim = iterations)
     # write to disk
     simulation_iterations %>% 
       write_csv(paste0("models/", results_file, ".csv"))
@@ -337,25 +338,25 @@ For each DV and their hypothesis. Run time of an hour or more on good hardware, 
 
 # full sample
 simulation_iterations_self_report <- 
-  simulation(results_file             = "simulation_iterations_self_report",
-             initial_fit_filename     = "fit_simulation_initial_selfreport",
-             empirical_model_fit      = fit_selfreport, 
-             N_simulated_participants = N_participants, 
-             iterations               = N_simulations)
+  simulate(results_file             = "simulation_iterations_self_report",
+           initial_fit_filename     = "fit_simulation_initial_selfreport",
+           empirical_model_fit      = fit_selfreport, 
+           N_simulated_participants = N_participants, 
+           iterations               = N_simulations)
 
 simulation_iterations_implicit <- 
-  simulation(results_file             = "simulation_iterations_implicit",
-             initial_fit_filename     = "fit_simulation_initial_implicit",
-             empirical_model_fit      = fit_implicit, 
-             N_simulated_participants = N_participants, 
-             iterations               = N_simulations)
+  simulate(results_file             = "simulation_iterations_implicit",
+           initial_fit_filename     = "fit_simulation_initial_implicit",
+           empirical_model_fit      = fit_implicit, 
+           N_simulated_participants = N_participants, 
+           iterations               = N_simulations)
 
 simulation_iterations_intentions <- 
-  simulation(results_file             = "simulation_iterations_intentions",
-             initial_fit_filename     = "fit_simulation_initial_intentions",
-             empirical_model_fit      = fit_intentions, 
-             N_simulated_participants = N_participants, 
-             iterations               = N_simulations)
+  simulate(results_file             = "simulation_iterations_intentions",
+           initial_fit_filename     = "fit_simulation_initial_intentions",
+           empirical_model_fit      = fit_intentions, 
+           N_simulated_participants = N_participants, 
+           iterations               = N_simulations)
 
 ```
 
