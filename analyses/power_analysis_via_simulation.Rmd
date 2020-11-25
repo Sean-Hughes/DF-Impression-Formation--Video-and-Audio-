@@ -702,8 +702,8 @@ simulation_iterations_intentions_deepfaked_aware_detected <-
 - N (after exclusions) for H1 & H2 = `r N_participants`
 - Likely N needing to be recruited to obtain the above = `r ceiling(N_participants / (1 - empirical_exclusion_rate))`
 - Likely N for H5 (shown Deepfaked content and reported prior awareness of Deepfaking) = `r N_participants_deepfaked_aware`
-- Likely N for H6 (shown Deepfaked content and detected the Deepfake) = `r N_participants_deepfaked_aware`
-- Likely N for H7 (shown Deepfaked content, reported prior awareness of Deepfaking, and detected the Deepfake) = `r N_participants_deepfaked_aware`
+- Likely N for H6 (shown Deepfaked content and detected the Deepfake) = `r N_participants_deepfaked_detected`
+- Likely N for H7 (shown Deepfaked content, reported prior awareness of Deepfaking, and detected the Deepfake) = `r N_participants_deepfaked_aware_detected`
 - N simulation iterations run = `r N_simulations`
 
 ## Power
