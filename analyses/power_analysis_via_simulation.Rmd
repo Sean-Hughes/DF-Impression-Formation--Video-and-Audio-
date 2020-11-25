@@ -18,6 +18,7 @@ output:
 - Power is simulated for hypotheses 1, 2, 5, 6, and 7 (i.e., the linear Bayesian models). 
 - This script requires the exploratory analyses script to be run first, so that the /models/ directory has the model fit objects for the empirical data present in it.
 - For a cleaner html report knit this file a second time: no model fit iteration messages will be printed the second time and it will be easier to read.
+- The first run (500 participants and 3000 iterations) had a run time of 9 hours on my PC with good hardware.
 
 ```{r include=FALSE}
 knitr::opts_chunk$set(message=FALSE,
@@ -526,7 +527,7 @@ simulate_simple_model <- function(results_file, empirical_model_fit, N_simulated
 
 # Run simulations
 
-For each DV and their hypothesis. Run time of an hour or more on good hardware, depending on parameters.
+For each DV and their hypothesis.
 
 ## For H1 & H2 
 
