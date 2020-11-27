@@ -12,7 +12,13 @@ output:
     toc_float: yes
 ---
 
-Note that this script requires the exploratory analyses script to be run first, so that the /models/ directory has the model fit objects for the empirical data present in it.
+# Notes
+
+- Hypothesis labels (e.g., H1c) follow the preregistration document and the analysis script.
+- Power is simulated for hypotheses 1, 2, 5, 6, and 7 (i.e., the linear Bayesian models). 
+- This script requires the exploratory analyses script to be run first, so that the /models/ directory has the model fit objects for the empirical data present in it.
+- For a cleaner html report knit this file a second time: no model fit iteration messages will be printed the second time and it will be easier to read.
+- The first run (500 participants and 3000 iterations) had a run time of 9 hours on my PC with good hardware.
 
 ```{r include=FALSE}
 knitr::opts_chunk$set(message=FALSE,
@@ -44,7 +50,7 @@ dir.create("models")
 
 # Data and fitted models
 
-- Calculate empirical exclusion rate from existing data.
+- Calculate empirical exclusion rate, detection rate, and awareness rate from existing data.
 - Load fitted meta-analyses models of existing data (fitted in the exploratory analyses script).
 
 ```{r}
@@ -58,6 +64,13 @@ empirical_exclusion_rate <- data_processed %>%
   summarize(percent_excluded = mean(exclude)) %>%
   pull(percent_excluded)
 
+empirical_awareness_rate <- data_processed %>%
+  filter(exclude_subject == FALSE & 
+           exclude_implausible_intervention_linger == FALSE &
+           !is.na(deepfake_awareness_open_recoded)) %>%
+  summarize(percent_aware = mean(deepfake_awareness_open_recoded)) %>%
+  pull(percent_aware) 
+
 empirical_detection_rate <- data_processed %>%
   filter(exclude_subject == FALSE & 
            exclude_implausible_intervention_linger == FALSE &
@@ -65,13 +78,32 @@ empirical_detection_rate <- data_processed %>%
   summarize(percent_detected = mean(deepfake_detection_open_recoded)) %>%
   pull(percent_detected) 
 
+empirical_aware_and_detected_rate <- data_processed %>%
+  filter(exclude_subject == FALSE & 
+           exclude_implausible_intervention_linger == FALSE &
+           !is.na(deepfake_awareness_open_recoded) & 
+           !is.na(deepfake_detection_open_recoded)) %>%
+  mutate(aware_and_detected = ifelse(deepfake_awareness_open_recoded == TRUE & deepfake_detection_open_recoded == TRUE, TRUE, FALSE)) %>%
+  summarize(percent_aware_and_detected = mean(aware_and_detected)) %>%
+  pull(percent_aware_and_detected) 
+
 # empirical fits (created by exploratory analyses script)
+## H1 and H2
 fit_selfreport <- read_rds("models/fit_selfreport.rds")
 fit_implicit   <- read_rds("models/fit_implicit.rds")
 fit_intentions <- read_rds("models/fit_intentions.rds")
-# fit_selfreport_deepfaked_detected <- read_rds("models/fit_selfreport_deepfaked_detected.rds")
-# fit_implicit_deepfaked_detected   <- read_rds("models/fit_implicit_deepfaked_detected.rds")
-# fit_intentions_deepfaked_detected <- read_rds("models/fit_intentions_deepfaked_detected.rds")
+## H5
+fit_selfreport_deepfaked_aware <- read_rds("models/fit_selfreport_deepfaked_aware.rds")
+fit_implicit_deepfaked_aware   <- read_rds("models/fit_implicit_deepfaked_aware.rds")
+fit_intentions_deepfaked_aware <- read_rds("models/fit_intentions_deepfaked_aware.rds")
+## H6
+fit_selfreport_deepfaked_detected <- read_rds("models/fit_selfreport_deepfaked_detected.rds")
+fit_implicit_deepfaked_detected   <- read_rds("models/fit_implicit_deepfaked_detected.rds")
+fit_intentions_deepfaked_detected <- read_rds("models/fit_intentions_deepfaked_detected.rds")
+## H7
+fit_selfreport_deepfaked_aware_detected <- read_rds("models/fit_selfreport_deepfaked_aware_detected.rds")
+fit_implicit_deepfaked_aware_detected   <- read_rds("models/fit_implicit_deepfaked_aware_detected.rds")
+fit_intentions_deepfaked_aware_detected <- read_rds("models/fit_intentions_deepfaked_aware_detected.rds")
 
 ```
 
@@ -81,27 +113,36 @@ Note that total N_participants is intended to represent the total sample after e
 
 ```{r}
 
-N_participants <- 100  # this value is changed across runs to observe its effect on the estimated power. 
-N_simulations  <- 100  # increase to 1000+ after testing
+N_participants <- 500  # this value is changed across runs to observe its effect on the estimated power. 
+N_simulations  <- 3000  # increase to 1000+ after testing
+
+N_participants_deepfaked_aware          <- floor(N_participants*empirical_awareness_rate)
+N_participants_deepfaked_detected       <- floor(N_participants*empirical_detection_rate)
+N_participants_deepfaked_aware_detected <- floor(N_participants*empirical_aware_and_detected_rate)
 
 ```
 
-- N participants to be simulated = `r N_participants`
+- N participants to be simulated:
+- Full sample N after exclusions that were simulated = `r N_participants`
 - N simulation iterations run = `r N_simulations`
 
 # Functions
 
 Define the functions used to run the simulations.
 
-- simulate_data(): Simulate data that mimics to the empirical data, using the fitted empirical models.
-- fit_initial_model(): Fit the model to this newly simulated data, check for parameter recovery. 
-- simulate_data_update_fit_and_hypothesis_test(): Repeatedly (1) simulate new data again (calling the above function), (2) fit the model to this simulated data (by updating the fit_initial model above, in order to reuse its STAN code and therefore save a lot of run time), and (3) apply our hypothesis tests to the results of these fits.
-- run_multiple_iterations(): Run simulate_data_update_fit_and_hypothesis_test() a large number of times, append and tidy its results into a tibble.
+## For H1 & H2
+
+i.e, DV ~ 1 + source_valence * experiment_condition
+
+- simulate_data_interaction_model(): Simulate data that mimics to the empirical data, using the fitted empirical models.
+- fit_initial_interaction_model(): Fit the model to this newly simulated data, check for parameter recovery. 
+- simulate_data_update_fit_and_hypothesis_test_interaction_model(): Repeatedly (1) simulate new data again (calling the above function), (2) fit the model to this simulated data (by updating the fit_initial model above, in order to reuse its STAN code and therefore save a lot of run time), and (3) apply our hypothesis tests to the results of these fits.
+- run_multiple_iterations_interaction_model(): Run simulate_data_update_fit_and_hypothesis_test_interaction_model() a large number of times, append and tidy its results into a tibble.
 - simulate(): Check if results from a previous run of the simulation have been saved to disk and read in if so. If no, run the simulation functions above in order.
 
 ```{r}
 
-simulate_data <- function(fitted_empirical_model, N){
+simulate_data_interaction_model <- function(fitted_empirical_model, N){
   
   # get point estimates from fitted data
   results_empirical <- as_tibble(map_estimate(fitted_empirical_model))
@@ -142,12 +183,12 @@ simulate_data <- function(fitted_empirical_model, N){
 }
 
 
-fit_initial_model <- function(fitted_empirical_model, N, filename){
+fit_initial_interaction_model <- function(fitted_empirical_model, N, filename){
   
   # NB it is faster to simulate and fit the model once, then use update() this fit, rather than generating the STAN code for the model at every iteration. 
   
   # simulate data using fitted model
-  simulated_data <- simulate_data(fitted_empirical_model, N = N)
+  simulated_data <- simulate_data_interaction_model(fitted_empirical_model, N = N)
   
   # fit the same model to the simulated data
   fit_initial <- 
@@ -187,21 +228,21 @@ fit_initial_model <- function(fitted_empirical_model, N, filename){
   results_comparison <- full_join(results_empirical, results_simulated, by = "Parameter") 
   
   return(list(fitted_empirical_model = fitted_empirical_model,
-              N = N,
-              fit_initial = fit_initial,
-              results_comparison = results_comparison))
+              N                      = N,
+              fit_initial            = fit_initial,
+              results_comparison     = results_comparison))
   
 }
 
 
-simulate_data_update_fit_and_hypothesis_test <- function(fit_initial_model_object, seed){
+simulate_data_update_fit_and_hypothesis_test_interaction_model <- function(fit_initial_model_object, seed){
   
   # set seed
   set.seed(seed)
   
   # simulate data using fitted model
-  simulated_data <- simulate_data(fitted_empirical_model = fit_initial_model_object$fitted_empirical_model, 
-                                  N = fit_initial_model_object$N)
+  simulated_data <- simulate_data_interaction_model(fitted_empirical_model = fit_initial_model_object$fitted_empirical_model, 
+                                                    N = fit_initial_model_object$N)
   
   # find a new (updated) fit using the newly simulated data
   fit_updated <- update(fit_initial_model_object$fit_initial, newdata = simulated_data)
@@ -218,16 +259,27 @@ simulate_data_update_fit_and_hypothesis_test <- function(fit_initial_model_objec
   
   # parameterize posteriors
   estimates_fit_updated <-
+    map_estimate(draws_fit_updated) %>%
     # 95% CIs
-    (bayestestR::hdi(draws_fit_updated, ci = .95) %>% 
-       rename(CI_95_lower = CI_low) %>%
-       as_tibble()) %>%
+    full_join(bayestestR::hdi(draws_fit_updated, ci = .95) %>% 
+                as_tibble() %>%
+                rename(CI_95_lower = CI_low),
+              by = "Parameter") %>%
     # 90% CIs (for non-inferiority test)
     full_join(bayestestR::hdi(draws_fit_updated, ci = .90) %>%
                 as_tibble() %>%
                 rename(CI_90_lower = CI_low),
               by = "Parameter") %>%
-    select(Parameter, CI_95_lower, CI_90_lower)
+    select(Parameter, MAP_Estimate, CI_95_lower, CI_90_lower)
+  
+  # lower CI estimates hypothesis tests
+  effect_genuine_MAP <- estimates_fit_updated %>% 
+    filter(Parameter == "effect_genuine") %>% 
+    pull(MAP_Estimate)
+  
+  effect_deepfaked_MAP <- estimates_fit_updated %>% 
+    filter(Parameter == "effect_deepfaked") %>% 
+    pull(MAP_Estimate)
   
   # lower CI estimates hypothesis tests
   effect_genuine_95_CI_lower <- estimates_fit_updated %>% 
@@ -250,7 +302,9 @@ simulate_data_update_fit_and_hypothesis_test <- function(fit_initial_model_objec
   H2_noninferiority <- ifelse(effect_genuine_95_CI_lower < effect_deepfaked_90_CI_lower, 1, 0)
   
   # binary hypothesis tests
-  results_simulation <- tibble(effect_genuine_95_CI_lower   = effect_genuine_95_CI_lower,
+  results_simulation <- tibble(effect_genuine_MAP           = effect_genuine_MAP,
+                               effect_genuine_95_CI_lower   = effect_genuine_95_CI_lower,
+                               effect_deepfaked_MAP         = effect_deepfaked_MAP,
                                effect_deepfaked_95_CI_lower = effect_deepfaked_95_CI_lower,
                                effect_deepfaked_90_CI_lower = effect_deepfaked_90_CI_lower,
                                H1_genuine                   = H1_genuine,
@@ -262,11 +316,11 @@ simulate_data_update_fit_and_hypothesis_test <- function(fit_initial_model_objec
 }
 
 
-run_multiple_iterations <- function(fit_initial_model_object, n_sim){
+run_multiple_iterations_interaction_model <- function(fit_initial_model_object, n_sim){
   
   results <- 
     tibble(seed = 1:n_sim) %>% 
-    mutate(tidy = future_map(seed, simulate_data_update_fit_and_hypothesis_test, 
+    mutate(tidy = future_map(seed, simulate_data_update_fit_and_hypothesis_test_interaction_model, 
                              .options = furrr_options(seed = TRUE),
                              .progress = TRUE,
                              fit_initial_model_object = fit_initial_model_object)) %>%
@@ -277,17 +331,17 @@ run_multiple_iterations <- function(fit_initial_model_object, n_sim){
 }
 
 
-simulate <- function(results_file, empirical_model_fit, N_simulated_participants, iterations, initial_fit_filename){
+simulate_interaction_model <- function(results_file, empirical_model_fit, N_simulated_participants, iterations, initial_fit_filename){
   if(file.exists(paste0("models/", results_file, ".csv"))){
     simulation_iterations <- read.csv(paste0("models/", results_file, ".csv"))
   } else {
     # run simulations
     simulation_iterations <- empirical_model_fit %>%
-      fit_initial_model(fitted_empirical_model = ., 
-                        filename = initial_fit_filename, 
-                        N = N_simulated_participants) %>%
-      run_multiple_iterations(fit_initial_model_object = ., 
-                              n_sim = iterations)
+      fit_initial_interaction_model(fitted_empirical_model = ., 
+                                    filename = initial_fit_filename, 
+                                    N = N_simulated_participants) %>%
+      run_multiple_iterations_interaction_model(fit_initial_model_object = ., 
+                                                n_sim = iterations)
     # write to disk
     simulation_iterations %>% 
       write_csv(paste0("models/", results_file, ".csv"))
@@ -297,111 +351,366 @@ simulate <- function(results_file, empirical_model_fit, N_simulated_participants
 
 ```
 
-# Check parameter recovery
+## For H5, H6, & H7
 
-As a sanity check to ensure that (1) models are being extracted correctly from the original (meta analytic) empirical fits, (2) data fitting these models is being simulated correctly, and (3) (fixed effect) models are being fit to these simulated data correctly, ensure that parameters from the empirical models are being recovered. Given that it's just a single simulated dataset, some degree of difference is to be expected of course.
+i.e, DV ~ 1 + source_valence run on a subset.
+
+Functions serve same purpose as those named for H1 and H2.
+
+NB these functions are copies of the above ones with changes to the model or the way priors are manipulated or tested to remove the experiment_condition variable.
 
 ```{r}
 
-parameter_recovery_self_report <- 
-  fit_initial_model(fitted_empirical_model = fit_selfreport, 
-                    filename = "fit_simulation_initial_selfreport",
-                    N = N_participants)
+simulate_data_simple_model <- function(fitted_empirical_model, N){
+  
+  # get point estimates from fitted data
+  results_empirical <- as_tibble(map_estimate(fitted_empirical_model))
+  
+  # extract these point estimates
+  beta_Intercept <- results_empirical %>% 
+    filter(Parameter == "b_Intercept") %>% 
+    pull(MAP_Estimate)
+  
+  beta_source_valence <- results_empirical %>% 
+    filter(Parameter == "b_source_valencepositive") %>% 
+    pull(MAP_Estimate)
+  
+  # set parameters of model to be simulated using point estimates
+  simulation_arguments <- 
+    list(formula     = DV ~ 1 + source_valence,
+         reg_weights = c(beta_Intercept, beta_source_valence),
+         fixed       = list(source_valence = list(var_type = "factor", levels = c("negative", "positive"))),
+         sample_size = N)
+  
+  # simulate data to fit_initial model
+  data_simulated <- simulation_arguments %>%
+    simulate_fixed(data = NULL, .) %>%
+    simulate_error(simulation_arguments) %>%
+    generate_response(simulation_arguments)
+  
+  return(data_simulated)
+  
+}
 
-parameter_recovery_implicit <- 
-  fit_initial_model(fitted_empirical_model = fit_implicit, 
-                    filename = "fit_simulation_initial_implicit",
-                    N = N_participants)
 
-parameter_recovery_intentions <- 
-  fit_initial_model(fitted_empirical_model = fit_intentions, 
-                    filename = "fit_simulation_initial_intentions",
-                    N = N_participants)
+fit_initial_simple_model <- function(fitted_empirical_model, N, filename){
+  
+  # NB it is faster to simulate and fit the model once, then use update() this fit, rather than generating the STAN code for the model at every iteration. 
+  
+  # simulate data using fitted model
+  simulated_data <- simulate_data_simple_model(fitted_empirical_model, N = N)
+  
+  # fit the same model to the simulated data
+  fit_initial <- 
+    brm(formula = DV ~ 1 + source_valence,
+        data    = simulated_data,
+        prior   = prior(normal(0, 10)),
+        iter    = 10000,
+        warmup  = 3000,
+        control = list(adapt_delta = 0.99),  # to avoid divergent transitions
+        chains  = 4,
+        cores   = parallel::detectCores(),
+        file    = paste0("models/", filename))
+  
+  # sanity check: can we recover comparable parameters that we built the model with?
+  # e.g., the fixed effect estimates should be close to the reg_weights used above.
+  # get point estimates from fitted data
+  results_empirical <- fitted_empirical_model %>%
+    map_estimate() %>%
+    as_tibble() %>%
+    mutate(Parameter = case_when(
+      Parameter == "b_source_valencepositive" ~ "b_source_valence",
+      TRUE ~ Parameter)
+    ) %>%
+    rename(empirical = MAP_Estimate)
+  
+  results_simulated <- fit_initial %>%
+    map_estimate() %>%
+    as_tibble() %>%
+    rename(simulated = MAP_Estimate)
+  
+  results_comparison <- full_join(results_empirical, results_simulated, by = "Parameter") 
+  
+  return(list(fitted_empirical_model = fitted_empirical_model,
+              N                      = N,
+              fit_initial            = fit_initial,
+              results_comparison     = results_comparison))
+  
+}
 
-bind_rows(mutate(parameter_recovery_self_report$results_comparison, DV = "self report"),
-          mutate(parameter_recovery_implicit$results_comparison, DV = "implicit"),
-          mutate(parameter_recovery_intentions$results_comparison, DV = "intentions")) %>%
-  mutate(difference = empirical - simulated) %>%
-  select(DV, Parameter, empirical, simulated, difference) %>%
-  mutate_if(is.numeric, round, digits = 2) %>%
-  kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
-                full_width = FALSE)
+
+simulate_data_update_fit_and_hypothesis_test_simple_model <- function(fit_initial_model_object, seed){
+  
+  # set seed
+  set.seed(seed)
+  
+  # simulate data using fitted model
+  simulated_data <- simulate_data_simple_model(fitted_empirical_model = fit_initial_model_object$fitted_empirical_model, 
+                                               N = fit_initial_model_object$N)
+  
+  # find a new (updated) fit using the newly simulated data
+  fit_updated <- update(fit_initial_model_object$fit_initial, newdata = simulated_data)
+  
+  # manipulate posterior distributions
+  draws_fit_updated <-
+    bind_cols(select(spread_draws(fit_updated, b_Intercept),            b_Intercept),
+              select(spread_draws(fit_updated, b_source_valence),       b_source_valence)) %>%
+    mutate(effect_deepfaked = b_source_valence)
+  
+  # parameterize posteriors
+  estimates_fit_updated <-
+    map_estimate(draws_fit_updated) %>%
+    # 95% CIs
+    full_join(bayestestR::hdi(draws_fit_updated, ci = .95) %>% 
+                as_tibble() %>%
+                rename(CI_95_lower = CI_low),
+              by = "Parameter") %>%
+    select(Parameter, MAP_Estimate, CI_95_lower)
+  
+  # lower CI estimates hypothesis tests
+  effect_deepfaked_MAP <- estimates_fit_updated %>% 
+    filter(Parameter == "effect_deepfaked") %>% 
+    pull(MAP_Estimate)
+  
+  # lower CI estimates hypothesis tests
+  effect_deepfaked_95_CI_lower <- estimates_fit_updated %>% 
+    filter(Parameter == "effect_deepfaked") %>% 
+    pull(CI_95_lower)
+  
+  ## non-zero effect in deepfake condition
+  H567_deepfaked <- ifelse(effect_deepfaked_95_CI_lower > 0, 1, 0)
+  
+  # binary hypothesis tests
+  results_simulation <- tibble(effect_deepfaked_MAP         = effect_deepfaked_MAP,
+                               effect_deepfaked_95_CI_lower = effect_deepfaked_95_CI_lower,
+                               H567_deepfaked               = H567_deepfaked)
+  
+  return(results_simulation)
+  
+}
+
+
+run_multiple_iterations_simple_model <- function(fit_initial_model_object, n_sim){
+  
+  results <- 
+    tibble(seed = 1:n_sim) %>% 
+    mutate(tidy = future_map(seed, simulate_data_update_fit_and_hypothesis_test_simple_model, 
+                             .options = furrr_options(seed = TRUE),
+                             .progress = TRUE,
+                             fit_initial_model_object = fit_initial_model_object)) %>%
+    unnest(tidy) 
+  
+  return(results)
+  
+}
+
+
+simulate_simple_model <- function(results_file, empirical_model_fit, N_simulated_participants, iterations, initial_fit_filename){
+  if(file.exists(paste0("models/", results_file, ".csv"))){
+    simulation_iterations <- read.csv(paste0("models/", results_file, ".csv"))
+  } else {
+    # run simulations
+    simulation_iterations <- empirical_model_fit %>%
+      fit_initial_simple_model(fitted_empirical_model = ., 
+                               filename = initial_fit_filename, 
+                               N = N_simulated_participants) %>%
+      run_multiple_iterations_simple_model(fit_initial_model_object = ., 
+                                           n_sim = iterations)
+    # write to disk
+    simulation_iterations %>% 
+      write_csv(paste0("models/", results_file, ".csv"))
+  }
+  return(simulation_iterations)
+}
 
 ```
 
 # Run simulations
 
-For each DV and their hypothesis. Run time of an hour or more on good hardware, depending on parameters.
+For each DV and their hypothesis.
+
+## For H1 & H2 
 
 ```{r message=TRUE, warning=TRUE}
 
-# full sample
+# initial models
+parameter_recovery_self_report <- 
+  fit_initial_interaction_model(fitted_empirical_model = fit_selfreport, 
+                                filename = "fit_simulation_initial_selfreport",
+                                N = N_participants)
+
+parameter_recovery_implicit <- 
+  fit_initial_interaction_model(fitted_empirical_model = fit_implicit, 
+                                filename = "fit_simulation_initial_implicit",
+                                N = N_participants)
+
+parameter_recovery_intentions <- 
+  fit_initial_interaction_model(fitted_empirical_model = fit_intentions, 
+                                filename = "fit_simulation_initial_intentions",
+                                N = N_participants)
+
+# simulations
 simulation_iterations_self_report <- 
-  simulate(results_file             = "simulation_iterations_self_report",
-           initial_fit_filename     = "fit_simulation_initial_selfreport",
-           empirical_model_fit      = fit_selfreport, 
-           N_simulated_participants = N_participants, 
-           iterations               = N_simulations)
+  simulate_interaction_model(results_file             = "simulation_iterations_self_report",
+                             initial_fit_filename     = "fit_simulation_initial_selfreport",
+                             empirical_model_fit      = fit_selfreport, 
+                             N_simulated_participants = N_participants, 
+                             iterations               = N_simulations)
 
 simulation_iterations_implicit <- 
-  simulate(results_file             = "simulation_iterations_implicit",
-           initial_fit_filename     = "fit_simulation_initial_implicit",
-           empirical_model_fit      = fit_implicit, 
-           N_simulated_participants = N_participants, 
-           iterations               = N_simulations)
+  simulate_interaction_model(results_file             = "simulation_iterations_implicit",
+                             initial_fit_filename     = "fit_simulation_initial_implicit",
+                             empirical_model_fit      = fit_implicit, 
+                             N_simulated_participants = N_participants, 
+                             iterations               = N_simulations)
 
 simulation_iterations_intentions <- 
-  simulate(results_file             = "simulation_iterations_intentions",
-           initial_fit_filename     = "fit_simulation_initial_intentions",
-           empirical_model_fit      = fit_intentions, 
-           N_simulated_participants = N_participants, 
-           iterations               = N_simulations)
+  simulate_interaction_model(results_file             = "simulation_iterations_intentions",
+                             initial_fit_filename     = "fit_simulation_initial_intentions",
+                             empirical_model_fit      = fit_intentions, 
+                             N_simulated_participants = N_participants, 
+                             iterations               = N_simulations)
 
 ```
 
-## To do
+## For H5, H6, & H7
 
-NB FURTHER SIMULATIONS NEED TO BE ADDED FOR AWARENESS EXCLUSION SUBSET, AND POSSIBLE FOR COMBINED DETECTION AND AWARENESS SUBSETS. TBD BASED ON FEEDBACK FROM PREREG. IN EITHER CASE, THE SAME LOGIC OF THE EXISTING POWER ANANALYSES WOULD APPLY
+```{r message=TRUE, warning=TRUE}
 
-```{r}
+# initial models
+## H5
+parameter_recovery_self_report_deepfaked_aware <- 
+  fit_initial_simple_model(fitted_empirical_model = fit_selfreport_deepfaked_aware, 
+                           filename = "fit_simulation_initial_selfreport_deepfaked_aware",
+                           N = N_participants_deepfaked_aware)
 
-# NB simulation functions must be altered as the subset models dont compare the experiment condition variable, therefore data generation and model fits must be changed.
+parameter_recovery_implicit_deepfaked_aware <- 
+  fit_initial_simple_model(fitted_empirical_model = fit_implicit_deepfaked_aware, 
+                           filename = "fit_simulation_initial_implicit_deepfaked_aware",
+                           N = N_participants_deepfaked_aware)
 
-# # subsets
-# parameter_recovery_self_report <- 
-#   fit_initial_model(fitted_empirical_model = fit_selfreport_deepfaked_detected, 
-#                     filename = "fit_simulation_initial_selfreport_deepfaked_detected",
-#                     N = N_participants)
-# 
-# simulation_iterations_self_report_deefake_detected <-
-#   simulation(results_file             = "simulation_iterations_self_report_deepfaked_detected",
-#              initial_fit_filename     = "fit_simulation_initial_selfreport_deepfaked_detected",
-#              empirical_model_fit      = fit_selfreport_deepfaked_detected,
-#              N_simulated_participants = floor(N_participants*empirical_detection_rate),
-#              iterations               = N_simulations)
-# 
-# simulation_iterations_implicit_deefake_detected <- 
-#   simulation(results_file             = "simulation_iterations_implicit_detected",
-#              initial_fit_filename     = "fit_simulation_initial_implicit",
-#              empirical_model_fit      = fit_implicit_deepfaked_detected, 
-#              N_simulated_participants = floor(N_participants*empirical_detection_rate), 
-#              iterations               = N_simulations)
-# 
-# simulation_iterations_intentions_deefake_detected <- 
-#   simulation(results_file             = "simulation_iterations_intentions_detected",
-#              initial_fit_filename     = "fit_simulation_initial_intentions",
-#              empirical_model_fit      = fit_intentions_deepfaked_detected, 
-#              N_simulated_participants = floor(N_participants*empirical_detection_rate), 
-#              iterations               = N_simulations)
+parameter_recovery_intentions_deepfaked_aware <- 
+  fit_initial_simple_model(fitted_empirical_model = fit_intentions_deepfaked_aware, 
+                           filename = "fit_simulation_initial_intentions_deepfaked_aware",
+                           N = N_participants_deepfaked_aware)
+
+## H6
+parameter_recovery_self_report_deepfaked_detected <- 
+  fit_initial_simple_model(fitted_empirical_model = fit_selfreport_deepfaked_detected, 
+                           filename = "fit_simulation_initial_selfreport_deepfaked_detected",
+                           N = N_participants_deepfaked_detected)
+
+parameter_recovery_implicit_deepfaked_detected <- 
+  fit_initial_simple_model(fitted_empirical_model = fit_implicit_deepfaked_detected, 
+                           filename = "fit_simulation_initial_implicit_deepfaked_detected",
+                           N = N_participants_deepfaked_detected)
+
+parameter_recovery_intentions_deepfaked_detected <- 
+  fit_initial_simple_model(fitted_empirical_model = fit_intentions_deepfaked_detected, 
+                           filename = "fit_simulation_initial_intentions_deepfaked_detected",
+                           N = N_participants_deepfaked_detected)
+
+## H7
+parameter_recovery_self_report_deepfaked_aware_detected <- 
+  fit_initial_simple_model(fitted_empirical_model = fit_selfreport_deepfaked_aware_detected, 
+                           filename = "fit_simulation_initial_selfreport_deepfaked_aware_detected",
+                           N = N_participants_deepfaked_aware)
+
+parameter_recovery_implicit_deepfaked_aware_detected <- 
+  fit_initial_simple_model(fitted_empirical_model = fit_implicit_deepfaked_aware_detected, 
+                           filename = "fit_simulation_initial_implicit_deepfaked_aware_detected",
+                           N = N_participants_deepfaked_aware)
+
+parameter_recovery_intentions_deepfaked_aware_detected <- 
+  fit_initial_simple_model(fitted_empirical_model = fit_intentions_deepfaked_aware_detected, 
+                           filename = "fit_simulation_initial_intentions_deepfaked_aware_detected",
+                           N = N_participants_deepfaked_aware)
+
+# run simulations
+# H5
+simulation_iterations_self_report_deepfaked_aware <- 
+  simulate_simple_model(results_file             = "simulation_iterations_self_report_deepfaked_aware",
+                        initial_fit_filename     = "fit_simulation_initial_selfreport_deepfaked_aware",
+                        empirical_model_fit      = fit_selfreport_deepfaked_aware, 
+                        N_simulated_participants = N_participants_deepfaked_aware, 
+                        iterations               = N_simulations)
+
+simulation_iterations_implicit_deepfaked_aware <- 
+  simulate_simple_model(results_file             = "simulation_iterations_implicit_deepfaked_aware",
+                        initial_fit_filename     = "fit_simulation_initial_implicit_deepfaked_aware",
+                        empirical_model_fit      = fit_implicit_deepfaked_aware, 
+                        N_simulated_participants = N_participants_deepfaked_aware, 
+                        iterations               = N_simulations)
+
+simulation_iterations_intentions_deepfaked_aware <- 
+  simulate_simple_model(results_file             = "simulation_iterations_intentions_deepfaked_aware",
+                        initial_fit_filename     = "fit_simulation_initial_intentions_deepfaked_aware",
+                        empirical_model_fit      = fit_intentions_deepfaked_aware, 
+                        N_simulated_participants = N_participants_deepfaked_aware, 
+                        iterations               = N_simulations)
+
+# H6
+simulation_iterations_self_report_deepfaked_detected <- 
+  simulate_simple_model(results_file             = "simulation_iterations_self_report_deepfaked_detected",
+                        initial_fit_filename     = "fit_simulation_initial_selfreport_deepfaked_detected",
+                        empirical_model_fit      = fit_selfreport_deepfaked_detected, 
+                        N_simulated_participants = N_participants_deepfaked_detected, 
+                        iterations               = N_simulations)
+
+simulation_iterations_implicit_deepfaked_detected <- 
+  simulate_simple_model(results_file             = "simulation_iterations_implicit_deepfaked_detected",
+                        initial_fit_filename     = "fit_simulation_initial_implicit_deepfaked_detected",
+                        empirical_model_fit      = fit_implicit_deepfaked_detected, 
+                        N_simulated_participants = N_participants_deepfaked_detected, 
+                        iterations               = N_simulations)
+
+simulation_iterations_intentions_deepfaked_detected <- 
+  simulate_simple_model(results_file             = "simulation_iterations_intentions_deepfaked_detected",
+                        initial_fit_filename     = "fit_simulation_initial_intentions_deepfaked_detected",
+                        empirical_model_fit      = fit_intentions_deepfaked_detected, 
+                        N_simulated_participants = N_participants_deepfaked_detected, 
+                        iterations               = N_simulations)
+
+# H7
+simulation_iterations_self_report_deepfaked_aware_detected <- 
+  simulate_simple_model(results_file             = "simulation_iterations_self_report_deepfaked_aware_detected",
+                        initial_fit_filename     = "fit_simulation_initial_selfreport_deepfaked_aware_detected",
+                        empirical_model_fit      = fit_selfreport_deepfaked_aware_detected, 
+                        N_simulated_participants = N_participants_deepfaked_aware, 
+                        iterations               = N_simulations)
+
+simulation_iterations_implicit_deepfaked_aware_detected <- 
+  simulate_simple_model(results_file             = "simulation_iterations_implicit_deepfaked_aware_detected",
+                        initial_fit_filename     = "fit_simulation_initial_implicit_deepfaked_aware_detected",
+                        empirical_model_fit      = fit_implicit_deepfaked_aware_detected, 
+                        N_simulated_participants = N_participants_deepfaked_aware, 
+                        iterations               = N_simulations)
+
+simulation_iterations_intentions_deepfaked_aware_detected <- 
+  simulate_simple_model(results_file             = "simulation_iterations_intentions_deepfaked_aware_detected",
+                        initial_fit_filename     = "fit_simulation_initial_intentions_deepfaked_aware_detected",
+                        empirical_model_fit      = fit_intentions_deepfaked_aware_detected, 
+                        N_simulated_participants = N_participants_deepfaked_aware, 
+                        iterations               = N_simulations)
 
 ```
 
 # Results
 
-Based on the meta-analyses of our experiments so far, and taking the exclusion rate into account (i.e., `r round(empirical_exclusion_rate*100, 1)`%), a sample size of $N \geq$ `r ceiling(N_participants / (1 - empirical_exclusion_rate))` would provide the following degree of statistical power to test each hypothesis:
+## Sample sizes
 
-NB hypothesis labels follow the preregistration document and the analysis script.
+- N (after exclusions) for H1 & H2 = `r N_participants`
+- Likely N needing to be recruited to obtain the above = `r ceiling(N_participants / (1 - empirical_exclusion_rate))`
+- Likely N for H5 (shown Deepfaked content and reported prior awareness of Deepfaking) = `r N_participants_deepfaked_aware`
+- Likely N for H6 (shown Deepfaked content and detected the Deepfake) = `r N_participants_deepfaked_detected`
+- Likely N for H7 (shown Deepfaked content, reported prior awareness of Deepfaking, and detected the Deepfake) = `r N_participants_deepfaked_aware_detected`
+- N simulation iterations run = `r N_simulations`
+
+## Power
+
+Based on the meta-analyses of our experiments so far, and taking the empirical exclusion rate into account (i.e., `r round(empirical_exclusion_rate*100, 1)`%), a sample size of $N \geq$ `r ceiling(N_participants / (1 - empirical_exclusion_rate))` would provide the following degree of statistical power to test each hypothesis.
+
+### For H1 & H2
 
 ```{r fig.height=5, fig.width=12}
 
@@ -467,6 +776,49 @@ simuations_iterations %>%
   facet_wrap(~ DV, scales = "free") + 
   theme(legend.position = "bottom") +
   ggtitle("H2")
+
+```
+
+### For H5, H6, & H7
+
+```{r fig.height=10, fig.width=12}
+
+# combine 
+simuations_iterations_deepfaked_detected <- 
+  bind_rows(simulation_iterations_self_report_deepfaked_aware          %>% mutate(DV = "Self report", related_hypothesis = "H5"),
+            simulation_iterations_implicit_deepfaked_aware             %>% mutate(DV = "Implicit",    related_hypothesis = "H5"),
+            simulation_iterations_intentions_deepfaked_aware           %>% mutate(DV = "Intentions",  related_hypothesis = "H5"),
+            simulation_iterations_self_report_deepfaked_detected       %>% mutate(DV = "Self report", related_hypothesis = "H6"),
+            simulation_iterations_implicit_deepfaked_detected          %>% mutate(DV = "Implicit",    related_hypothesis = "H6"),
+            simulation_iterations_intentions_deepfaked_detected        %>% mutate(DV = "Intentions",  related_hypothesis = "H6"),
+            simulation_iterations_self_report_deepfaked_aware_detected %>% mutate(DV = "Self report", related_hypothesis = "H7"),
+            simulation_iterations_implicit_deepfaked_aware_detected    %>% mutate(DV = "Implicit",    related_hypothesis = "H7"),
+            simulation_iterations_intentions_deepfaked_aware_detected  %>% mutate(DV = "Intentions",  related_hypothesis = "H7")) %>%
+  mutate(DV = fct_relevel(DV, "Self report", "Implicit", "Intentions"))
+
+# table
+simuations_iterations_deepfaked_detected %>%
+  select(related_hypothesis, DV, detected = H567_deepfaked) %>%
+  group_by(related_hypothesis, DV) %>%
+  summarize(power = mean(detected), .groups = "drop") %>%
+  mutate(hypothesis = paste(DV, related_hypothesis, sep = "_")) %>%
+  select(hypothesis, DV, power) %>%
+  arrange(hypothesis) %>%
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+
+simuations_iterations_deepfaked_detected %>%
+  select(related_hypothesis, DV, Deepfaked = effect_deepfaked_95_CI_lower) %>%
+  ggplot(aes(Deepfaked, fill = "grey")) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_density(alpha = 0.2) +
+  scale_color_viridis_d(begin = 0.3, end = 0.7) +
+  scale_fill_viridis_d(begin = 0.3, end = 0.7) +
+  xlab("Lower bound 95% CI") +
+  facet_wrap(~ related_hypothesis + DV, scales = "free") + 
+  theme(legend.position = "bottom") +
+  ggtitle("H5, H6, & H7") +
+  theme(legend.position = "none")
 
 ```
 
