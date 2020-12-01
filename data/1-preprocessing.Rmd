@@ -226,6 +226,9 @@ rm(data_database_exp_1,
    data_database_exp_6_genuine,
    data_database_exp_7)
 
+gc()
+memory.limit(size = 16000)
+
 ```
 
 # Extract full data 
