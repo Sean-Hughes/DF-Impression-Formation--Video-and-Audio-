@@ -253,11 +253,11 @@ data_after_exclusions %>%
 
 ```{r}
 
-fit_selfreport <-
+fit_exploratory_selfreport <-
   brm(formula = mean_self_reported_evaluation ~ source_valence * experiment_condition + (1 | experiment),
       family = gaussian(),
       data    = data_after_exclusions,
-      file    = "models/fit_selfreport",
+      file    = "models/fit_exploratory_selfreport",
       prior   = prior(normal(0, 10)),
       iter    = 10000,
       warmup  = 3000,
@@ -271,8 +271,8 @@ fit_selfreport <-
 
 ```{r}
 
-summary(fit_selfreport)
-plot(fit_selfreport, ask = FALSE)
+summary(fit_exploratory_selfreport)
+plot(fit_exploratory_selfreport, ask = FALSE)
 
 ```
 
@@ -282,7 +282,7 @@ Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-ea
 
 ```{r}
 
-check_prior(fit_selfreport) %>%
+check_prior(fit_exploratory_selfreport) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -293,15 +293,15 @@ check_prior(fit_selfreport) %>%
 
 ```{r}
 
-# plot_model(fit_selfreport)
-plot_model(fit_selfreport, type = "pred", terms = c("source_valence", "experiment_condition"))
+# plot_model(fit_exploratory_selfreport)
+plot_model(fit_exploratory_selfreport, type = "pred", terms = c("source_valence", "experiment_condition"))
 
 # percent moderation
 draws_sr <-
   bind_cols(
-    select(spread_draws(fit_selfreport, b_source_valencepositive), b_source_valencepositive),
-    select(spread_draws(fit_selfreport, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
-    select(spread_draws(fit_selfreport, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
+    select(spread_draws(fit_exploratory_selfreport, b_source_valencepositive), b_source_valencepositive),
+    select(spread_draws(fit_exploratory_selfreport, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
+    select(spread_draws(fit_exploratory_selfreport, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
   ) %>%
   rename(main_valence = b_source_valencepositive,
          main_experiment_condition = b_experiment_conditiondeepfaked,
@@ -389,11 +389,11 @@ Change in self-reported evaluations (i.e., between Source Valence conditions) in
 
 ```{r}
 
-fit_implicit <-
+fit_exploratory_implicit <-
   brm(formula = IAT_D2 ~ source_valence * experiment_condition + (1 | experiment),
       family = gaussian(),
       data    = data_after_exclusions,
-      file    = "models/fit_implicit",
+      file    = "models/fit_exploratory_implicit",
       prior   = prior(normal(0, 10)),
       iter    = 10000,
       warmup  = 3000,
@@ -407,8 +407,8 @@ fit_implicit <-
 
 ```{r}
 
-summary(fit_implicit)
-plot(fit_implicit, ask = FALSE)
+summary(fit_exploratory_implicit)
+plot(fit_exploratory_implicit, ask = FALSE)
 
 ```
 
@@ -418,7 +418,7 @@ Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-ea
 
 ```{r}
 
-check_prior(fit_implicit) %>%
+check_prior(fit_exploratory_implicit) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -429,15 +429,15 @@ check_prior(fit_implicit) %>%
 
 ```{r}
 
-#plot_model(fit_implicit)
-plot_model(fit_implicit, type = "pred", terms = c("source_valence", "experiment_condition"))
+#plot_model(fit_exploratory_implicit)
+plot_model(fit_exploratory_implicit, type = "pred", terms = c("source_valence", "experiment_condition"))
 
 # percent moderation
 draws_imp <-
   bind_cols(
-    select(spread_draws(fit_implicit, b_source_valencepositive), b_source_valencepositive),
-    select(spread_draws(fit_implicit, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
-    select(spread_draws(fit_implicit, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
+    select(spread_draws(fit_exploratory_implicit, b_source_valencepositive), b_source_valencepositive),
+    select(spread_draws(fit_exploratory_implicit, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
+    select(spread_draws(fit_exploratory_implicit, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
   ) %>%
   rename(main_valence = b_source_valencepositive,
          main_experiment_condition = b_experiment_conditiondeepfaked,
@@ -524,11 +524,11 @@ Change in IAT D2 scores (i.e., between Source Valence conditions) induced by Dee
 
 ```{r}
 
-fit_intentions <-
+fit_exploratory_intentions <-
   brm(formula = mean_intentions ~ source_valence * experiment_condition, # no random effect for experiment as only exp 6 assessed intentions
       family = gaussian(),
       data    = data_after_exclusions,
-      file    = "models/fit_intentions",
+      file    = "models/fit_exploratory_intentions",
       prior   = prior(normal(0, 10)),
       iter    = 10000,
       warmup  = 3000,
@@ -542,8 +542,8 @@ fit_intentions <-
 
 ```{r}
 
-summary(fit_intentions)
-plot(fit_intentions, ask = FALSE)
+summary(fit_exploratory_intentions)
+plot(fit_exploratory_intentions, ask = FALSE)
 
 ```
 
@@ -553,7 +553,7 @@ Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-ea
 
 ```{r}
 
-check_prior(fit_intentions) %>%
+check_prior(fit_exploratory_intentions) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -564,15 +564,15 @@ check_prior(fit_intentions) %>%
 
 ```{r}
 
-#plot_model(fit_intentions)
-plot_model(fit_intentions, type = "pred", terms = c("source_valence", "experiment_condition"))
+#plot_model(fit_exploratory_intentions)
+plot_model(fit_exploratory_intentions, type = "pred", terms = c("source_valence", "experiment_condition"))
 
 # percent moderation
 draws_intentions <-
   bind_cols(
-    select(spread_draws(fit_intentions, b_source_valencepositive), b_source_valencepositive),
-    select(spread_draws(fit_intentions, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
-    select(spread_draws(fit_intentions, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
+    select(spread_draws(fit_exploratory_intentions, b_source_valencepositive), b_source_valencepositive),
+    select(spread_draws(fit_exploratory_intentions, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
+    select(spread_draws(fit_exploratory_intentions, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
   ) %>%
   rename(main_valence = b_source_valencepositive,
          main_experiment_condition = b_experiment_conditiondeepfaked,
@@ -705,13 +705,60 @@ data_after_exclusions %>%
  
 ```
 
+### Classification stats
+
+```{r}
+
+data_counts <- data_after_exclusions %>%
+  select(experiment_condition, deepfake_detection_open_recoded) %>%
+  drop_na() %>%
+  count(experiment_condition, deepfake_detection_open_recoded)
+
+TP <- pull(filter(data_counts, experiment_condition == "deepfaked" & deepfake_detection_open_recoded == TRUE),  n)
+FP <- pull(filter(data_counts, experiment_condition == "genuine"   & deepfake_detection_open_recoded == TRUE),  n)
+FN <- pull(filter(data_counts, experiment_condition == "deepfaked" & deepfake_detection_open_recoded == FALSE), n)
+TN <- pull(filter(data_counts, experiment_condition == "genuine"   & deepfake_detection_open_recoded == FALSE), n)
+
+#accuracy <- (TP+TN)/(TP+TN+FP+FN)
+sensitivity <- TP / (TP+FN)
+false_negative_rate <- 1 - sensitivity
+specificity <- TN / (TN+FP)
+false_positive_rate <- 1 - specificity
+
+# Youden's J statistic aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions". a zero value when a diagnostic test gives the same proportion of positive results for groups with and without the disease, i.e the test is useless.
+informedness <- sensitivity + specificity - 1
+
+balanced_accuracy <- (sensitivity + specificity)/2
+
+fit_exploratory_classification <-
+  tibble(variable = c(
+    #"accuracy",
+    "balanced_accuracy",
+    "informedness",
+    #"sensitivity",
+    "false_negative_rate",
+    #"specificity",
+    "false_positive_rate"
+  ),
+  observed = c(
+    #accuracy,
+    balanced_accuracy,
+    informedness,
+    #sensitivity,
+    false_negative_rate,
+    #specificity,
+    false_positive_rate
+  ))
+
+```
+
 ### Bootstrapped classification stats
 
 ```{r}
 
-if(file.exists("models/fit_classification_bootstraps.rds")){
+if(file.exists("models/fit_exploratory_classification_bootstraps.rds")){
 
-  fit_classification_bootstraps <- read_rds("models/fit_classification_bootstraps.rds")
+  fit_exploratory_classification_bootstraps <- read_rds("models/fit_exploratory_classification_bootstraps.rds")
 
 } else {
 
@@ -767,27 +814,37 @@ if(file.exists("models/fit_classification_bootstraps.rds")){
   }
 
   # apply to each bootstrap
-  fit_classification_bootstraps <- boots %>%
+  fit_exploratory_classification_bootstraps <- boots %>%
     mutate(categorization_stats = map(splits, bootstrap_categorization_stats)) %>%
     select(-splits) %>%
     unnest(categorization_stats)
 
-  write_rds(fit_classification_bootstraps, "models/fit_classification_bootstraps.rds")
+  write_rds(fit_exploratory_classification_bootstraps, "models/fit_exploratory_classification_bootstraps.rds")
 
 }
 
-fit_classification_bootstraps %>%
+```
+
+### Results
+
+```{r}
+
+fit_exploratory_classification_bootstraps %>%
   group_by(variable) %>%
-  summarize(median = quantile(value, 0.500),
+  summarize(median   = quantile(value, 0.500),
             ci_lower = quantile(value, 0.025),
             ci_upper = quantile(value, 0.975),
-            .groups = "drop") %>%
+            .groups  = "drop") %>%
+  full_join(fit_exploratory_classification, by = "variable") %>%
   mutate_if(is.numeric, round, digits = 2) %>%
+  select(variable, observed, median, ci_lower, ci_upper) %>%
   kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
                 full_width = FALSE)
 
 ```
+
+- Results will report the observed estimate and the bootstrapped 95% CIs. Bootstrapped median estimate is reported here as a robustness test. 
 
 H3: Participants are poor at making accurate and informed judgements about whether online video content is genuine or Deepfaked. Our predictions here are descriptive/continuous rather than involving cut-off based inference rules.
 
@@ -824,13 +881,60 @@ data_after_exclusions %>%
  
 ```
 
+### Classification stats
+
+```{r}
+
+data_counts_subset <- data_after_exclusions %>%
+  select(experiment_condition, deepfake_detection_open_recoded) %>%
+  drop_na() %>%
+  count(experiment_condition, deepfake_detection_open_recoded)
+
+TP <- pull(filter(data_counts_subset, experiment_condition == "deepfaked" & deepfake_detection_open_recoded == TRUE),  n)
+FP <- pull(filter(data_counts_subset, experiment_condition == "genuine"   & deepfake_detection_open_recoded == TRUE),  n)
+FN <- pull(filter(data_counts_subset, experiment_condition == "deepfaked" & deepfake_detection_open_recoded == FALSE), n)
+TN <- pull(filter(data_counts_subset, experiment_condition == "genuine"   & deepfake_detection_open_recoded == FALSE), n)
+
+#accuracy <- (TP+TN)/(TP+TN+FP+FN)
+sensitivity <- TP / (TP+FN)
+false_negative_rate <- 1 - sensitivity
+specificity <- TN / (TN+FP)
+false_positive_rate <- 1 - specificity
+
+# Youden's J statistic aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions". a zero value when a diagnostic test gives the same proportion of positive results for groups with and without the disease, i.e the test is useless.
+informedness <- sensitivity + specificity - 1
+
+balanced_accuracy <- (sensitivity + specificity)/2
+
+fit_exploratory_classification_subset <-
+  tibble(variable = c(
+    #"accuracy",
+    "balanced_accuracy",
+    "informedness",
+    #"sensitivity",
+    "false_negative_rate",
+    #"specificity",
+    "false_positive_rate"
+  ),
+  observed = c(
+    #accuracy,
+    balanced_accuracy,
+    informedness,
+    #sensitivity,
+    false_negative_rate,
+    #specificity,
+    false_positive_rate
+  ))
+
+```
+
 ### Bootstrapped classification stats
 
 ```{r}
 
-if(file.exists("models/fit_classification_bootstraps_subset.rds")){
+if(file.exists("models/fit_exploratory_classification_bootstraps_subset.rds")){
 
-  fit_classification_bootstraps_subset <- read_rds("models/fit_classification_bootstraps_subset.rds")
+  fit_exploratory_classification_bootstraps_subset <- read_rds("models/fit_exploratory_classification_bootstraps_subset.rds")
 
 } else {
 
@@ -887,27 +991,37 @@ if(file.exists("models/fit_classification_bootstraps_subset.rds")){
   }
 
   # apply to each bootstrap
-  fit_classification_bootstraps_subset <- boots %>%
+  fit_exploratory_classification_bootstraps_subset <- boots %>%
     mutate(categorization_stats = map(splits, bootstrap_categorization_stats)) %>%
     select(-splits) %>%
     unnest(categorization_stats)
 
-  write_rds(fit_classification_bootstraps_subset, "models/fit_classification_bootstraps_subset.rds")
+  write_rds(fit_exploratory_classification_bootstraps_subset, "models/fit_exploratory_classification_bootstraps_subset.rds")
 
 }
 
-fit_classification_bootstraps_subset %>%
+```
+
+### Results
+
+```{r}
+
+fit_exploratory_classification_bootstraps_subset %>%
   group_by(variable) %>%
-  summarize(median = quantile(value, 0.500),
+  summarize(median   = quantile(value, 0.500),
             ci_lower = quantile(value, 0.025),
             ci_upper = quantile(value, 0.975),
-            .groups = "drop") %>%
+            .groups  = "drop") %>%
+  full_join(fit_exploratory_classification_subset, by = "variable") %>%
   mutate_if(is.numeric, round, digits = 2) %>%
+  select(variable, observed, median, ci_lower, ci_upper) %>%
   kable() %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
                 full_width = FALSE)
 
 ```
+
+- Results will report the observed estimate and the bootstrapped 95% CIs. Bootstrapped median estimate is reported here as a robustness test. 
 
 # RQ4: Are people aware that content can be Deepfaked before they take part in the study, and does this make them better at detecting them? 
 
@@ -964,11 +1078,11 @@ total_counts_awareness_detection <- data_counts_awareness_detection %>%
   summarize(total = sum(counts)) 
 
 # fit poisson model
-fit_poisson_awareness_detection <- 
+fit_exploratory_poisson_awareness_detection <- 
   brm(formula = counts ~ 1 + awareness * detection + (1 | experiment),
       family  = poisson(),
       data    = data_counts_awareness_detection,
-      file    = "models/fit_poisson_awareness_detection",
+      file    = "models/fit_exploratory_poisson_awareness_detection",
       prior   = prior(normal(0, 10)),
       iter    = 10000,
       warmup  = 3000,
@@ -983,9 +1097,9 @@ fit_poisson_awareness_detection <-
 
 ```{r}
 
-pp_check(fit_poisson_awareness_detection, nsamples = 100)
-summary(fit_poisson_awareness_detection)
-plot(fit_poisson_awareness_detection, ask = FALSE)
+pp_check(fit_exploratory_poisson_awareness_detection, nsamples = 100)
+summary(fit_exploratory_poisson_awareness_detection)
+plot(fit_exploratory_poisson_awareness_detection, ask = FALSE)
 
 ```
 
@@ -995,7 +1109,7 @@ Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-ea
 
 ```{r}
 
-check_prior(fit_poisson_awareness_detection) %>%
+check_prior(fit_exploratory_poisson_awareness_detection) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -1006,8 +1120,8 @@ check_prior(fit_poisson_awareness_detection) %>%
 
 ```{r}
 
-plot_model(fit_poisson_awareness_detection)
-# plot(conditional_effects(fit_poisson_awareness_detection), ask = FALSE)
+plot_model(fit_exploratory_poisson_awareness_detection)
+# plot(conditional_effects(fit_exploratory_poisson_awareness_detection), ask = FALSE)
 
 ```
 
@@ -1016,7 +1130,7 @@ plot_model(fit_poisson_awareness_detection)
 ```{r}
 
 # posterior draws for parameters (for results table)
-draws_awareness_detection <- posterior_samples(fit_poisson_awareness_detection) %>%
+draws_awareness_detection <- posterior_samples(fit_exploratory_poisson_awareness_detection) %>%
   dplyr::select(awarenessTRUE = b_awarenessTRUE, 
                 detectionTRUE = b_detectionTRUE, 
                 interaction = `b_awarenessTRUE:detectionTRUE`) 
@@ -1079,7 +1193,7 @@ posterior_predictions_awareness_detection <-
          awareness = c("TRUE", "FALSE"),
          detection = c("TRUE", "FALSE")) %>%
   data_grid(experiment, awareness, detection) %>%
-  add_predicted_draws(model = fit_poisson_awareness_detection, re_formula = NULL) %>%
+  add_predicted_draws(model = fit_exploratory_poisson_awareness_detection, re_formula = NULL) %>%
   rename(predicted_count = .prediction) %>%
   left_join(total_counts_awareness_detection, by = "experiment") %>%
   mutate(predicted_probabiity = predicted_count/total) %>%
@@ -1161,11 +1275,11 @@ data_aware_subset <- data_after_exclusions %>%
 
 ```{r}
 
-fit_selfreport_deepfaked_aware <-
+fit_exploratory_selfreport_deepfaked_aware <-
   brm(formula = mean_self_reported_evaluation ~ source_valence + (1 | experiment),
       family  = gaussian(),
       data    = data_aware_subset,
-      file    = "models/fit_selfreport_deepfaked_aware",
+      file    = "models/fit_exploratory_selfreport_deepfaked_aware",
       prior   = prior(normal(0, 10)),
       iter    = 10000,
       warmup  = 3000,
@@ -1179,8 +1293,8 @@ fit_selfreport_deepfaked_aware <-
 
 ```{r}
 
-summary(fit_selfreport_deepfaked_aware)
-plot(fit_selfreport_deepfaked_aware, ask = FALSE)
+summary(fit_exploratory_selfreport_deepfaked_aware)
+plot(fit_exploratory_selfreport_deepfaked_aware, ask = FALSE)
 
 ```
 
@@ -1190,7 +1304,7 @@ Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-ea
 
 ```{r}
 
-check_prior(fit_selfreport_deepfaked_aware) %>%
+check_prior(fit_exploratory_selfreport_deepfaked_aware) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -1201,12 +1315,12 @@ check_prior(fit_selfreport_deepfaked_aware) %>%
 
 ```{r}
 
-#plot_model(fit_selfreport_deepfaked_aware)
-plot_model(fit_selfreport_deepfaked_aware, type = "pred", terms = "source_valence")
+#plot_model(fit_exploratory_selfreport_deepfaked_aware)
+plot_model(fit_exploratory_selfreport_deepfaked_aware, type = "pred", terms = "source_valence")
 
 # results table
 draws_sr_deepfaked_aware <-
-  select(spread_draws(fit_selfreport_deepfaked_aware, b_source_valencepositive), b_source_valencepositive) %>%
+  select(spread_draws(fit_exploratory_selfreport_deepfaked_aware, b_source_valencepositive), b_source_valencepositive) %>%
   rename(effect_deepfaked_aware = b_source_valencepositive)
 
 estimates_sr_deepfaked_aware <-
@@ -1258,11 +1372,11 @@ In the subset of participants who were shown a Deepfaked video and accurately de
 
 ```{r}
 
-fit_implicit_deepfaked_aware <-
+fit_exploratory_implicit_deepfaked_aware <-
   brm(formula = IAT_D2 ~ source_valence + (1 | experiment),
       family  = gaussian(),
       data    = data_aware_subset,
-      file    = "models/fit_implicit_deepfaked_aware",
+      file    = "models/fit_exploratory_implicit_deepfaked_aware",
       prior   = prior(normal(0, 10)),
       iter    = 10000,
       warmup  = 3000,
@@ -1276,8 +1390,8 @@ fit_implicit_deepfaked_aware <-
 
 ```{r}
 
-summary(fit_implicit_deepfaked_aware)
-plot(fit_implicit_deepfaked_aware, ask = FALSE)
+summary(fit_exploratory_implicit_deepfaked_aware)
+plot(fit_exploratory_implicit_deepfaked_aware, ask = FALSE)
 
 ```
 
@@ -1287,7 +1401,7 @@ Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-ea
 
 ```{r}
 
-check_prior(fit_implicit_deepfaked_aware) %>%
+check_prior(fit_exploratory_implicit_deepfaked_aware) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -1298,12 +1412,12 @@ check_prior(fit_implicit_deepfaked_aware) %>%
 
 ```{r}
 
-#plot_model(fit_implicit_deepfaked_aware)
-plot_model(fit_implicit_deepfaked_aware, type = "pred", terms = "source_valence")
+#plot_model(fit_exploratory_implicit_deepfaked_aware)
+plot_model(fit_exploratory_implicit_deepfaked_aware, type = "pred", terms = "source_valence")
 
 # results table
 draws_imp_deepfaked_aware <-
-  select(spread_draws(fit_implicit_deepfaked_aware, b_source_valencepositive), b_source_valencepositive) %>%
+  select(spread_draws(fit_exploratory_implicit_deepfaked_aware, b_source_valencepositive), b_source_valencepositive) %>%
   rename(effect_deepfaked_aware = b_source_valencepositive)
 
 estimates_imp_deepfaked_aware <-
@@ -1355,11 +1469,11 @@ In the subset of participants who were shown a Deepfaked video and accurately de
 
 ```{r}
 
-fit_intentions_deepfaked_aware <-
+fit_exploratory_intentions_deepfaked_aware <-
   brm(formula = mean_intentions ~ source_valence, # no random effect for experiment as only exp 6 assessed intentions
       family  = gaussian(),
       data    = data_aware_subset,
-      file    = "models/fit_intentions_deepfaked_aware",
+      file    = "models/fit_exploratory_intentions_deepfaked_aware",
       prior   = prior(normal(0, 10)),
       iter    = 10000,
       warmup  = 3000,
@@ -1373,8 +1487,8 @@ fit_intentions_deepfaked_aware <-
 
 ```{r}
 
-summary(fit_intentions_deepfaked_aware)
-plot(fit_intentions_deepfaked_aware, ask = FALSE)
+summary(fit_exploratory_intentions_deepfaked_aware)
+plot(fit_exploratory_intentions_deepfaked_aware, ask = FALSE)
 
 ```
 
@@ -1384,7 +1498,7 @@ Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-ea
 
 ```{r}
 
-check_prior(fit_intentions_deepfaked_aware) %>%
+check_prior(fit_exploratory_intentions_deepfaked_aware) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -1395,12 +1509,12 @@ check_prior(fit_intentions_deepfaked_aware) %>%
 
 ```{r}
 
-#plot_model(fit_intentions_deepfaked_aware)
-plot_model(fit_intentions_deepfaked_aware, type = "pred", terms = "source_valence")
+#plot_model(fit_exploratory_intentions_deepfaked_aware)
+plot_model(fit_exploratory_intentions_deepfaked_aware, type = "pred", terms = "source_valence")
 
 # results table
 draws_intentions_deepfaked_aware <-
-  select(spread_draws(fit_intentions_deepfaked_aware, b_source_valencepositive), b_source_valencepositive) %>%
+  select(spread_draws(fit_exploratory_intentions_deepfaked_aware, b_source_valencepositive), b_source_valencepositive) %>%
   rename(effect_deepfaked_aware = b_source_valencepositive)
 
 estimates_intentions_deepfaked_aware <-
@@ -1478,11 +1592,11 @@ data_detectors_subset <- data_after_exclusions %>%
 
 ```{r}
 
-fit_selfreport_deepfaked_detected <-
+fit_exploratory_selfreport_deepfaked_detected <-
   brm(formula = mean_self_reported_evaluation ~ source_valence + (1 | experiment),
       family  = gaussian(),
       data    = data_detectors_subset,
-      file    = "models/fit_selfreport_deepfaked_detected",
+      file    = "models/fit_exploratory_selfreport_deepfaked_detected",
       prior   = prior(normal(0, 10)),
       iter    = 10000,
       warmup  = 3000,
@@ -1496,8 +1610,8 @@ fit_selfreport_deepfaked_detected <-
 
 ```{r}
 
-summary(fit_selfreport_deepfaked_detected)
-plot(fit_selfreport_deepfaked_detected, ask = FALSE)
+summary(fit_exploratory_selfreport_deepfaked_detected)
+plot(fit_exploratory_selfreport_deepfaked_detected, ask = FALSE)
 
 ```
 
@@ -1507,7 +1621,7 @@ Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-ea
 
 ```{r}
 
-check_prior(fit_selfreport_deepfaked_detected) %>%
+check_prior(fit_exploratory_selfreport_deepfaked_detected) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -1518,12 +1632,12 @@ check_prior(fit_selfreport_deepfaked_detected) %>%
 
 ```{r}
 
-#plot_model(fit_selfreport_deepfaked_detected)
-plot_model(fit_selfreport_deepfaked_detected, type = "pred", terms = "source_valence")
+#plot_model(fit_exploratory_selfreport_deepfaked_detected)
+plot_model(fit_exploratory_selfreport_deepfaked_detected, type = "pred", terms = "source_valence")
 
 # results table
 draws_sr_deepfaked_detected <-
-  select(spread_draws(fit_selfreport_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
+  select(spread_draws(fit_exploratory_selfreport_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
   rename(effect_deepfaked_detected = b_source_valencepositive)
 
 estimates_sr_deepfaked_detected <-
@@ -1575,11 +1689,11 @@ In the subset of participants who were shown a Deepfaked video and accurately de
 
 ```{r}
 
-fit_implicit_deepfaked_detected <-
+fit_exploratory_implicit_deepfaked_detected <-
   brm(formula = IAT_D2 ~ source_valence + (1 | experiment),
       family  = gaussian(),
       data    = data_detectors_subset,
-      file    = "models/fit_implicit_deepfaked_detected",
+      file    = "models/fit_exploratory_implicit_deepfaked_detected",
       prior   = prior(normal(0, 10)),
       iter    = 10000,
       warmup  = 3000,
@@ -1593,8 +1707,8 @@ fit_implicit_deepfaked_detected <-
 
 ```{r}
 
-summary(fit_implicit_deepfaked_detected)
-plot(fit_implicit_deepfaked_detected, ask = FALSE)
+summary(fit_exploratory_implicit_deepfaked_detected)
+plot(fit_exploratory_implicit_deepfaked_detected, ask = FALSE)
 
 ```
 
@@ -1604,7 +1718,7 @@ Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-ea
 
 ```{r}
 
-check_prior(fit_implicit_deepfaked_detected) %>%
+check_prior(fit_exploratory_implicit_deepfaked_detected) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -1615,12 +1729,12 @@ check_prior(fit_implicit_deepfaked_detected) %>%
 
 ```{r}
 
-#plot_model(fit_implicit_deepfaked_detected)
-plot_model(fit_implicit_deepfaked_detected, type = "pred", terms = "source_valence")
+#plot_model(fit_exploratory_implicit_deepfaked_detected)
+plot_model(fit_exploratory_implicit_deepfaked_detected, type = "pred", terms = "source_valence")
 
 # results table
 draws_imp_deepfaked_detected <-
-  select(spread_draws(fit_implicit_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
+  select(spread_draws(fit_exploratory_implicit_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
   rename(effect_deepfaked_detected = b_source_valencepositive)
 
 estimates_imp_deepfaked_detected <-
@@ -1672,11 +1786,11 @@ In the subset of participants who were shown a Deepfaked video and accurately de
 
 ```{r}
 
-fit_intentions_deepfaked_detected <-
+fit_exploratory_intentions_deepfaked_detected <-
   brm(formula = mean_intentions ~ source_valence, # no random effect for experiment as only exp 6 assessed intentions
       family  = gaussian(),
       data    = data_detectors_subset,
-      file    = "models/fit_intentions_deepfaked_detected",
+      file    = "models/fit_exploratory_intentions_deepfaked_detected",
       prior   = prior(normal(0, 10)),
       iter    = 10000,
       warmup  = 3000,
@@ -1690,8 +1804,8 @@ fit_intentions_deepfaked_detected <-
 
 ```{r}
 
-summary(fit_intentions_deepfaked_detected)
-plot(fit_intentions_deepfaked_detected, ask = FALSE)
+summary(fit_exploratory_intentions_deepfaked_detected)
+plot(fit_exploratory_intentions_deepfaked_detected, ask = FALSE)
 
 ```
 
@@ -1701,7 +1815,7 @@ Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-ea
 
 ```{r}
 
-check_prior(fit_intentions_deepfaked_detected) %>%
+check_prior(fit_exploratory_intentions_deepfaked_detected) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -1712,12 +1826,12 @@ check_prior(fit_intentions_deepfaked_detected) %>%
 
 ```{r}
 
-#plot_model(fit_intentions_deepfaked_detected)
-plot_model(fit_intentions_deepfaked_detected, type = "pred", terms = "source_valence")
+#plot_model(fit_exploratory_intentions_deepfaked_detected)
+plot_model(fit_exploratory_intentions_deepfaked_detected, type = "pred", terms = "source_valence")
 
 # results table
 draws_intentions_deepfaked_detected <-
-  select(spread_draws(fit_intentions_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
+  select(spread_draws(fit_exploratory_intentions_deepfaked_detected, b_source_valencepositive), b_source_valencepositive) %>%
   rename(effect_deepfaked_detected = b_source_valencepositive)
 
 estimates_intentions_deepfaked_detected <-
@@ -1773,7 +1887,9 @@ Subset who received deepfaked videos, were aware of the concept before the study
 ```{r}
 
 data_aware_detectors_subset_n <- data_after_exclusions %>%
-  filter(experiment_condition == "deepfaked" & !is.na(deepfake_detection_open_recoded) & !is.na(deepfake_awareness_open_recoded)) %>%
+  filter(experiment_condition == "deepfaked" & 
+           !is.na(deepfake_detection_open_recoded) & 
+           !is.na(deepfake_awareness_open_recoded)) %>%
   count(deepfake_detection_open_recoded, deepfake_awareness_open_recoded) %>%
   mutate(proportion = round(n/sum(n), 2)) %>%
   arrange(desc(proportion))
@@ -1795,11 +1911,11 @@ data_aware_detectors_subset <- data_after_exclusions %>%
 
 ```{r}
 
-fit_selfreport_deepfaked_aware_detected <-
+fit_exploratory_selfreport_deepfaked_aware_detected <-
   brm(formula = mean_self_reported_evaluation ~ source_valence + (1 | experiment),
       family  = gaussian(),
       data    = data_aware_detectors_subset,
-      file    = "models/fit_selfreport_deepfaked_aware_detected",
+      file    = "models/fit_exploratory_selfreport_deepfaked_aware_detected",
       prior   = prior(normal(0, 10)),
       iter    = 10000,
       warmup  = 3000,
@@ -1813,8 +1929,8 @@ fit_selfreport_deepfaked_aware_detected <-
 
 ```{r}
 
-summary(fit_selfreport_deepfaked_aware_detected)
-plot(fit_selfreport_deepfaked_aware_detected, ask = FALSE)
+summary(fit_exploratory_selfreport_deepfaked_aware_detected)
+plot(fit_exploratory_selfreport_deepfaked_aware_detected, ask = FALSE)
 
 ```
 
@@ -1824,7 +1940,7 @@ Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-ea
 
 ```{r}
 
-check_prior(fit_selfreport_deepfaked_aware_detected) %>%
+check_prior(fit_exploratory_selfreport_deepfaked_aware_detected) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -1835,12 +1951,12 @@ check_prior(fit_selfreport_deepfaked_aware_detected) %>%
 
 ```{r}
 
-#plot_model(fit_selfreport_deepfaked_aware_detected)
-plot_model(fit_selfreport_deepfaked_aware_detected, type = "pred", terms = "source_valence")
+#plot_model(fit_exploratory_selfreport_deepfaked_aware_detected)
+plot_model(fit_exploratory_selfreport_deepfaked_aware_detected, type = "pred", terms = "source_valence")
 
 # results table
 draws_sr_deepfaked_aware_detected <-
-  select(spread_draws(fit_selfreport_deepfaked_aware_detected, b_source_valencepositive), b_source_valencepositive) %>%
+  select(spread_draws(fit_exploratory_selfreport_deepfaked_aware_detected, b_source_valencepositive), b_source_valencepositive) %>%
   rename(effect_deepfaked_aware_detected = b_source_valencepositive)
 
 estimates_sr_deepfaked_aware_detected <-
@@ -1892,11 +2008,11 @@ In the subset of participants who were shown a Deepfaked video and accurately de
 
 ```{r}
 
-fit_implicit_deepfaked_aware_detected <-
+fit_exploratory_implicit_deepfaked_aware_detected <-
   brm(formula = IAT_D2 ~ source_valence + (1 | experiment),
       family  = gaussian(),
       data    = data_aware_detectors_subset,
-      file    = "models/fit_implicit_deepfaked_aware_detected",
+      file    = "models/fit_exploratory_implicit_deepfaked_aware_detected",
       prior   = prior(normal(0, 10)),
       iter    = 10000,
       warmup  = 3000,
@@ -1910,8 +2026,8 @@ fit_implicit_deepfaked_aware_detected <-
 
 ```{r}
 
-summary(fit_implicit_deepfaked_aware_detected)
-plot(fit_implicit_deepfaked_aware_detected, ask = FALSE)
+summary(fit_exploratory_implicit_deepfaked_aware_detected)
+plot(fit_exploratory_implicit_deepfaked_aware_detected, ask = FALSE)
 
 ```
 
@@ -1921,7 +2037,7 @@ Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-ea
 
 ```{r}
 
-check_prior(fit_implicit_deepfaked_aware_detected) %>%
+check_prior(fit_exploratory_implicit_deepfaked_aware_detected) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -1932,12 +2048,12 @@ check_prior(fit_implicit_deepfaked_aware_detected) %>%
 
 ```{r}
 
-#plot_model(fit_implicit_deepfaked_aware_detected)
-plot_model(fit_implicit_deepfaked_aware_detected, type = "pred", terms = "source_valence")
+#plot_model(fit_exploratory_implicit_deepfaked_aware_detected)
+plot_model(fit_exploratory_implicit_deepfaked_aware_detected, type = "pred", terms = "source_valence")
 
 # results table
 draws_imp_deepfaked_aware_detected <-
-  select(spread_draws(fit_implicit_deepfaked_aware_detected, b_source_valencepositive), b_source_valencepositive) %>%
+  select(spread_draws(fit_exploratory_implicit_deepfaked_aware_detected, b_source_valencepositive), b_source_valencepositive) %>%
   rename(effect_deepfaked_aware_detected = b_source_valencepositive)
 
 estimates_imp_deepfaked_aware_detected <-
@@ -1989,11 +2105,11 @@ In the subset of participants who were shown a Deepfaked video and accurately de
 
 ```{r}
 
-fit_intentions_deepfaked_aware_detected <-
+fit_exploratory_intentions_deepfaked_aware_detected <-
   brm(formula = mean_intentions ~ source_valence, # no random effect for experiment as only exp 6 assessed intentions
       family  = gaussian(),
       data    = data_aware_detectors_subset,
-      file    = "models/fit_intentions_deepfaked_aware_detected",
+      file    = "models/fit_exploratory_intentions_deepfaked_aware_detected",
       prior   = prior(normal(0, 10)),
       iter    = 10000,
       warmup  = 3000,
@@ -2007,8 +2123,8 @@ fit_intentions_deepfaked_aware_detected <-
 
 ```{r}
 
-summary(fit_intentions_deepfaked_aware_detected)
-plot(fit_intentions_deepfaked_aware_detected, ask = FALSE)
+summary(fit_exploratory_intentions_deepfaked_aware_detected)
+plot(fit_exploratory_intentions_deepfaked_aware_detected, ask = FALSE)
 
 ```
 
@@ -2018,7 +2134,7 @@ Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-ea
 
 ```{r}
 
-check_prior(fit_intentions_deepfaked_aware_detected) %>%
+check_prior(fit_exploratory_intentions_deepfaked_aware_detected) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -2029,12 +2145,12 @@ check_prior(fit_intentions_deepfaked_aware_detected) %>%
 
 ```{r}
 
-#plot_model(fit_intentions_deepfaked_aware_detected)
-plot_model(fit_intentions_deepfaked_aware_detected, type = "pred", terms = "source_valence")
+#plot_model(fit_exploratory_intentions_deepfaked_aware_detected)
+plot_model(fit_exploratory_intentions_deepfaked_aware_detected, type = "pred", terms = "source_valence")
 
 # results table
 draws_intentions_deepfaked_aware_detected <-
-  select(spread_draws(fit_intentions_deepfaked_aware_detected, b_source_valencepositive), b_source_valencepositive) %>%
+  select(spread_draws(fit_exploratory_intentions_deepfaked_aware_detected, b_source_valencepositive), b_source_valencepositive) %>%
   rename(effect_deepfaked_aware_detected = b_source_valencepositive)
 
 estimates_intentions_deepfaked_aware_detected <-

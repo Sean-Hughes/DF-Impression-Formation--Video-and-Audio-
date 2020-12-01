@@ -56,6 +56,10 @@ Would it be possible to add this in?
 
 
 
+ensure that deepfaking_detection_open_recoded == TRUE means the response was "deepfake" as opposed to "correctly calssified".
+
+
+
 ### Analyses
 
 #### Check correspondence with preregistrations [sean]

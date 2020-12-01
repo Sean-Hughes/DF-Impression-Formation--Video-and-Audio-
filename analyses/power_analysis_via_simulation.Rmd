@@ -89,21 +89,21 @@ empirical_aware_and_detected_rate <- data_processed %>%
 
 # empirical fits (created by exploratory analyses script)
 ## H1 and H2
-fit_selfreport <- read_rds("models/fit_selfreport.rds")
-fit_implicit   <- read_rds("models/fit_implicit.rds")
-fit_intentions <- read_rds("models/fit_intentions.rds")
+fit_selfreport <- read_rds("models/fit_exploratory_selfreport.rds")
+fit_implicit   <- read_rds("models/fit_exploratory_implicit.rds")
+fit_intentions <- read_rds("models/fit_exploratory_intentions.rds")
 ## H5
-fit_selfreport_deepfaked_aware <- read_rds("models/fit_selfreport_deepfaked_aware.rds")
-fit_implicit_deepfaked_aware   <- read_rds("models/fit_implicit_deepfaked_aware.rds")
-fit_intentions_deepfaked_aware <- read_rds("models/fit_intentions_deepfaked_aware.rds")
+fit_selfreport_deepfaked_aware <- read_rds("models/fit_exploratory_selfreport_deepfaked_aware.rds")
+fit_implicit_deepfaked_aware   <- read_rds("models/fit_exploratory_implicit_deepfaked_aware.rds")
+fit_intentions_deepfaked_aware <- read_rds("models/fit_exploratory_intentions_deepfaked_aware.rds")
 ## H6
-fit_selfreport_deepfaked_detected <- read_rds("models/fit_selfreport_deepfaked_detected.rds")
-fit_implicit_deepfaked_detected   <- read_rds("models/fit_implicit_deepfaked_detected.rds")
-fit_intentions_deepfaked_detected <- read_rds("models/fit_intentions_deepfaked_detected.rds")
+fit_selfreport_deepfaked_detected <- read_rds("models/fit_exploratory_selfreport_deepfaked_detected.rds")
+fit_implicit_deepfaked_detected   <- read_rds("models/fit_exploratory_implicit_deepfaked_detected.rds")
+fit_intentions_deepfaked_detected <- read_rds("models/fit_exploratory_intentions_deepfaked_detected.rds")
 ## H7
-fit_selfreport_deepfaked_aware_detected <- read_rds("models/fit_selfreport_deepfaked_aware_detected.rds")
-fit_implicit_deepfaked_aware_detected   <- read_rds("models/fit_implicit_deepfaked_aware_detected.rds")
-fit_intentions_deepfaked_aware_detected <- read_rds("models/fit_intentions_deepfaked_aware_detected.rds")
+fit_selfreport_deepfaked_aware_detected <- read_rds("models/fit_exploratory_selfreport_deepfaked_aware_detected.rds")
+fit_implicit_deepfaked_aware_detected   <- read_rds("models/fit_exploratory_implicit_deepfaked_aware_detected.rds")
+fit_intentions_deepfaked_aware_detected <- read_rds("models/fit_exploratory_intentions_deepfaked_aware_detected.rds")
 
 ```
 
