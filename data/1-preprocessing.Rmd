@@ -12,6 +12,8 @@ output:
     toc_float: yes
 ---
 
+Note that pre-processing and processing of the data can be resource intensive in terms of RAM requirements. If you run into memory errors, you can run gc() where appropriate and/or also increase memory limit in R if necessary. Cleaning the R environment after each step of the (pre)processing should also help with memory requirements. 16GB RAM recommended. 
+
 ```{r include=FALSE}
 knitr::opts_chunk$set(message=FALSE,
                       warning=FALSE)
