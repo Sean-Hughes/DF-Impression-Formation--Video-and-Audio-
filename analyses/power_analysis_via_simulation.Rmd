@@ -56,36 +56,47 @@ dir.create("models")
 ```{r}
 
 # empirical data
-data_processed <- read.csv("../data/processed/4_data_participant_level_with_hand_scoring.csv") 
+data_processed <- read.csv("../data/processed/4_data_participant_level_with_hand_scoring.csv") %>%
+  # include only experiments 1-6
+  filter(experiment %in% c(1, 2, 3, 4, 5, 6)) 
 
 empirical_exclusion_rate <- data_processed %>%
   mutate(exclude = ifelse(exclude_subject == FALSE & 
                             exclude_implausible_intervention_linger == FALSE, FALSE, TRUE)) %>%
-  summarize(percent_excluded = mean(exclude)) %>%
-  pull(percent_excluded)
+  summarize(proportion_excluded = mean(exclude)) %>%
+  pull(proportion_excluded)
 
-empirical_awareness_rate <- data_processed %>%
-  filter(exclude_subject == FALSE & 
-           exclude_implausible_intervention_linger == FALSE &
-           !is.na(deepfake_awareness_open_recoded)) %>%
-  summarize(percent_aware = mean(deepfake_awareness_open_recoded)) %>%
-  pull(percent_aware) 
 
-empirical_detection_rate <- data_processed %>%
+data_after_exclusions <- data_processed %>%
   filter(exclude_subject == FALSE & 
-           exclude_implausible_intervention_linger == FALSE &
-           !is.na(deepfake_detection_open_recoded)) %>%
-  summarize(percent_detected = mean(deepfake_detection_open_recoded)) %>%
-  pull(percent_detected) 
+           exclude_implausible_intervention_linger == FALSE)
 
-empirical_aware_and_detected_rate <- data_processed %>%
-  filter(exclude_subject == FALSE & 
-           exclude_implausible_intervention_linger == FALSE &
-           !is.na(deepfake_awareness_open_recoded) & 
-           !is.na(deepfake_detection_open_recoded)) %>%
-  mutate(aware_and_detected = ifelse(deepfake_awareness_open_recoded == TRUE & deepfake_detection_open_recoded == TRUE, TRUE, FALSE)) %>%
-  summarize(percent_aware_and_detected = mean(aware_and_detected)) %>%
-  pull(percent_aware_and_detected) 
+empirical_deepfaked_and_awareness_rate <- data_after_exclusions %>%
+  filter(!is.na(deepfake_awareness_open_recoded)) %>%
+  mutate(deepfaked_and_awareness_rate = ifelse(experiment_condition == "deepfaked" & 
+                                                 deepfake_awareness_open_recoded == TRUE, 
+                                               TRUE, FALSE)) %>%
+  summarize(proportion_deepfaked_and_awareness = mean(deepfaked_and_awareness_rate)) %>%
+  pull(proportion_deepfaked_and_awareness) 
+
+empirical_deepfaked_and_detection_rate <- data_after_exclusions %>%
+  filter(!is.na(deepfake_detection_open_recoded)) %>%
+  mutate(deepfaked_and_detection_rate = ifelse(experiment_condition == "deepfaked" & 
+                                                 deepfake_detection_open_recoded == TRUE, 
+                                               TRUE, FALSE)) %>%
+  summarize(proportion_deepfaked_and_detection = mean(deepfaked_and_detection_rate)) %>%
+  pull(proportion_deepfaked_and_detection) 
+
+empirical_deepfaked_and_aware_and_detected_rate <- data_after_exclusions %>%
+  filter(!is.na(deepfake_awareness_open_recoded) & !is.na(deepfake_detection_open_recoded)) %>%
+  mutate(deepfaked_and_awareness_and_detection_rate = ifelse(experiment_condition == "deepfaked" & 
+                                                               deepfake_awareness_open_recoded == TRUE & 
+                                                               deepfake_detection_open_recoded == TRUE, 
+                                                             TRUE, FALSE)) %>%
+  summarize(proportion_deepfaked_and_awareness_and_detection = mean(deepfaked_and_awareness_and_detection_rate)) %>%
+  pull(proportion_deepfaked_and_awareness_and_detection)
+
+
 
 # empirical fits (created by exploratory analyses script)
 ## H1 and H2
@@ -113,8 +124,8 @@ Note that total N_participants is intended to represent the total sample after e
 
 ```{r}
 
-N_participants <- 500  # this value is changed across runs to observe its effect on the estimated power. 
-N_simulations  <- 3000  # increase to 1000+ after testing
+N_participants <- 600   # this value is changed across runs to observe its effect on the estimated power. 
+N_simulations  <- 1000  # increase to 1000+ after testing
 
 N_participants_deepfaked_aware          <- floor(N_participants*empirical_awareness_rate)
 N_participants_deepfaked_detected       <- floor(N_participants*empirical_detection_rate)
