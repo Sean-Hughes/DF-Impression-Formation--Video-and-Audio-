@@ -828,11 +828,11 @@ H3: Participants are poor at making accurate and informed judgements about wheth
 
 *H3a* 
 
-We expect participants to be poor at correctly detecting Deepfakes (i.e., demonstrate a high false negative rate, FNR ≳ .80).
+We expect participants to be poor at correctly detecting Deepfakes (i.e., demonstrate a false negative rate, FNR ≳ .80).
 
 *H3b*
 
-We expect participants to incorrectly detect Deepfakes even when the video content was real (i.e., demonstrate a high false positive rate, FPR ≳ .05).
+We expect participants to incorrectly detect Deepfakes even when the video content was real (i.e., demonstrate a false positive rate, FPR ≳ .05).
 
 *H3c*
 
@@ -1101,9 +1101,11 @@ check_prior(fit_confirmatory_poisson_awareness_detection) %>%
 
 ### Interpret posteriors
 
+sjPlot doesn't behave well with these variable names for some reason. From top to bottom, the parameters are awareness, detection, and awareness*detection.
+
 ```{r}
 
-plot_model(fit_confirmatory_poisson_awareness_detection)
+plot_model(fit_confirmatory_poisson_awareness_detection) + xlab("Parameter")
 # plot(conditional_effects(fit_confirmatory_poisson_awareness_detection), ask = FALSE)
 
 ```
