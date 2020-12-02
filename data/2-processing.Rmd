@@ -428,9 +428,11 @@ data_conditions_and_demographics <- data_trial_level %>%
 data_induction_linger_time <- data_trial_level %>%
   filter(task == "intervention") %>%
   select(subject, 
+         experiment,
          latency) %>%
   mutate(intervention_linger_minutes = round(as.numeric(latency)/(1000*60), 3),
-         exclude_implausible_intervention_linger = ifelse(intervention_linger_minutes <= 1.5 |
+         exclude_implausible_intervention_linger = ifelse((experiment != 7 & intervention_linger_minutes <= 1.5) |
+                                                            (experiment == 7 & intervention_linger_minutes <= 2.25) |
                                                             intervention_linger_minutes >= 4.5, 
                                                           TRUE, FALSE)) %>%
   drop_na()
