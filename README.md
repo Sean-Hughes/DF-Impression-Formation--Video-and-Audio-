@@ -46,25 +46,17 @@ Analyses were conducted in RStudio and can be found in the “analyses” folder
 
 ## To do
 
-### Data processing
+### Data processing (prereg 1-6)
 
-"A fourth score from the news task will be *truth discernment* - that is, the extent to which individuals distinguish between true and false content in their judgments (Pennycook & Rand, 2019b). Discernment is defined as the difference in accuracy judgments (or sharing intentions) between true and false headlines. For example, an individual who shared 9 out of 15 true headlines and 12 out of 15 false headlines would have a discernment level of −.2 (i.e., .6 – .8), whereas an individual who shared 9 out of 15 true headlines and 3 out of 15 false headlines would have a discernment level of .4 (i.e., .6 – .2). Thus, a higher discernment score indicates a higher sensitivity to truth relative to falsity."  
+- "A fourth score from the news task will be *truth discernment* - that is, the extent to which individuals distinguish between true and false content in their judgments (Pennycook & Rand, 2019b). Discernment is defined as the difference in accuracy judgments (or sharing intentions) between true and false headlines. For example, an individual who shared 9 out of 15 true headlines and 12 out of 15 false headlines would have a discernment level of −.2 (i.e., .6 – .8), whereas an individual who shared 9 out of 15 true headlines and 3 out of 15 false headlines would have a discernment level of .4 (i.e., .6 – .2). Thus, a higher discernment score indicates a higher sensitivity to truth relative to falsity."  
 
-Would it be possible to add this in?
-
-> Ian: Working on this - need to add to both processing and analyses maybe?
-
-
-
-ensure that deepfaking_detection_open_recoded == TRUE means the response was "deepfake" as opposed to "correctly calssified".
+  ​	- Would it be possible to add this in?
 
 
 
 ### Analyses
 
-#### Check correspondence with preregistrations [sean]
-
-We also said we would run the following analyses: 
+#### Prereg 1-6
 
 - One sample t-tests that compare the self-reported evaluations from zero, one for the people exposed to positive content and another for the people exposed to negative content, for each experiment (i.e., NOT the rescored versions but the raw versions for each condition).
 
@@ -74,23 +66,19 @@ We also said we would run the following analyses:
 
   > Ian: Working on this
 
-
-
-when *truth discernment* is added to data processing, should it be added somewhere to the preregistered analyses? eg to the correlations? [sean]
-
-
-
-#### raincloud plots [ian]
-
-
-
-### from prereg analysis script
+- when *truth discernment* is added to data processing, should it be added somewhere to the preregistered analyses? eg to the correlations? [sean]
 
 - elaborate d and DF for one sample analyses 
 - add more IV variables to correlations: demographics etc
 - add deepfake detection to correlations
 - Note somewhere that POMPs are included for fidelity to prereg but are unnecessary given we're studying correlations
 - Note somewhere that all correlations are underpowered, alpha correction needed, or something. Really needs its own dedicated individual difference work with large samples and feature importance selection.
+
+
+
+#### Study 7 and exploratory 1-6
+
+- raincloud plots [ian]
 
 
 
@@ -102,18 +90,13 @@ We said we would include employment in the correlations but we do not because it
 
 
 
-### Methods
-
-Possibly restructure the experiment files - images seem to be duplicated etc. clarify which folders/copies are actually called by the script. when material is acrually pulled from youtube etc, include these files in a stimuli folder and note that they must be uploaded, and where the URL can be edited.
-
-
-
 ### Prereg
 
-- explicate that power analyses not conducted for H3 or H5 (or whatever we call poisson model)
 - informedness ci below 0 looks weird? should be 0 to 1 range right?
 - look at the processed data for exp 7 
 - why is *H2c* failed? is it implemented correctly?
+- Add descriptives on N per exclusions and subsets and note that the fact that a small percent of people meet these critieria is itself interesting – pull this code from simulation?
+- ensure that deepfaking_detection_open_recoded == TRUE means the response was "deepfake" as opposed to "correctly calssified".
 
 
 
