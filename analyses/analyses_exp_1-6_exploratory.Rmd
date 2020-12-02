@@ -40,7 +40,12 @@ library(IATscores)
 library(lavaan)
 library(semTools)
 library(modelr)
+library(furrr)
 
+# set up parallel processing
+future::plan(multiprocess)
+
+# knitr options
 options(knitr.kable.NA = "/")
 
 # set seed for bootstrapping reproducibility
@@ -122,7 +127,8 @@ data_processed %>%
             excluded_percent = (excluded_n / n) *100) %>%
   mutate_if(is.numeric, round, digits = 1) %>%
   kable(align = "c") %>%
-  kable_styling()
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 ```
 
@@ -137,7 +143,8 @@ data_after_exclusions %>%
             age_sd = sd(age, na.rm = TRUE)) %>%
   mutate_if(is.numeric, round, digits = 1) %>%
   kable(align = "c") %>%
-  kable_styling()
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
 
 data_after_exclusions %>%
   count(experiment, gender) %>%
@@ -815,7 +822,7 @@ if(file.exists("models/fit_exploratory_classification_bootstraps.rds")){
 
   # apply to each bootstrap
   fit_exploratory_classification_bootstraps <- boots %>%
-    mutate(categorization_stats = map(splits, bootstrap_categorization_stats)) %>%
+    mutate(categorization_stats = future_map(splits, bootstrap_categorization_stats)) %>%
     select(-splits) %>%
     unnest(categorization_stats)
 
@@ -829,22 +836,21 @@ if(file.exists("models/fit_exploratory_classification_bootstraps.rds")){
 
 ```{r}
 
-fit_exploratory_classification_bootstraps %>%
+classifications <- fit_exploratory_classification_bootstraps %>%
   group_by(variable) %>%
-  summarize(median   = quantile(value, 0.500),
-            ci_lower = quantile(value, 0.025),
+  summarize(ci_lower = quantile(value, 0.025),
             ci_upper = quantile(value, 0.975),
             .groups  = "drop") %>%
   full_join(fit_exploratory_classification, by = "variable") %>%
   mutate_if(is.numeric, round, digits = 2) %>%
-  select(variable, observed, median, ci_lower, ci_upper) %>%
+  select(variable, observed, ci_lower, ci_upper) 
+
+classifications %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
                 full_width = FALSE)
 
 ```
-
-- Results will report the observed estimate and the bootstrapped 95% CIs. Bootstrapped median estimate is reported here as a robustness test. 
 
 H3: Participants are poor at making accurate and informed judgements about whether online video content is genuine or Deepfaked. Our predictions here are descriptive/continuous rather than involving cut-off based inference rules.
 
@@ -992,7 +998,7 @@ if(file.exists("models/fit_exploratory_classification_bootstraps_subset.rds")){
 
   # apply to each bootstrap
   fit_exploratory_classification_bootstraps_subset <- boots %>%
-    mutate(categorization_stats = map(splits, bootstrap_categorization_stats)) %>%
+    mutate(categorization_stats = future_map(splits, bootstrap_categorization_stats)) %>%
     select(-splits) %>%
     unnest(categorization_stats)
 
@@ -1006,22 +1012,21 @@ if(file.exists("models/fit_exploratory_classification_bootstraps_subset.rds")){
 
 ```{r}
 
-fit_exploratory_classification_bootstraps_subset %>%
+classifications_subset <- fit_exploratory_classification_bootstraps_subset %>%
   group_by(variable) %>%
-  summarize(median   = quantile(value, 0.500),
-            ci_lower = quantile(value, 0.025),
+  summarize(ci_lower = quantile(value, 0.025),
             ci_upper = quantile(value, 0.975),
             .groups  = "drop") %>%
   full_join(fit_exploratory_classification_subset, by = "variable") %>%
   mutate_if(is.numeric, round, digits = 2) %>%
-  select(variable, observed, median, ci_lower, ci_upper) %>%
+  select(variable, observed, ci_lower, ci_upper) 
+
+classifications_subset %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
                 full_width = FALSE)
 
 ```
-
-- Results will report the observed estimate and the bootstrapped 95% CIs. Bootstrapped median estimate is reported here as a robustness test. 
 
 # RQ4: Are people aware that content can be Deepfaked before they take part in the study, and does this make them better at detecting them? 
 
@@ -1033,15 +1038,17 @@ Description of sample:
 
 ```{r}
 
-data_after_exclusions %>%
+percent_aware <- data_after_exclusions %>%
   dplyr::select(deepfake_awareness_open_recoded) %>%
   drop_na() %>%
   count(deepfake_awareness_open_recoded) %>%
   mutate(counts = n,
          awareness = as.factor(deepfake_awareness_open_recoded),
-         percent = round(counts/sum(counts)*100, 1)) %>%
+         percent_aware = round(counts/sum(counts)*100, 1)) %>%
   filter(awareness == "TRUE") %>%
-  dplyr::select(percent) %>%
+  dplyr::select(percent_aware) 
+
+percent_aware %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -1050,7 +1057,7 @@ data_after_exclusions %>%
 
 ## In the subset of participants who were shown a deepfake, did prior awareness make them more likely to detect it?
 
-Putting aside true negatives and false positive, does prior awareness of the concept of deepfaking at least make people better at detecting deepfakes
+Putting aside true negatives and false positive, does prior awareness of the concept of Deepfaking at least make people better at detecting Deepfakes
 
 It would of course be possible include data from both experiment_conditions and add it to the model, however interpreting the two and three way interactions is less intuitive. Given this question is of secondary importance, I we therefore elected for the simpler analysis focusing on awareness and the FNR/TPR.
 
@@ -2195,6 +2202,52 @@ H7c <- ifelse((estimates_intentions_deepfaked_aware_detected %>% filter(Paramete
 In the subset of participants who were shown a Deepfaked video and accurately detected that the video was Deepfaked, the content of the Deepfaked videos (i.e., Source Valence) will influence participants’ behavioral intention scores. Specifically, we will use a Bayesian linear model (model 4) to estimate a 95% Confidence Interval on standardized effect size change in behavioral intention scores between Source Valence conditions in the Deepfaked video condition subgroup. Confidence Intervals whose lower bounds are > 0 will be considered evidence in support of this hypothesis.  ######### needs editing #########
 
 - Result: `r H7c`
+
+# Summary of hypothesis tests
+
+H1: Establishing first impressions via online video content
+
+- Genuine content can establish self-reported evaluations (`r H1a`), implicit evaluations (`r H1c`), and behavioural intentions (`r H1e`).
+- Deepfaked content can establish self-reported evaluations (`r H1b`), implicit evaluations (`r H1d`), and behavioural intentions (`r H1f`). 
+
+H2: Are deepfakes just as good as the real thing?
+
+- Deepfakes are non-inferior to genuine content on self-reported evaluations (`r H2a`), implicit evaluations (`r H2b`), and behavioural intentions (`r H2c`).
+
+H3: How good are people at detecting whether content is genuine or Deepfaked?
+
+Whole sample
+
+```{r}
+
+classifications %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE)
+
+```
+
+Those who were aware of the concept prior to the study
+
+```{r}
+
+classifications_subset %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+                full_width = FALSE)
+
+```
+
+H4: Does prior awareness of the concept of Deepfakes make people better at detecting them?
+
+- Percent aware of the concept of Deepfakes: `r pull(percent_aware, percent_aware)`
+- Of those exposed to a Deepfake, `r comparison_string_awareness_detection`, `r H4`.
+
+H5-7: Does being aware of the concept, detecitng the deepfake, or both make you immune to a Deepfake?
+
+- H5: Evaluative learning effects found in the subset who were shown Deepfakes and were aware of the concept, on self-reports (`r H5a`), implicit measure (`r H5b`) and behavioural intentions (`r H5c`).
+- H6: Evaluative learning effects found in the subset who were shown Deepfakes and detected them, on self-reports (`r H6a`), implicit measure (`r H6b`) and behavioural intentions (`r H6c`).
+- H6: Evaluative learning effects found in the subset who were shown Deepfakes, were aware of the concept, and detected them, on self-reports (`r H7a`), implicit measure (`r H7b`) and behavioural intentions (`r H7c`).
 
 # Session Info
 
