@@ -232,9 +232,7 @@ results_reliability_bi %>%
 ```
 
 
-# RQ1: Can online content establish first impressions towards a novel individual? 
-
-# RQ2: Are Deepfakes just as good as genuine online content at establishing first impressions?
+# RQ1 & RQ2: Can online content establish first impressions towards a novel individual?; Are Deepfakes just as good as genuine online content at establishing first impressions?
 
 - Analyses employ Bayesian multilevel models with experiment employed as a random (Group level) intercept, and source_valence, experiment_condition and their interaction as IVs. This could therefore be described as akin to a Bayesian multilevel ANOVA.
 - DVs were standardize as noted above, and as such fitted model estimates represent standardized beta values (which due to the specifics of the standardization have comparable [but not exact] interpretation as Cohen's d values). 
@@ -1122,9 +1120,11 @@ check_prior(fit_exploratory_poisson_awareness_detection) %>%
 
 ### Interpret posteriors
 
+sjPlot doesn't behave well with these variable names for some reason. From top to bottom, the parameters are awareness, detection, and awareness*detection.
+
 ```{r}
 
-plot_model(fit_exploratory_poisson_awareness_detection)
+plot_model(fit_exploratory_poisson_awareness_detection) + xlab("Parameter")
 # plot(conditional_effects(fit_exploratory_poisson_awareness_detection), ask = FALSE)
 
 ```

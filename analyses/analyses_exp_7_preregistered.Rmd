@@ -1101,9 +1101,11 @@ check_prior(fit_confirmatory_poisson_awareness_detection) %>%
 
 ### Interpret posteriors
 
+sjPlot doesn't behave well with these variable names for some reason. From top to bottom, the parameters are awareness, detection, and awareness*detection.
+
 ```{r}
 
-plot_model(fit_confirmatory_poisson_awareness_detection)
+plot_model(fit_confirmatory_poisson_awareness_detection) + xlab("Parameter")
 # plot(conditional_effects(fit_confirmatory_poisson_awareness_detection), ask = FALSE)
 
 ```
