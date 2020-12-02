@@ -111,6 +111,9 @@ Possibly restructure the experiment files - images seem to be duplicated etc. cl
 ### Prereg
 
 - explicate that power analyses not conducted for H3 or H5 (or whatever we call poisson model)
+- informedness ci below 0 looks weird? should be 0 to 1 range right?
+- look at the processed data for exp 7 
+- why is *H2c* failed? is it implemented correctly?
 
 
 
