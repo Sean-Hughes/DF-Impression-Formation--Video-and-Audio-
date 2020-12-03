@@ -92,9 +92,7 @@ We said we would include employment in the correlations but we do not because it
 
 ### Prereg
 
-- look at the processed data for exp 7 
-- why is *H2c* failed? is it implemented correctly?
-- Add descriptives on N per exclusions and subsets and note that the fact that a small percent of people meet these criteria is itself interesting – pull this code from simulation?
+- analyses exp and prereg need H3 text updated
 
   
 
