@@ -124,7 +124,7 @@ Note that total N_participants is intended to represent the total sample after e
 
 ```{r}
 
-N_participants <- 600   # this value is changed across runs to observe its effect on the estimated power. 
+N_participants <- 700   # this value is changed across runs to observe its effect on the estimated power. 
 N_simulations  <- 1000
 
 N_participants_deepfaked_aware          <- floor(N_participants*empirical_deepfaked_and_awareness_rate)
