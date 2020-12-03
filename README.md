@@ -92,11 +92,9 @@ We said we would include employment in the correlations but we do not because it
 
 ### Prereg
 
-- informedness ci below 0 looks weird? should be 0 to 1 range right?
 - look at the processed data for exp 7 
 - why is *H2c* failed? is it implemented correctly?
 - Add descriptives on N per exclusions and subsets and note that the fact that a small percent of people meet these criteria is itself interesting – pull this code from simulation?
-- ensure that deepfaking_detection_open_recoded == TRUE means the response was "deepfake" as opposed to "correctly classified".
 
-
+  
 
