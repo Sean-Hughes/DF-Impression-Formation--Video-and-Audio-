@@ -791,23 +791,14 @@ classifications %>%
 
 H3: Participants are poor at making accurate and informed judgements about whether online video content is genuine or Deepfaked. Our predictions here are descriptive/continuous rather than involving cut-off based inference rules.
 
-*H3a* 
-
-We expect participants to be poor at correctly detecting Deepfakes (i.e., demonstrate a false negative rate, FNR ≳ .80).
-
-*H3b*
-
-We expect participants to incorrectly detect Deepfakes even when the video content was real (i.e., demonstrate a false positive rate, FPR ≳ .05).
-
-*H3c*
-
-We expect participants to be poor at making accurate decisions about whether content is genuine or not (i.e., balanced accuracy not greatly above chance, ≲ .60).
-
-*H3d* 
-
-We expect participants to make poorly informed decisions about whether content is genuine or not (i.e., informedness/Youden’s J ≲ .25). 
+- H3a. We expect a substantial proportion of participants to be poor at correctly detecting Deepfakes. This will be examined using the false negative rate, although we do not have numerical predictions here.
+- H3b. We expect a substantial proportion of participants to incorrectly detect Deepfakes even when the video content was real/.This will be examined using the false positive rate, although we do not have numerical predictions here.
+- H3c. We expect participants to be poor at making accurate decisions about whether content is genuine or not (e.g., Balanced Accuracy not greatly above chance, circa .60), far less than what might be considered highly accurate decisions (e.g., BA of .80 or .90).
+- H3d. We expect participants to make poorly informed decisions about whether content is genuine or not, (e.g., informedness/Youden’s J of circa  .20), far less than what might be considered highly informed decisions (e.g., J of .80 or .90).
 
 ## Even the subset of participants who were aware of the concept of Deepfakes before the study?
+
+Same descriptive predictions as above.
 
 ### Sample size
 

@@ -2476,18 +2476,18 @@ omega_t
 <a class="sourceLine" id="cb10-2" title="2"><span class="st">  </span><span class="kw">SplitHalf.D2</span>(<span class="dt">IATdata =</span> .) <span class="op">%&gt;%</span></a>
 <a class="sourceLine" id="cb10-3" title="3"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">algorithm =</span> <span class="kw">ifelse</span>(algorithm <span class="op">==</span><span class="st"> &quot;p2112&quot;</span>, <span class="st">&quot;D2&quot;</span>, algorithm),</a>
 <a class="sourceLine" id="cb10-4" title="4">         <span class="dt">splithalf =</span> <span class="kw">round</span>(splithalf, <span class="dv">3</span>))</a></code></pre></div>
-<pre><code>## [1] &quot;2020-12-03 17:17:39: Applying parameter P4 = dist&quot;
-## [1] &quot;2020-12-03 17:17:39: Applying parameters P1 and P2&quot;
-## [1] &quot;2020-12-03 17:17:39: Applying parameter P3 = dscore&quot;
-## [1] &quot;2020-12-03 17:17:39: Applying parameters P1 and P2&quot;
-## [1] &quot;2020-12-03 17:17:39: Applying parameter P3 = dscore&quot;
-## [1] &quot;2020-12-03 17:17:39: IAT scores have been computed&quot;
-## [1] &quot;2020-12-03 17:17:39: Applying parameter P4 = dist&quot;
-## [1] &quot;2020-12-03 17:17:39: Applying parameters P1 and P2&quot;
-## [1] &quot;2020-12-03 17:17:39: Applying parameter P3 = dscore&quot;
-## [1] &quot;2020-12-03 17:17:40: Applying parameters P1 and P2&quot;
-## [1] &quot;2020-12-03 17:17:40: Applying parameter P3 = dscore&quot;
-## [1] &quot;2020-12-03 17:17:40: IAT scores have been computed&quot;</code></pre>
+<pre><code>## [1] &quot;2020-12-03 20:55:31: Applying parameter P4 = dist&quot;
+## [1] &quot;2020-12-03 20:55:31: Applying parameters P1 and P2&quot;
+## [1] &quot;2020-12-03 20:55:31: Applying parameter P3 = dscore&quot;
+## [1] &quot;2020-12-03 20:55:31: Applying parameters P1 and P2&quot;
+## [1] &quot;2020-12-03 20:55:31: Applying parameter P3 = dscore&quot;
+## [1] &quot;2020-12-03 20:55:31: IAT scores have been computed&quot;
+## [1] &quot;2020-12-03 20:55:31: Applying parameter P4 = dist&quot;
+## [1] &quot;2020-12-03 20:55:31: Applying parameters P1 and P2&quot;
+## [1] &quot;2020-12-03 20:55:31: Applying parameter P3 = dscore&quot;
+## [1] &quot;2020-12-03 20:55:32: Applying parameters P1 and P2&quot;
+## [1] &quot;2020-12-03 20:55:32: Applying parameter P3 = dscore&quot;
+## [1] &quot;2020-12-03 20:55:32: IAT scores have been computed&quot;</code></pre>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" title="1">results_iat_split_half_reliability <span class="op">%&gt;%</span></a>
 <a class="sourceLine" id="cb12-2" title="2"><span class="st">  </span><span class="kw">kable</span>(<span class="dt">knitr.kable.NA =</span> <span class="st">&quot;/&quot;</span>, <span class="dt">align =</span> <span class="st">&quot;c&quot;</span>) <span class="op">%&gt;%</span></a>
 <a class="sourceLine" id="cb12-3" title="3"><span class="st">  </span><span class="kw">kable_styling</span>(<span class="dt">bootstrap_options =</span> <span class="kw">c</span>(<span class="st">&quot;striped&quot;</span>, <span class="st">&quot;hover&quot;</span>, <span class="st">&quot;condensed&quot;</span>), </a>
@@ -4131,18 +4131,17 @@ informedness
 </tbody>
 </table>
 <p>H3: Participants are poor at making accurate and informed judgements about whether online video content is genuine or Deepfaked. Our predictions here are descriptive/continuous rather than involving cut-off based inference rules.</p>
-<p><em>H3a</em></p>
-<p>We expect participants to be poor at correctly detecting Deepfakes (i.e., demonstrate a false negative rate, FNR ≳ .80).</p>
-<p><em>H3b</em></p>
-<p>We expect participants to incorrectly detect Deepfakes even when the video content was real (i.e., demonstrate a false positive rate, FPR ≳ .05).</p>
-<p><em>H3c</em></p>
-<p>We expect participants to be poor at making accurate decisions about whether content is genuine or not (i.e., balanced accuracy not greatly above chance, ≲ .60).</p>
-<p><em>H3d</em></p>
-<p>We expect participants to make poorly informed decisions about whether content is genuine or not (i.e., informedness/Youden’s J ≲ .25).</p>
+<ul>
+<li>H3a. We expect a substantial proportion of participants to be poor at correctly detecting Deepfakes. This will be examined using the false negative rate, although we do not have numerical predictions here.</li>
+<li>H3b. We expect a substantial proportion of participants to incorrectly detect Deepfakes even when the video content was real/.This will be examined using the false positive rate, although we do not have numerical predictions here.</li>
+<li>H3c. We expect participants to be poor at making accurate decisions about whether content is genuine or not (e.g., Balanced Accuracy not greatly above chance, circa .60), far less than what might be considered highly accurate decisions (e.g., BA of .80 or .90).</li>
+<li>H3d. We expect participants to make poorly informed decisions about whether content is genuine or not, (e.g., informedness/Youden’s J of circa .20), far less than what might be considered highly informed decisions (e.g., J of .80 or .90).</li>
+</ul>
 </div>
 </div>
 <div id="even-the-subset-of-participants-who-were-aware-of-the-concept-of-deepfakes-before-the-study" class="section level2">
 <h2>Even the subset of participants who were aware of the concept of Deepfakes before the study?</h2>
+<p>Same descriptive predictions as above.</p>
 <div id="sample-size-1" class="section level3">
 <h3>Sample size</h3>
 <div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb47-1" title="1">data_after_exclusions <span class="op">%&gt;%</span></a>
