@@ -44,7 +44,7 @@ Analyses were conducted in RStudio and can be found in the “analyses” folder
 
 
 
-## To do
+## To do - preregistered analyses studies 1-6
 
 ### Data processing (prereg 1-6)
 
@@ -52,11 +52,7 @@ Analyses were conducted in RStudio and can be found in the “analyses” folder
 
   ​	- Would it be possible to add this in?
 
-
-
 ### Analyses
-
-#### Prereg 1-6
 
 - One sample t-tests that compare the self-reported evaluations from zero, one for the people exposed to positive content and another for the people exposed to negative content, for each experiment (i.e., NOT the rescored versions but the raw versions for each condition).
 
@@ -74,14 +70,6 @@ Analyses were conducted in RStudio and can be found in the “analyses” folder
 - Note somewhere that POMPs are included for fidelity to prereg but are unnecessary given we're studying correlations
 - Note somewhere that all correlations are underpowered, alpha correction needed, or something. Really needs its own dedicated individual difference work with large samples and feature importance selection.
 
-
-
-#### Study 7 and exploratory 1-6
-
-- raincloud plots [ian]
-
-
-
 ### Deviations from prereg file [sean]
 
 D2 used throughout where prereg said D3 score in Experiment 1, D1 in Experiment 2,  D2 in Experiments 3,4, 5, 6.
@@ -89,10 +77,4 @@ D2 used throughout where prereg said D3 score in Experiment 1, D1 in Experiment 
 We said we would include employment in the correlations but we do not because its categorical rather than continuous or binary, and so not suitable for a correlation. 
 
 
-
-### Prereg
-
-- analyses exp and prereg need H3 text updated
-
-  
 
