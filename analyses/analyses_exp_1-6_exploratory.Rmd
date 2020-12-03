@@ -41,6 +41,8 @@ library(lavaan)
 library(semTools)
 library(modelr)
 library(furrr)
+library(caret)
+library(e1071)
 
 # set up parallel processing
 future::plan(multiprocess)
@@ -712,6 +714,8 @@ data_after_exclusions %>%
   count(experiment_condition,
         deepfake_detection_open_recoded) %>%
   drop_na() %>%
+  mutate(deepfake_detection_open_recoded = case_when(deepfake_detection_open_recoded == "TRUE" ~ "deepfaked",
+                                                     deepfake_detection_open_recoded == "FALSE" ~ "genuine")) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
@@ -722,43 +726,35 @@ data_after_exclusions %>%
 
 ```{r}
 
-data_counts <- data_after_exclusions %>%
+data_classifications <- data_after_exclusions %>%
   select(experiment_condition, deepfake_detection_open_recoded) %>%
   drop_na() %>%
-  count(experiment_condition, deepfake_detection_open_recoded)
+  mutate(deepfake_detection_open_recoded = case_when(deepfake_detection_open_recoded == "TRUE" ~ "deepfaked",
+                                                     deepfake_detection_open_recoded == "FALSE" ~ "genuine"))
 
-TP <- pull(filter(data_counts, experiment_condition == "deepfaked" & deepfake_detection_open_recoded == TRUE),  n)
-FP <- pull(filter(data_counts, experiment_condition == "genuine"   & deepfake_detection_open_recoded == TRUE),  n)
-FN <- pull(filter(data_counts, experiment_condition == "deepfaked" & deepfake_detection_open_recoded == FALSE), n)
-TN <- pull(filter(data_counts, experiment_condition == "genuine"   & deepfake_detection_open_recoded == FALSE), n)
+truth <- factor(data_classifications$experiment_condition,
+                levels = rev(c("genuine", "deepfaked")))
 
-sensitivity         <- TP / (TP+FN)
-false_negative_rate <- 1 - sensitivity
-specificity         <- TN / (TN+FP)
-false_positive_rate <- 1 - specificity
+pred <- factor(data_classifications$deepfake_detection_open_recoded,
+               levels = rev(c("genuine", "deepfaked")))
 
-# Youden's J statistic aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions". a zero value when a diagnostic test gives the same proportion of positive results for groups with and without the disease, i.e the test is useless.
-informedness <- sensitivity + specificity - 1
+cm <- confusionMatrix(table(pred, truth))
 
-balanced_accuracy <- (sensitivity + specificity)/2
-
-fit_exploratory_classification <-
-  tibble(variable = c(
-    "balanced_accuracy",
-    "informedness",
-    #"sensitivity",
-    "false_negative_rate",
-    #"specificity",
-    "false_positive_rate"
-  ),
-  observed = c(
-    balanced_accuracy,
-    informedness,
-    #sensitivity,
-    false_negative_rate,
-    #specificity,
-    false_positive_rate
-  ))
+fit_confirmatory_classification <-
+  as_tibble(cm$byClass, rownames = "parameter") %>%
+  spread(parameter, value) %>%
+  mutate(balanced_accuracy = `Balanced Accuracy`,
+         false_negative_rate = 1 - Sensitivity,
+         false_positive_rate = 1 - Specificity,
+         informedness = Sensitivity + Specificity - 1) %>%
+  select(balanced_accuracy,
+         informedness,
+         false_negative_rate,
+         false_positive_rate) %>%
+  gather(variable, observed, c(balanced_accuracy, 
+                               informedness, 
+                               false_negative_rate, 
+                               false_positive_rate))
 
 ```
 
@@ -766,69 +762,41 @@ fit_exploratory_classification <-
 
 ```{r}
 
-if(file.exists("models/fit_exploratory_classification_bootstraps.rds")){
+# create bootstraps using out of bag method. makes a df with values that are collapsed dfs.
+boots <- data_classifications %>%
+  bootstraps(times = 2000)
 
-  fit_exploratory_classification_bootstraps <- read_rds("models/fit_exploratory_classification_bootstraps.rds")
-
-} else {
-
-  # create bootstraps using out of bag method. makes a df with values that are collapsed dfs.
-  boots <- data_after_exclusions %>%
-    select(experiment_condition, deepfake_detection_open_recoded) %>%
-    drop_na() %>%
-    bootstraps(times = 2000)
-
-  # generalize to a summarize function ------
-  bootstrap_categorization_stats <- function(split) {
-
-    data_counts <- analysis(split) %>%
-      count(experiment_condition, deepfake_detection_open_recoded)
-
-    TP <- pull(filter(data_counts, experiment_condition == "deepfaked" & deepfake_detection_open_recoded == TRUE),  n)
-    FP <- pull(filter(data_counts, experiment_condition == "genuine"   & deepfake_detection_open_recoded == TRUE),  n)
-    FN <- pull(filter(data_counts, experiment_condition == "deepfaked" & deepfake_detection_open_recoded == FALSE), n)
-    TN <- pull(filter(data_counts, experiment_condition == "genuine"   & deepfake_detection_open_recoded == FALSE), n)
-
-    sensitivity         <- TP / (TP+FN)
-    false_negative_rate <- 1 - sensitivity
-    specificity         <- TN / (TN+FP)
-    false_positive_rate <- 1 - specificity
-
-    # Youden's J statistic aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions". a zero value when a diagnostic test gives the same proportion of positive results for groups with and without the disease, i.e the test is useless.
-    informedness <- sensitivity + specificity - 1
-
-    balanced_accuracy <- (sensitivity + specificity)/2
-
-    results <-
-      tibble(variable = c(
-        "balanced_accuracy",
-        "informedness",
-        #"sensitivity",
-        "false_negative_rate",
-        #"specificity",
-        "false_positive_rate"
-      ),
-      value = c(
-        balanced_accuracy,
-        informedness,
-        #sensitivity,
-        false_negative_rate,
-        #specificity,
-        false_positive_rate
-      ))
-
-    return(results)
-  }
-
-  # apply to each bootstrap
-  fit_exploratory_classification_bootstraps <- boots %>%
-    mutate(categorization_stats = future_map(splits, bootstrap_categorization_stats)) %>%
-    select(-splits) %>%
-    unnest(categorization_stats)
-
-  write_rds(fit_exploratory_classification_bootstraps, "models/fit_exploratory_classification_bootstraps.rds")
-
+# function to bootstrap classification stats and return a tibble
+bootstrap_categorization_stats <- function(split) {
+  
+  truth <- factor(analysis(split)$experiment_condition,
+                  levels = rev(c("genuine", "deepfaked")))
+  
+  pred <- factor(analysis(split)$deepfake_detection_open_recoded,
+                 levels = rev(c("genuine", "deepfaked")))
+  
+  cm <- confusionMatrix(table(pred, truth))
+  
+  results <-
+    as_tibble(cm$byClass, rownames = "parameter") %>%
+    spread(parameter, value) %>%
+    mutate(balanced_accuracy = `Balanced Accuracy`,
+           false_negative_rate = 1 - Sensitivity,
+           false_positive_rate = 1 - Specificity,
+           informedness = Sensitivity + Specificity - 1) %>%
+    select(balanced_accuracy,
+           informedness,
+           false_negative_rate,
+           false_positive_rate) 
+  
+  return(results)
 }
+
+# apply to each bootstrap
+fit_confirmatory_classification_bootstraps <- boots %>%
+  mutate(categorization_stats = future_map(splits, bootstrap_categorization_stats)) %>%
+  select(-splits) %>%
+  unnest(categorization_stats)
 
 ```
 
@@ -836,12 +804,16 @@ if(file.exists("models/fit_exploratory_classification_bootstraps.rds")){
 
 ```{r}
 
-classifications <- fit_exploratory_classification_bootstraps %>%
+classifications <- fit_confirmatory_classification_bootstraps %>%
+  gather(variable, value, c(balanced_accuracy, 
+                            informedness, 
+                            false_negative_rate, 
+                            false_positive_rate)) %>%
   group_by(variable) %>%
   summarize(ci_lower = quantile(value, 0.025),
             ci_upper = quantile(value, 0.975),
             .groups  = "drop") %>%
-  full_join(fit_exploratory_classification, by = "variable") %>%
+  full_join(fit_confirmatory_classification, by = "variable") %>%
   mutate_if(is.numeric, round, digits = 2) %>%
   select(variable, observed, ci_lower, ci_upper) 
 
@@ -856,11 +828,11 @@ H3: Participants are poor at making accurate and informed judgements about wheth
 
 *H3a* 
 
-We expect participants to be poor at correctly detecting Deepfakes (i.e., demonstrate a high false negative rate, FNR ≳ .80).
+We expect participants to be poor at correctly detecting Deepfakes (i.e., demonstrate a false negative rate, FNR ≳ .80).
 
 *H3b*
 
-We expect participants to incorrectly detect Deepfakes even when the video content was real (i.e., demonstrate a high false positive rate, FPR ≳ .05).
+We expect participants to incorrectly detect Deepfakes even when the video content was real (i.e., demonstrate a false positive rate, FPR ≳ .05).
 
 *H3c*
 
@@ -870,7 +842,7 @@ We expect participants to be poor at making accurate decisions about whether con
 
 We expect participants to make poorly informed decisions about whether content is genuine or not (i.e., informedness/Youden’s J ≲ .25). 
 
-## Even the subset of participants who were aware of the concept of deepfakes before the study?
+## Even the subset of participants who were aware of the concept of Deepfakes before the study?
 
 ### Sample size
 
@@ -881,53 +853,48 @@ data_after_exclusions %>%
   count(experiment_condition,
         deepfake_detection_open_recoded) %>%
   drop_na() %>%
+  mutate(deepfake_detection_open_recoded = case_when(deepfake_detection_open_recoded == "TRUE" ~ "deepfaked",
+                                                     deepfake_detection_open_recoded == "FALSE" ~ "genuine")) %>%
   kable() %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
                 full_width = FALSE)
- 
+
 ```
 
 ### Classification stats
 
 ```{r}
 
-data_counts_subset <- data_after_exclusions %>%
+data_classifications_subset <- data_after_exclusions %>%
+  filter(deepfake_awareness_open_recoded == TRUE) %>%
   select(experiment_condition, deepfake_detection_open_recoded) %>%
   drop_na() %>%
-  count(experiment_condition, deepfake_detection_open_recoded)
+  mutate(deepfake_detection_open_recoded = case_when(deepfake_detection_open_recoded == "TRUE" ~ "deepfaked",
+                                                     deepfake_detection_open_recoded == "FALSE" ~ "genuine"))
 
-TP <- pull(filter(data_counts_subset, experiment_condition == "deepfaked" & deepfake_detection_open_recoded == TRUE),  n)
-FP <- pull(filter(data_counts_subset, experiment_condition == "genuine"   & deepfake_detection_open_recoded == TRUE),  n)
-FN <- pull(filter(data_counts_subset, experiment_condition == "deepfaked" & deepfake_detection_open_recoded == FALSE), n)
-TN <- pull(filter(data_counts_subset, experiment_condition == "genuine"   & deepfake_detection_open_recoded == FALSE), n)
+truth_subset <- factor(data_classifications_subset$experiment_condition,
+                levels = rev(c("genuine", "deepfaked")))
 
-sensitivity         <- TP / (TP+FN)
-false_negative_rate <- 1 - sensitivity
-specificity         <- TN / (TN+FP)
-false_positive_rate <- 1 - specificity
+pred_subset <- factor(data_classifications_subset$deepfake_detection_open_recoded,
+               levels = rev(c("genuine", "deepfaked")))
 
-# Youden's J statistic aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions". a zero value when a diagnostic test gives the same proportion of positive results for groups with and without the disease, i.e the test is useless.
-informedness <- sensitivity + specificity - 1
+cm_subset <- confusionMatrix(table(pred_subset, truth_subset))
 
-balanced_accuracy <- (sensitivity + specificity)/2
-
-fit_exploratory_classification_subset <-
-  tibble(variable = c(
-    "balanced_accuracy",
-    "informedness",
-    #"sensitivity",
-    "false_negative_rate",
-    #"specificity",
-    "false_positive_rate"
-  ),
-  observed = c(
-    balanced_accuracy,
-    informedness,
-    #sensitivity,
-    false_negative_rate,
-    #specificity,
-    false_positive_rate
-  ))
+fit_confirmatory_classification_subset <-
+  as_tibble(cm_subset$byClass, rownames = "parameter") %>%
+  spread(parameter, value) %>%
+  mutate(balanced_accuracy = `Balanced Accuracy`,
+         false_negative_rate = 1 - Sensitivity,
+         false_positive_rate = 1 - Specificity,
+         informedness = Sensitivity + Specificity - 1) %>%
+  select(balanced_accuracy,
+         informedness,
+         false_negative_rate,
+         false_positive_rate) %>%
+  gather(variable, observed, c(balanced_accuracy, 
+                               informedness, 
+                               false_negative_rate, 
+                               false_positive_rate))
 
 ```
 
@@ -935,70 +902,15 @@ fit_exploratory_classification_subset <-
 
 ```{r}
 
-if(file.exists("models/fit_exploratory_classification_bootstraps_subset.rds")){
+# create bootstraps using out of bag method. makes a df with values that are collapsed dfs.
+boots_subset <- data_classifications_subset %>%
+  bootstraps(times = 2000)
 
-  fit_exploratory_classification_bootstraps_subset <- read_rds("models/fit_exploratory_classification_bootstraps_subset.rds")
-
-} else {
-
-  # create bootstraps using out of bag method. makes a df with values that are collapsed dfs.
-  boots <- data_after_exclusions %>%
-    filter(deepfake_awareness_open_recoded == TRUE) %>%
-    select(experiment_condition, deepfake_detection_open_recoded) %>%
-    drop_na() %>%
-    bootstraps(times = 2000)
-
-  # generalize to a summarize function ------
-  bootstrap_categorization_stats <- function(split) {
-
-    data_counts <- analysis(split) %>%
-      count(experiment_condition, deepfake_detection_open_recoded)
-
-    TP <- pull(filter(data_counts, experiment_condition == "deepfaked" & deepfake_detection_open_recoded == TRUE),  n)
-    FP <- pull(filter(data_counts, experiment_condition == "genuine"   & deepfake_detection_open_recoded == TRUE),  n)
-    FN <- pull(filter(data_counts, experiment_condition == "deepfaked" & deepfake_detection_open_recoded == FALSE), n)
-    TN <- pull(filter(data_counts, experiment_condition == "genuine"   & deepfake_detection_open_recoded == FALSE), n)
-
-    sensitivity         <- TP / (TP+FN)
-    false_negative_rate <- 1 - sensitivity
-    specificity         <- TN / (TN+FP)
-    false_positive_rate <- 1 - specificity
-
-    # Youden's J statistic aka informedness aka "the probability of an informed decision (as opposed to a random guess) and takes into account all predictions". a zero value when a diagnostic test gives the same proportion of positive results for groups with and without the disease, i.e the test is useless.
-    informedness <- sensitivity + specificity - 1
-
-    balanced_accuracy <- (sensitivity + specificity)/2
-
-    results <-
-      tibble(variable = c(
-        "balanced_accuracy",
-        "informedness",
-        #"sensitivity",
-        "false_negative_rate",
-        #"specificity",
-        "false_positive_rate"
-      ),
-      value = c(
-        balanced_accuracy,
-        informedness,
-        #sensitivity,
-        false_negative_rate,
-        #specificity,
-        false_positive_rate
-      ))
-
-    return(results)
-  }
-
-  # apply to each bootstrap
-  fit_exploratory_classification_bootstraps_subset <- boots %>%
-    mutate(categorization_stats = future_map(splits, bootstrap_categorization_stats)) %>%
-    select(-splits) %>%
-    unnest(categorization_stats)
-
-  write_rds(fit_exploratory_classification_bootstraps_subset, "models/fit_exploratory_classification_bootstraps_subset.rds")
-
-}
+# apply to each bootstrap
+fit_confirmatory_classification_bootstraps_subset <- boots_subset %>%
+  mutate(categorization_stats = future_map(splits, bootstrap_categorization_stats)) %>%
+  select(-splits) %>%
+  unnest(categorization_stats)
 
 ```
 
@@ -1006,12 +918,16 @@ if(file.exists("models/fit_exploratory_classification_bootstraps_subset.rds")){
 
 ```{r}
 
-classifications_subset <- fit_exploratory_classification_bootstraps_subset %>%
+classifications_subset <- fit_confirmatory_classification_bootstraps_subset %>%
+  gather(variable, value, c(balanced_accuracy, 
+                            informedness, 
+                            false_negative_rate, 
+                            false_positive_rate)) %>%
   group_by(variable) %>%
   summarize(ci_lower = quantile(value, 0.025),
             ci_upper = quantile(value, 0.975),
             .groups  = "drop") %>%
-  full_join(fit_exploratory_classification_subset, by = "variable") %>%
+  full_join(fit_confirmatory_classification_subset, by = "variable") %>%
   mutate_if(is.numeric, round, digits = 2) %>%
   select(variable, observed, ci_lower, ci_upper) 
 
