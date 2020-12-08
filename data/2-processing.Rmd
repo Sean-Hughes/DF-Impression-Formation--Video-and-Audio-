@@ -23,6 +23,7 @@ knitr::opts_chunk$set(message=FALSE,
 
 ```{r}
 
+
 library(tidyverse)
 library(knitr)
 library(kableExtra)
@@ -1134,6 +1135,7 @@ data_participant_level <- data_conditions_and_demographics %>%
   full_join(data_individual_differences,                 by = "subject") %>%
   full_join(data_self_reported_evaluations_item_level,   by = "subject") %>%
   full_join(data_behavioural_intentions_item_level,      by = "subject") %>%
+  mutate(experiment = experiment.x) %>%
   arrange(experiment, experiment_condition) %>%
   
   # recode IAT and self reported evaluations for stimulus identity 
@@ -1285,6 +1287,14 @@ data_participant_level %>%
 
 # item level IAT for internal reliability analysis
 write_csv(data_iat_item_level, "processed/2.4_data_iat_item_level.csv")
+
+```
+
+
+
+```{r}
+sean <- data_processed %>%
+  select(experiment_condition, source_valence, deepfake_detection_open, deepfake_detection_closed, deepfake_awareness_open, deepfake_awareness_closed)
 
 ```
 

@@ -11,7 +11,7 @@
 
 <meta name="author" content="Sean Hughes &amp; Ian Hussey" />
 
-<meta name="date" content="2020-12-01" />
+<meta name="date" content="2020-12-08" />
 
 <title>Data preprocessing</title>
 
@@ -1729,11 +1729,12 @@ div.tocify {
 <h1 class="title toc-ignore">Data preprocessing</h1>
 <h3 class="subtitle">Convert from SQLite databases to single ‘tidy’ format dataframe</h3>
 <h4 class="author">Sean Hughes &amp; Ian Hussey</h4>
-<h4 class="date">01 December 2020</h4>
+<h4 class="date">08 December 2020</h4>
 
 </div>
 
 
+<p>Note that pre-processing and processing of the data can be resource intensive in terms of RAM requirements. If you run into memory errors, you can run gc() where appropriate and/or also increase memory limit in R if necessary. Cleaning the R environment after each step of the (pre)processing should also help with memory requirements. 16GB RAM recommended.</p>
 <div id="functions-and-dependencies" class="section level1">
 <h1>Functions and dependencies</h1>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">library</span>(tidyverse)</span>
@@ -1933,8 +1934,8 @@ div.tocify {
 <span id="cb27-27"><a href="#cb27-27"></a></span>
 <span id="cb27-28"><a href="#cb27-28"></a><span class="kw">gc</span>()</span></code></pre></div>
 <pre><code>##             used   (Mb) gc trigger   (Mb)  max used   (Mb)
-## Ncells   1299278   69.4    2078364  111.0   2078364  111.0
-## Vcells 207686908 1584.6  334948607 2555.5 210152504 1603.4</code></pre>
+## Ncells   1332156   71.2    2621682  140.1   2621682  140.1
+## Vcells 294636057 2247.9  488985354 3730.7 298436350 2276.9</code></pre>
 <div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a><span class="kw">memory.limit</span>(<span class="dt">size =</span> <span class="dv">16000</span>)</span></code></pre></div>
 <pre><code>## [1] 32718</code></pre>
 </div>
