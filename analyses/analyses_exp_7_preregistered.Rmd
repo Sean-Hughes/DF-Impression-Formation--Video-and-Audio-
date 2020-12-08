@@ -127,7 +127,8 @@ ggplot(data_after_exclusions, aes(mean_intentions)) +
 
 data_processed %>%
   summarise(n = n(),
-            excluded_n = sum(exclude_subject > 0 | exclude_implausible_intervention_linger > 0),
+            excluded_n = sum(exclude_subject != FALSE | 
+                               exclude_implausible_intervention_linger != FALSE, na.rm = TRUE),
             excluded_percent = (excluded_n / n) *100) %>%
   mutate_if(is.numeric, round, digits = 1) %>%
   kable(align = "c") %>%
