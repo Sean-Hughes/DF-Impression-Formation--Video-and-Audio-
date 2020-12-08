@@ -322,7 +322,7 @@ draws_sr <-
          main_experiment_condition = b_experiment_conditiondeepfaked,
          interaction = `b_source_valencepositive:experiment_conditiondeepfaked`) %>%
   mutate(effect_genuine = main_valence,
-         effect_deepfaked = main_valence + main_experiment_condition + interaction,
+         effect_deepfaked = main_valence + interaction,
          #percent_moderation = (main_experiment_condition + interaction)/main_valence *100,  # alt method, same result
          percent_comparison = (effect_deepfaked/effect_genuine)*100)
 
@@ -458,7 +458,7 @@ draws_imp <-
          main_experiment_condition = b_experiment_conditiondeepfaked,
          interaction = `b_source_valencepositive:experiment_conditiondeepfaked`) %>%
   mutate(effect_genuine = main_valence,
-         effect_deepfaked = main_valence + main_experiment_condition + interaction,
+         effect_deepfaked = main_valence + interaction,
          #percent_moderation = (main_experiment_condition + interaction)/main_valence *100,  # alt method, same result
          percent_comparison = (effect_deepfaked/effect_genuine)*100)
 
@@ -593,7 +593,7 @@ draws_intentions <-
          main_experiment_condition = b_experiment_conditiondeepfaked,
          interaction = `b_source_valencepositive:experiment_conditiondeepfaked`) %>%
   mutate(effect_genuine = main_valence,
-         effect_deepfaked = main_valence + main_experiment_condition + interaction,
+         effect_deepfaked = main_valence + interaction,
          #percent_moderation = (main_experiment_condition + interaction)/main_valence *100,  # alt method, same result
          percent_comparison = (effect_deepfaked/effect_genuine)*100)
 

@@ -266,7 +266,7 @@ simulate_data_update_fit_and_hypothesis_test_interaction_model <- function(fit_i
               select(spread_draws(fit_updated, `b_source_valence:experiment_condition`),
                      b_interaction = `b_source_valence:experiment_condition`)) %>%
     mutate(effect_genuine   = b_source_valence,
-           effect_deepfaked = b_source_valence + b_experiment_condition + b_interaction)
+           effect_deepfaked = b_source_valence + b_interaction)
   
   # parameterize posteriors
   estimates_fit_updated <-
