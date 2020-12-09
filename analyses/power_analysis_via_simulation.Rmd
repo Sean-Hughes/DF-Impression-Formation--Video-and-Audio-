@@ -625,17 +625,17 @@ parameter_recovery_intentions_deepfaked_detected <-
 parameter_recovery_self_report_deepfaked_aware_detected <- 
   fit_initial_simple_model(fitted_empirical_model = fit_selfreport_deepfaked_aware_detected, 
                            filename = "fit_simulation_initial_selfreport_deepfaked_aware_detected",
-                           N = N_participants_deepfaked_aware)
+                           N = N_participants_deepfaked_aware_detected)
 
 parameter_recovery_implicit_deepfaked_aware_detected <- 
   fit_initial_simple_model(fitted_empirical_model = fit_implicit_deepfaked_aware_detected, 
                            filename = "fit_simulation_initial_implicit_deepfaked_aware_detected",
-                           N = N_participants_deepfaked_aware)
+                           N = N_participants_deepfaked_aware_detected)
 
 parameter_recovery_intentions_deepfaked_aware_detected <- 
   fit_initial_simple_model(fitted_empirical_model = fit_intentions_deepfaked_aware_detected, 
                            filename = "fit_simulation_initial_intentions_deepfaked_aware_detected",
-                           N = N_participants_deepfaked_aware)
+                           N = N_participants_deepfaked_aware_detected)
 
 # run simulations
 # H5
@@ -687,21 +687,21 @@ simulation_iterations_self_report_deepfaked_aware_detected <-
   simulate_simple_model(results_file             = "simulation_iterations_self_report_deepfaked_aware_detected",
                         initial_fit_filename     = "fit_simulation_initial_selfreport_deepfaked_aware_detected",
                         empirical_model_fit      = fit_selfreport_deepfaked_aware_detected, 
-                        N_simulated_participants = N_participants_deepfaked_aware, 
+                        N_simulated_participants = N_participants_deepfaked_aware_detected, 
                         iterations               = N_simulations)
 
 simulation_iterations_implicit_deepfaked_aware_detected <- 
   simulate_simple_model(results_file             = "simulation_iterations_implicit_deepfaked_aware_detected",
                         initial_fit_filename     = "fit_simulation_initial_implicit_deepfaked_aware_detected",
                         empirical_model_fit      = fit_implicit_deepfaked_aware_detected, 
-                        N_simulated_participants = N_participants_deepfaked_aware, 
+                        N_simulated_participants = N_participants_deepfaked_aware_detected, 
                         iterations               = N_simulations)
 
 simulation_iterations_intentions_deepfaked_aware_detected <- 
   simulate_simple_model(results_file             = "simulation_iterations_intentions_deepfaked_aware_detected",
                         initial_fit_filename     = "fit_simulation_initial_intentions_deepfaked_aware_detected",
                         empirical_model_fit      = fit_intentions_deepfaked_aware_detected, 
-                        N_simulated_participants = N_participants_deepfaked_aware, 
+                        N_simulated_participants = N_participants_deepfaked_aware_detected, 
                         iterations               = N_simulations)
 
 ```
