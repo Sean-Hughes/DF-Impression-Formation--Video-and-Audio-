@@ -998,7 +998,8 @@ sjPlot doesn't behave well with these variable names for some reason. From top t
 ```{r}
 
 plot_model(fit_confirmatory_poisson_awareness_detection) + xlab("Parameter")
-# plot(conditional_effects(fit_confirmatory_poisson_awareness_detection), ask = FALSE)
+plot(conditional_effects(fit_confirmatory_poisson_awareness_detection, 
+                         effects = "detection:awareness"), ask = FALSE)
 
 ```
 
@@ -1010,7 +1011,8 @@ plot_model(fit_confirmatory_poisson_awareness_detection) + xlab("Parameter")
 draws_awareness_detection <- posterior_samples(fit_confirmatory_poisson_awareness_detection) %>%
   dplyr::select(awarenessTRUE = b_awarenessTRUE, 
                 detectionTRUE = b_detectionTRUE, 
-                interaction   = `b_awarenessTRUE:detectionTRUE`) 
+                interaction   = `b_awarenessTRUE:detectionTRUE`) %>%
+  mutate(effect_awareness_increases_detection = awarenessTRUE + interaction)
 
 estimates_awareness_detection <- 
   full_join(as_tibble(map_estimate(draws_awareness_detection)),
@@ -1026,9 +1028,9 @@ estimates_awareness_detection <-
               ungroup() %>%
               select(Parameter, p),
             by = "Parameter") %>%
-  dplyr::select(Parameter, incidence_rate_ratio_MAP = MAP_Estimate, CI_95_lower = CI_low, CI_95_upper = CI_high, p) 
+  dplyr::select(Parameter, incidence_rate_ratio_MAP = MAP_Estimate, CI_95_lower = CI_low, CI_95_upper = CI_high, p)
   # convert from odds to probability
-  # mutate_if(is.numeric, function(x){x/(1+x)}) %>%
+  # mutate_if(is.numeric, function(x){x/(1+x)})
   
 # table
 estimates_awareness_detection %>%
@@ -1038,25 +1040,38 @@ estimates_awareness_detection %>%
                 full_width = FALSE)
 
 # hypothesis testing
-H4 <- ifelse((estimates_awareness_detection %>% filter(Parameter == "interaction") %>% pull(CI_95_lower)) > 1, 
+H4 <- ifelse((estimates_awareness_detection %>% filter(Parameter == "effect_awareness_increases_detection") %>%
+                pull(CI_95_lower)) > 1, 
               "Accepted", "Rejected")
 
 comparison_string_awareness_detection <-
   paste0("Individuals who were aware of the concept of Deepfakes prior to participating in the study were ",
-         estimates_awareness_detection %>% filter(Parameter == "interaction") %>% pull(incidence_rate_ratio_MAP) %>% round(1), 
+         estimates_awareness_detection %>% 
+           filter(Parameter == "effect_awareness_increases_detection") %>% 
+           pull(incidence_rate_ratio_MAP) %>% 
+           round(1), 
          " times more likely to detect that they had been shown a deepfake than those who were not aware of the concept (Incidence Rate Ratio = ",
-         estimates_awareness_detection %>% filter(Parameter == "interaction") %>% pull(incidence_rate_ratio_MAP) %>% round(2), 
+         estimates_awareness_detection %>% 
+           filter(Parameter == "effect_awareness_increases_detection") %>% 
+           pull(incidence_rate_ratio_MAP) %>% 
+           round(2), 
          ", 95% CI [",
-         estimates_awareness_detection %>% filter(Parameter == "interaction") %>% pull(CI_95_lower) %>% round(2),
+         estimates_awareness_detection %>% 
+           filter(Parameter == "effect_awareness_increases_detection") %>% 
+           pull(CI_95_lower) %>% 
+           round(2),
          ", ",
-         estimates_awareness_detection %>% filter(Parameter == "interaction") %>% pull(CI_95_upper) %>% round(2),
+         estimates_awareness_detection %>% 
+           filter(Parameter == "effect_awareness_increases_detection") %>% 
+           pull(CI_95_upper) %>% 
+           round(2),
          "])")
 
 ```
 
 *H4*
 
-Using the subset of participants who were in the Deepfake condition, we calculated counts for each of the combinations of the Deepfake concept check and Deepfake detection questions (e.g., awareness = TRUE & detection = TRUE, awareness = TRUE & detection = FALSE, etc.). We will then use a Bayesian Poisson model to estimate a 95% Credible Interval around the interaction effect’s Incidence Rate Ratio. A Credible Interval whose lower bound is > 1 will be considered evidence in support of this hypothesis. Estimated marginal predicted probabilities will also be reported.
+Using the subset of participants who were in the Deepfake condition, we calculated counts for each of the combinations of the Deepfake concept check and Deepfake detection questions (e.g., awareness = TRUE & detection = TRUE, awareness = TRUE & detection = FALSE, etc.). We will then use a Bayesian Poisson model to estimate a 95% Credible Interval around the effect’s Incidence Rate Ratio. A Credible Interval whose lower bound is > 1 will be considered evidence in support of this hypothesis. Estimated marginal predicted probabilities will also be reported.
 
 - Result: `r H4`
 - `r comparison_string_awareness_detection`
