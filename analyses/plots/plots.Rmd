@@ -235,7 +235,38 @@ p1
 
 ```{r}
 
+# plot object 
 write_rds(p1, "figure_1.rds")
+
+ggsave(filename  = "figure_1.pdf",
+       plot      = p1,
+       device    = "pdf",
+       # path      = NULL,
+       # dpi       = 300,
+       units     = "in",
+       width     = 7.50,
+       height    = 3.20,
+       limitsize = TRUE)
+
+ggsave(filename  = "figure_1.eps",
+       plot      = p1,
+       device    = "eps",
+       # path      = NULL,
+       # dpi       = 300,
+       units     = "in",
+       width     = 7.50,
+       height    = 3.20,
+       limitsize = TRUE)
+
+ggsave(filename  = "figure_1.png",
+       plot      = p1,
+       device    = png(),
+       # path      = NULL,
+       dpi       = 300,
+       units     = "in",
+       width     = 7.50,
+       height    = 3.20,
+       limitsize = TRUE)
 
 ```
 
