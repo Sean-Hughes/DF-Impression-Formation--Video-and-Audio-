@@ -9,7 +9,7 @@ Code: MIT license
 Data and documents: CC-BY
 ## Citation
 
-Hughes, S., Fried, O., Ferguson, M., Yao, D., Hussey, I., Hughes, C., & Hughes, R. Using Deepfakes to Hack the Human Mind    
+Hughes, S., Fried, O., Ferguson, M., Yao, D., Hughes, C., & Hughes, R, & Hussey, I. Using Deepfakes to Hack the Human Mind    
 
 ## Instructions for replicating or reproducing
 
