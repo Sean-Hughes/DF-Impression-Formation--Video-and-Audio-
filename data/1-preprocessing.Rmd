@@ -228,6 +228,9 @@ rm(data_database_exp_1,
    data_database_exp_6_genuine,
    data_database_exp_7)
 
+# write_rds(data_database_combined, "processed/data_database_combined.rds")
+# data_database_combined <- read_rds("processed/data_database_combined.rds")
+
 ```
 
 # Extract full data 
@@ -243,6 +246,9 @@ data_database_combined_full <- data_database_combined %>%
   ) %>%
   ungroup() %>%
   select(-id)
+
+# write_rds(data_database_combined_full, "processed/data_database_combined_full.rds")
+# data_database_combined_full <- read_rds("processed/data_database_combined_full.rds")
 
 ```
 
@@ -260,6 +266,9 @@ data_database_combined_incremental <- data_database_combined %>%
   ungroup() %>%
   select(-id)
 
+# write_rds(data_database_combined_incremental, "processed/data_database_combined_incremental.rds")
+# data_database_combined_incremental <- read_rds("processed/data_database_combined_incremental.rds")
+
 ```
 
 # Merge full and incremental data
@@ -268,9 +277,18 @@ For analysis, we'll use the full data sets where available, and incremental data
 
 ```{r}
 
+data_database_combined_incremental_trimmed <- data_database_combined_incremental %>%
+  filter(!(subject %in% 
+             data_database_combined_full %>%
+             distinct(subject) %>%
+             pull(subject)))
+
 data_combined <- 
   bind_rows(data_database_combined_full,
-            filter(data_database_combined_incremental, !(subject %in% data_database_combined_full$subject))) 
+            data_database_combined_incremental_trimmed) 
+
+# write_rds(data_combined, "processed/data_combined.rds")
+# data_combined <- read_rds("processed/data_combined.rds")
 
 ```
 
