@@ -1,0 +1,279 @@
+---
+title: "Plots"
+author: "Ian Hussey"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    code_folding: hide
+    highlight: haddock
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(message=FALSE,
+                      warning=FALSE)
+```
+
+# Dependencies
+
+```{r}
+
+# dependencies
+library(tidyverse)
+library(brms)
+library(tidybayes)
+library(see)
+
+```
+
+# Figure 1
+
+## Load fitted models
+
+Taken from RQ1&2 models in analyses.
+
+```{r}
+
+fit_exploratory_selfreport  <- read_rds("../models/fit_exploratory_selfreport.rds")
+fit_exploratory_implicit    <- read_rds("../models/fit_exploratory_implicit.rds")
+fit_exploratory_intentions  <- read_rds("../models/fit_exploratory_intentions.rds")
+fit_confirmatory_selfreport <- read_rds("../models/fit_confirmatory_selfreport.rds")
+fit_confirmatory_implicit   <- read_rds("../models/fit_confirmatory_implicit.rds")
+fit_confirmatory_intentions <- read_rds("../models/fit_confirmatory_intentions.rds")
+
+```
+
+## Wrangle posterior draws
+
+```{r}
+
+# posterior draws
+draws_exploratory_selfreport <-
+  bind_cols(select(spread_draws(fit_exploratory_selfreport, b_source_valencepositive), 
+                   main_valence = b_source_valencepositive),
+            select(spread_draws(fit_exploratory_selfreport, b_experiment_conditiondeepfaked),
+                   main_experiment_condition = b_experiment_conditiondeepfaked),
+            select(spread_draws(fit_exploratory_selfreport,
+                                `b_source_valencepositive:experiment_conditiondeepfaked`),
+                   interaction = `b_source_valencepositive:experiment_conditiondeepfaked`)) %>%
+  mutate(Genuine   = main_valence,
+         Deepfaked = main_valence + interaction,
+         DV = "Self-reported attitudes",
+         Experiments = "Exploratory\nexperiments") %>%
+  select(Experiments,
+         DV, 
+         Genuine,
+         Deepfaked) 
+
+draws_exploratory_implicit <-
+  bind_cols(select(spread_draws(fit_exploratory_implicit, b_source_valencepositive), 
+                   main_valence = b_source_valencepositive),
+            select(spread_draws(fit_exploratory_implicit, b_experiment_conditiondeepfaked),
+                   main_experiment_condition = b_experiment_conditiondeepfaked),
+            select(spread_draws(fit_exploratory_implicit,
+                                `b_source_valencepositive:experiment_conditiondeepfaked`),
+                   interaction = `b_source_valencepositive:experiment_conditiondeepfaked`)) %>%
+  mutate(Genuine   = main_valence,
+         Deepfaked = main_valence + interaction,
+         DV = "Implicit attitudes",
+         Experiments = "Exploratory\nexperiments") %>%
+  select(Experiments,
+         DV, 
+         Genuine,
+         Deepfaked) 
+
+draws_exploratory_intentions <-
+  bind_cols(select(spread_draws(fit_exploratory_intentions, b_source_valencepositive), 
+                   main_valence = b_source_valencepositive),
+            select(spread_draws(fit_exploratory_intentions, b_experiment_conditiondeepfaked),
+                   main_experiment_condition = b_experiment_conditiondeepfaked),
+            select(spread_draws(fit_exploratory_intentions,
+                                `b_source_valencepositive:experiment_conditiondeepfaked`),
+                   interaction = `b_source_valencepositive:experiment_conditiondeepfaked`)) %>%
+  mutate(Genuine   = main_valence,
+         Deepfaked = main_valence + interaction,
+         DV = "Behavioral intentions",
+         Experiments = "Exploratory\nexperiments") %>%
+  select(Experiments,
+         DV, 
+         Genuine,
+         Deepfaked) 
+
+draws_confirmatory_selfreport <-
+  bind_cols(select(spread_draws(fit_confirmatory_selfreport, b_source_valencepositive), 
+                   main_valence = b_source_valencepositive),
+            select(spread_draws(fit_confirmatory_selfreport, b_experiment_conditiondeepfaked),
+                   main_experiment_condition = b_experiment_conditiondeepfaked),
+            select(spread_draws(fit_confirmatory_selfreport,
+                                `b_source_valencepositive:experiment_conditiondeepfaked`),
+                   interaction = `b_source_valencepositive:experiment_conditiondeepfaked`)) %>%
+  mutate(Genuine   = main_valence,
+         Deepfaked = main_valence + interaction,
+         DV = "Self-reported attitudes",
+         Experiments = "Confirmatory\nexperiment") %>%
+  select(Experiments,
+         DV, 
+         Genuine,
+         Deepfaked) 
+
+draws_confirmatory_implicit <-
+  bind_cols(select(spread_draws(fit_confirmatory_implicit, b_source_valencepositive), 
+                   main_valence = b_source_valencepositive),
+            select(spread_draws(fit_confirmatory_implicit, b_experiment_conditiondeepfaked),
+                   main_experiment_condition = b_experiment_conditiondeepfaked),
+            select(spread_draws(fit_confirmatory_implicit,
+                                `b_source_valencepositive:experiment_conditiondeepfaked`),
+                   interaction = `b_source_valencepositive:experiment_conditiondeepfaked`)) %>%
+  mutate(Genuine   = main_valence,
+         Deepfaked = main_valence + interaction,
+         DV = "Implicit attitudes",
+         Experiments = "Confirmatory\nexperiment") %>%
+  select(Experiments,
+         DV, 
+         Genuine,
+         Deepfaked) 
+
+draws_confirmatory_intentions <-
+  bind_cols(select(spread_draws(fit_confirmatory_intentions, b_source_valencepositive), 
+                   main_valence = b_source_valencepositive),
+            select(spread_draws(fit_confirmatory_intentions, b_experiment_conditiondeepfaked),
+                   main_experiment_condition = b_experiment_conditiondeepfaked),
+            select(spread_draws(fit_confirmatory_intentions,
+                                `b_source_valencepositive:experiment_conditiondeepfaked`),
+                   interaction = `b_source_valencepositive:experiment_conditiondeepfaked`)) %>%
+  mutate(Genuine   = main_valence,
+         Deepfaked = main_valence + interaction,
+         DV = "Behavioral intentions",
+         Experiments = "Confirmatory\nexperiment") %>%
+  select(Experiments,
+         DV, 
+         Genuine,
+         Deepfaked) 
+
+draws <- 
+  bind_rows(draws_confirmatory_selfreport,
+            draws_confirmatory_implicit,
+            draws_confirmatory_intentions,
+            draws_exploratory_selfreport,
+            draws_exploratory_implicit,
+            draws_exploratory_intentions) %>%
+  gather(Condition, effect_size, c(Genuine, Deepfaked)) %>%
+  mutate(DV = fct_relevel(DV, "Behavioral intentions", 
+                          "Implicit attitudes", "Self-reported attitudes"),
+         Condition = fct_relevel(paste(Condition, "content"), 
+                                 "Genuine content", "Deepfaked content"),
+         Experiments = fct_relevel(as.factor(Experiments), "Confirmatory\nexperiment", "Exploratory\nexperiments"))
+
+# subsets
+draws_genuine <- draws %>%
+  filter(Condition == "Genuine content")
+
+draws_deepfaked <- draws %>%
+  filter(Condition == "Deepfaked content")
+
+```
+
+## Plot
+
+```{r fig.height=3.20, fig.width=7.50}
+
+p1 <- 
+  ggplot() +
+  stat_eye(data     = draws_genuine, 
+           aes(y    = effect_size, 
+               x    = Experiments, 
+               fill = Condition),
+           side     = "right",
+           adjust   = 1, 
+           position = position_nudge(x = +.075),
+           #position = position_nudge(x = +.12),  
+           .width   = 0.95, 
+           size     = 2,
+           #justification = 0.1,
+           scale    = 0.47,
+           alpha    = 1) + 
+  stat_eye(data     = draws_deepfaked, 
+           aes(y    = effect_size, 
+               x    = Experiments, 
+               fill = Condition),
+           side     = "left",
+           adjust   = 1, 
+           position = position_nudge(x = -.075),
+           #position = position_nudge(x = -.12), 
+           .width   = 0.95, 
+           size     = 2,
+           #justification = 0.9,
+           scale    = 0.47,
+           alpha    = 1) + 
+  scale_fill_viridis_d(begin  = 0.3, 
+                       end    = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  coord_flip(ylim = c(0, 3.5)) + 
+  labs(y = expression("Standardized effect size ("*paste(delta)*")")) +
+       #x = "Experiments") +
+  theme_classic() +  
+  theme(axis.title.x      = element_text(size = 10, color = "black"),
+        axis.text.y       = element_text(color = "black"),
+        axis.title.y      = element_blank(),
+        strip.background  = element_blank(),
+        strip.text        = element_text(size = 10, colour = "black"),
+        legend.position   = "top", # c(.13, .89),  
+        legend.direction  = "horizontal", # "vertical",
+        legend.text       = element_text(size = 8),
+        legend.background = element_rect(fill = "transparent"),
+        legend.title      = element_blank()) +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  facet_wrap(~ fct_rev(DV), ncol = 3)
+
+p1
+
+```
+
+## Save to disk
+
+```{r}
+
+# plot object 
+write_rds(p1, "figure_1.rds")
+
+ggsave(filename  = "figure_1.pdf",
+       plot      = p1,
+       device    = "pdf",
+       # path      = NULL,
+       # dpi       = 300,
+       units     = "in",
+       width     = 7.50,
+       height    = 3.20,
+       limitsize = TRUE)
+
+ggsave(filename  = "figure_1.eps",
+       plot      = p1,
+       device    = "eps",
+       # path      = NULL,
+       # dpi       = 300,
+       units     = "in",
+       width     = 7.50,
+       height    = 3.20,
+       limitsize = TRUE)
+
+ggsave(filename  = "figure_1.png",
+       plot      = p1,
+       device    = png(),
+       # path      = NULL,
+       dpi       = 300,
+       units     = "in",
+       width     = 7.50,
+       height    = 3.20,
+       limitsize = TRUE)
+
+```
+
+# Session Info
+
+```{r}
+
+sessionInfo()
+
+```

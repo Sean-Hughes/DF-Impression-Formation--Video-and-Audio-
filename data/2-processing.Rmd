@@ -11,7 +11,7 @@ output:
     toc_float: yes
 ---
 
-Note that pre-processing and processing of the data can be resource intensive in terms of RAM requirements. If you run into memory errors, you can run gc() where appropriate and/or also increase memory limit in R if necessary. Cleaning the R environment after each step of the (pre)processing should also help with memory requirements. 16GB RAM recommended. 
+Note that pre-processing and processing of the data can be resource intensive in terms of RAM requirements. If you run into memory errors, you can run gc() where appropriate and/or also increase memory limit in R if necessary. Cleaning the R environment after each step of the (pre)processing should also help with memory requirements. 16GB RAM recommended.
 
 ```{r include=FALSE}
 knitr::opts_chunk$set(message=FALSE,
@@ -654,6 +654,7 @@ Mean scoring, completeness, and item level data
 
 data_behavioural_intentions_item_level <- data_trial_level %>%
   select(subject, 
+         experiment,
          behavioral_intentions_share     = intentions_q1, 
          behavioral_intentions_subscribe = intentions_q2, 
          behavioral_intentions_recommend = intentions_q3) %>%
@@ -664,7 +665,8 @@ data_behavioural_intentions <- data_behavioural_intentions_item_level %>%
                                                  "behavioral_intentions_subscribe", 
                                                  "behavioral_intentions_recommend")) %>%
   # rescore from 1-to-5 to -2-to-+2 to make inversion easier
-  mutate(intentions_response = intentions_response - 3) %>%
+  mutate(intentions_response = case_when(experiment == 6 ~ intentions_response - 3,
+                                         experiment == 7 ~ intentions_response)) %>%
   group_by(subject) %>%
   summarize(n = n(),
             mean_intentions = round(mean(intentions_response), 2), .groups = "drop") %>%
