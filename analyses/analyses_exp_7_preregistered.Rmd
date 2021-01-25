@@ -541,7 +541,7 @@ Change in IAT D2 scores (i.e., between Source Valence conditions) induced by Dee
 ```{r}
 
 fit_confirmatory_intentions <-
-  brm(formula = mean_intentions ~ source_valence * experiment_condition, # no random effect for experiment as only exp 6 assessed intentions
+  brm(formula = mean_intentions ~ source_valence * experiment_condition, 
       family = gaussian(),
       data    = data_after_exclusions,
       file    = "models/fit_confirmatory_intentions",
@@ -1680,7 +1680,7 @@ In the subset of participants who were shown a Deepfaked video and accurately de
 ```{r}
 
 fit_confirmatory_intentions_deepfaked_detected <-
-  brm(formula = mean_intentions ~ source_valence, # no random effect for experiment as only exp 6 assessed intentions
+  brm(formula = mean_intentions ~ source_valence, 
       family  = gaussian(),
       data    = data_detectors_subset,
       file    = "models/fit_confirmatory_intentions_deepfaked_detected",
@@ -2001,7 +2001,7 @@ In the subset of participants who were shown a Deepfaked video, reported being a
 ```{r}
 
 fit_confirmatory_intentions_deepfaked_aware_detected <-
-  brm(formula = mean_intentions ~ source_valence, # no random effect for experiment as only exp 6 assessed intentions
+  brm(formula = mean_intentions ~ source_valence, 
       family  = gaussian(),
       data    = data_aware_detectors_subset,
       file    = "models/fit_confirmatory_intentions_deepfaked_aware_detected",
