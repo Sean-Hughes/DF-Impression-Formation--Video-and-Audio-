@@ -30,7 +30,8 @@ library(janitor)
 library(furrr)
 
 # set up parallel processing
-future::plan(multiprocess)
+#future::plan(multiprocess)
+future::plan(multisession)  # for a windows machine. need to change if Unix.
 
 # used to extract the JSON data
 parseJSON <- function(input) {
@@ -247,7 +248,7 @@ data_database_combined_full <- data_database_combined %>%
   ungroup() %>%
   select(-id)
 
-# write_rds(data_database_combined_full, "processed/data_database_combined_full.rds")
+# write_rds(data_database_combined_full, "processed/data_database_combined_full.rds", compress = "gz")
 # data_database_combined_full <- read_rds("processed/data_database_combined_full.rds")
 
 ```
@@ -255,6 +256,9 @@ data_database_combined_full <- data_database_combined %>%
 # Extract incremental data 
 
 ```{r}
+
+gc()
+memory.limit(size=36000)
 
 data_database_combined_incremental <- data_database_combined %>%
   dplyr::filter(payload %in% c('incremental', 'latest')) %>%
@@ -266,7 +270,7 @@ data_database_combined_incremental <- data_database_combined %>%
   ungroup() %>%
   select(-id)
 
-# write_rds(data_database_combined_incremental, "processed/data_database_combined_incremental.rds")
+# write_rds(data_database_combined_incremental, "processed/data_database_combined_incremental.rds", compress = "gz")
 # data_database_combined_incremental <- read_rds("processed/data_database_combined_incremental.rds")
 
 ```
@@ -277,17 +281,20 @@ For analysis, we'll use the full data sets where available, and incremental data
 
 ```{r}
 
-data_database_combined_incremental_trimmed <- data_database_combined_incremental %>%
-  filter(!(subject %in% 
-             data_database_combined_full %>%
-             distinct(subject) %>%
-             pull(subject)))
+data_database_combined_full_subjects <- 
+  data_database_combined_full %>%
+  distinct(subject) %>%
+  pull(subject)
+
+data_database_combined_incremental_trimmed <- 
+  data_database_combined_incremental %>%
+  filter(!(subject %in% data_database_combined_full_subjects))
 
 data_combined <- 
   bind_rows(data_database_combined_full,
             data_database_combined_incremental_trimmed) 
 
-# write_rds(data_combined, "processed/data_combined.rds")
+# write_rds(data_combined, "processed/data_combined.rds", compress = "gz")
 # data_combined <- read_rds("processed/data_combined.rds")
 
 ```
@@ -318,7 +325,10 @@ Because of its size (>1GB if written to disk as an uncompressed csv file), data 
 ```{r}
 
 dir.create("processed")
-write_rds(data_preprocessed, "processed/1_data_preprocessed.rds", compress = "gz")
+
+write_rds(data_preprocessed, 
+          "processed/1_data_preprocessed.rds", 
+          compress = "xz")
 
 ```
 
