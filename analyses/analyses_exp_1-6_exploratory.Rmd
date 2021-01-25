@@ -269,7 +269,7 @@ data_after_exclusions %>%
 
 fit_exploratory_selfreport <-
   brm(formula = mean_self_reported_evaluation ~ source_valence * experiment_condition + (1 | experiment),
-      family = gaussian(),
+      family  = gaussian(),
       data    = data_after_exclusions,
       file    = "models/fit_exploratory_selfreport",
       prior   = prior(normal(0, 10)),
@@ -405,7 +405,7 @@ Change in self-reported evaluations (i.e., between Source Valence conditions) in
 
 fit_exploratory_implicit <-
   brm(formula = IAT_D2 ~ source_valence * experiment_condition + (1 | experiment),
-      family = gaussian(),
+      family  = gaussian(),
       data    = data_after_exclusions,
       file    = "models/fit_exploratory_implicit",
       prior   = prior(normal(0, 10)),
@@ -540,7 +540,7 @@ Change in IAT D2 scores (i.e., between Source Valence conditions) induced by Dee
 
 fit_exploratory_intentions <-
   brm(formula = mean_intentions ~ source_valence * experiment_condition, # no random effect for experiment as only exp 6 assessed intentions
-      family = gaussian(),
+      family  = gaussian(),
       data    = data_after_exclusions,
       file    = "models/fit_exploratory_intentions",
       prior   = prior(normal(0, 10)),
@@ -2171,6 +2171,547 @@ H5-7: Does being aware of the concept, detecitng the deepfake, or both make you 
 - H5: Evaluative learning effects found in the subset who were shown Deepfakes and were aware of the concept, on self-reports (`r H5a`), implicit measure (`r H5b`) and behavioural intentions (`r H5c`).
 - H6: Evaluative learning effects found in the subset who were shown Deepfakes and detected them, on self-reports (`r H6a`), implicit measure (`r H6b`) and behavioural intentions (`r H6c`).
 - H6: Evaluative learning effects found in the subset who were shown Deepfakes, were aware of the concept, and detected them, on self-reports (`r H7a`), implicit measure (`r H7b`) and behavioural intentions (`r H7c`).
+
+
+# Illustrative models
+
+For the sake of conveying points in the summary manuscript, e.g., that deepfakes or genuine content were shown to establish attitudes in a specific experiment, we add models and results using these specific subsets. These models were added after the confirmatory experiment 7 was run, and were chosen over adjusting the above models to (for example) include random intercept for experiment or intervention medium.
+
+## Evaluative learning effects in deepfaked group from Experiment 3
+
+### Self-reported evaluations
+
+#### Fit model
+
+```{r}
+
+fit_exploratory_selfreport_exp3 <-
+  data_after_exclusions %>%
+  filter(experiment == 3) %>%
+  brm(formula = mean_self_reported_evaluation ~ source_valence * experiment_condition,
+      family  = gaussian(),
+      data    = .,
+      file    = "models/fit_exploratory_selfreport_exp3",
+      prior   = prior(normal(0, 10)),
+      iter    = 10000,
+      warmup  = 3000,
+      control = list(adapt_delta = 0.99),  # to avoid divergent transitions
+      chains  = 4,
+      cores   = parallel::detectCores())
+
+```
+
+#### Inspect convergence
+
+```{r}
+
+summary(fit_exploratory_selfreport_exp3)
+plot(fit_exploratory_selfreport_exp3, ask = FALSE)
+
+```
+
+#### Check informativeness of prior
+
+Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-each-parameter-or-other-qoi-compare-the-posterior-sd-to-the-prior-sd-if-the-posterior-sd-for-any-parameter-or-qoi-is-more-than-0-1-times-the-prior-sd-then-print-out-a-note-the-prior-dist/) simple heuristic: For each parameter, compare the posterior sd to the prior sd. If the posterior sd for any parameter is more than 0.1 times the prior sd, then note that the prior was informative.
+
+```{r}
+
+check_prior(fit_exploratory_selfreport_exp3) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+```
+
+#### Interpret posteriors
+
+```{r}
+
+# plot_model(fit_exploratory_selfreport_exp3)
+plot_model(fit_exploratory_selfreport_exp3, type = "pred", terms = c("source_valence", "experiment_condition"))
+
+# percent moderation
+draws_sr_exp3 <-
+  bind_cols(
+    select(spread_draws(fit_exploratory_selfreport_exp3, b_source_valencepositive), b_source_valencepositive),
+    select(spread_draws(fit_exploratory_selfreport_exp3, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
+    select(spread_draws(fit_exploratory_selfreport_exp3, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
+  ) %>%
+  rename(main_valence = b_source_valencepositive,
+         main_experiment_condition = b_experiment_conditiondeepfaked,
+         interaction = `b_source_valencepositive:experiment_conditiondeepfaked`) %>%
+  mutate(effect_deepfaked = main_valence + interaction)
+
+# results
+estimates_sr_exp3 <-
+  map_estimate(draws_sr_exp3) %>%
+  full_join(bayestestR::hdi(draws_sr_exp3, ci = .95) %>%
+              rename(CI_95_lower = CI_low,
+                     CI_95_upper = CI_high) %>%
+              as_tibble(),
+            by = "Parameter") %>%
+  full_join(bayestestR::hdi(draws_sr_exp3, ci = .90) %>%
+              as_tibble() %>%
+              rename(CI_90_lower = CI_low,
+                     CI_90_upper = CI_high),
+            by = "Parameter") %>%
+  full_join(draws_sr_exp3 %>%
+              select(-percent_comparison) %>%
+              gather(Parameter, value) %>%
+              group_by(Parameter) %>%
+              summarize(pd = mean(value > 0)) %>%
+              mutate(p = pd_to_p(pd, direction = "one-sided")) %>%
+              ungroup() %>%
+              select(Parameter, p),
+            by = "Parameter") %>%
+  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper,
+         CI_90_lower, CI_90_upper, p)
+
+# results table
+estimates_sr_exp3 %>%
+  mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+# hypothesis testing
+H1b <- ifelse((estimates_sr_exp3 %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_95_lower)) > 0, 
+              "Accepted", "Rejected")
+
+```
+
+*H1b*
+
+The content of the Deepfaked videos (i.e., Source Valence) will influence participants’ self-reported evaluations. 
+
+- Result: `r H1b`
+
+### Implicit
+
+#### Fit model
+
+```{r}
+
+fit_exploratory_implicit_exp3 <-
+  data_after_exclusions %>%
+  filter(experiment == 3) %>%
+  brm(formula = IAT_D2 ~ source_valence * experiment_condition,
+      family  = gaussian(),
+      data    = .,
+      file    = "models/fit_exploratory_implicit_exp3",
+      prior   = prior(normal(0, 10)),
+      iter    = 10000,
+      warmup  = 3000,
+      control = list(adapt_delta = 0.99),  # to avoid divergent transitions
+      chains  = 4,
+      cores   = parallel::detectCores())
+
+```
+
+#### Inspect convergence
+
+```{r}
+
+summary(fit_exploratory_implicit_exp3)
+plot(fit_exploratory_implicit_exp3, ask = FALSE)
+
+```
+
+#### Check informativeness of prior
+
+Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-each-parameter-or-other-qoi-compare-the-posterior-sd-to-the-prior-sd-if-the-posterior-sd-for-any-parameter-or-qoi-is-more-than-0-1-times-the-prior-sd-then-print-out-a-note-the-prior-dist/) simple heuristic: For each parameter, compare the posterior sd to the prior sd. If the posterior sd for any parameter is more than 0.1 times the prior sd, then note that the prior was informative.
+
+```{r}
+
+check_prior(fit_exploratory_implicit_exp3) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+```
+
+#### Interpret posteriors
+
+```{r}
+
+#plot_model(fit_exploratory_implicit_exp3)
+plot_model(fit_exploratory_implicit_exp3, type = "pred", terms = c("source_valence", "experiment_condition"))
+
+# percent moderation
+draws_imp_exp3 <-
+  bind_cols(
+    select(spread_draws(fit_exploratory_implicit_exp3, b_source_valencepositive), b_source_valencepositive),
+    select(spread_draws(fit_exploratory_implicit_exp3, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
+    select(spread_draws(fit_exploratory_implicit_exp3, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
+  ) %>%
+  rename(main_valence = b_source_valencepositive,
+         main_experiment_condition = b_experiment_conditiondeepfaked,
+         interaction = `b_source_valencepositive:experiment_conditiondeepfaked`) %>%
+  mutate(effect_deepfaked = main_valence + interaction)
+
+# results table
+estimates_imp_exp3 <-
+  map_estimate(draws_imp_exp3) %>%
+  full_join(bayestestR::hdi(draws_imp_exp3, ci = .95) %>%
+              rename(CI_95_lower = CI_low,
+                     CI_95_upper = CI_high) %>%
+              as_tibble(),
+            by = "Parameter") %>%
+  full_join(bayestestR::hdi(draws_imp_exp3, ci = .90) %>%
+              as_tibble() %>%
+              rename(CI_90_lower = CI_low,
+                     CI_90_upper = CI_high),
+            by = "Parameter") %>%
+  full_join(draws_imp_exp3 %>%
+              select(-percent_comparison) %>%
+              gather(Parameter, value) %>%
+              group_by(Parameter) %>%
+              summarize(pd = mean(value > 0)) %>%
+              mutate(p = pd_to_p(pd, direction = "one-sided")) %>%
+              ungroup() %>%
+              select(Parameter, p),
+            by = "Parameter") %>%
+  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper,
+         CI_90_lower, CI_90_upper, p)
+
+estimates_imp_exp3 %>%
+  mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+# hypothesis testing
+H1d <- ifelse((estimates_imp_exp3 %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_95_lower)) > 0, 
+              "Accepted", "Rejected")
+
+```
+
+*H1d*
+
+The content of the Deepfaked videos (i.e., Source Valence) will influence participants’ IAT D2 scores. 
+
+- Result: `r H1d`
+
+## Evaluative learning effects in deepfaked group from Experiment 4 and 6
+
+### Self-reported evaluations
+
+#### Fit model
+
+```{r}
+
+fit_exploratory_selfreport_exp4 <-
+  data_after_exclusions %>%
+  filter(experiment %in% c(4, 6)) %>%
+  brm(formula = mean_self_reported_evaluation ~ source_valence * experiment_condition + (1 | experiment),
+      family  = gaussian(),
+      data    = .,
+      file    = "models/fit_exploratory_selfreport_exp4",
+      prior   = prior(normal(0, 10)),
+      iter    = 10000,
+      warmup  = 3000,
+      control = list(adapt_delta = 0.99),  # to avoid divergent transitions
+      chains  = 4,
+      cores   = parallel::detectCores())
+
+```
+
+#### Inspect convergence
+
+```{r}
+
+summary(fit_exploratory_selfreport_exp4)
+plot(fit_exploratory_selfreport_exp4, ask = FALSE)
+
+```
+
+#### Check informativeness of prior
+
+Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-each-parameter-or-other-qoi-compare-the-posterior-sd-to-the-prior-sd-if-the-posterior-sd-for-any-parameter-or-qoi-is-more-than-0-1-times-the-prior-sd-then-print-out-a-note-the-prior-dist/) simple heuristic: For each parameter, compare the posterior sd to the prior sd. If the posterior sd for any parameter is more than 0.1 times the prior sd, then note that the prior was informative.
+
+```{r}
+
+check_prior(fit_exploratory_selfreport_exp4) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+```
+
+#### Interpret posteriors
+
+```{r}
+
+# plot_model(fit_exploratory_selfreport_exp4)
+plot_model(fit_exploratory_selfreport_exp4, type = "pred", terms = c("source_valence", "experiment_condition"))
+
+# percent moderation
+draws_sr_exp4 <-
+  bind_cols(
+    select(spread_draws(fit_exploratory_selfreport_exp4, b_source_valencepositive), b_source_valencepositive),
+    select(spread_draws(fit_exploratory_selfreport_exp4, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
+    select(spread_draws(fit_exploratory_selfreport_exp4, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
+  ) %>%
+  rename(main_valence = b_source_valencepositive,
+         main_experiment_condition = b_experiment_conditiondeepfaked,
+         interaction = `b_source_valencepositive:experiment_conditiondeepfaked`) %>%
+  mutate(effect_deepfaked = main_valence + interaction)
+
+# results
+estimates_sr_exp4 <-
+  map_estimate(draws_sr_exp4) %>%
+  full_join(bayestestR::hdi(draws_sr_exp4, ci = .95) %>%
+              rename(CI_95_lower = CI_low,
+                     CI_95_upper = CI_high) %>%
+              as_tibble(),
+            by = "Parameter") %>%
+  full_join(bayestestR::hdi(draws_sr_exp4, ci = .90) %>%
+              as_tibble() %>%
+              rename(CI_90_lower = CI_low,
+                     CI_90_upper = CI_high),
+            by = "Parameter") %>%
+  full_join(draws_sr_exp4 %>%
+              select(-percent_comparison) %>%
+              gather(Parameter, value) %>%
+              group_by(Parameter) %>%
+              summarize(pd = mean(value > 0)) %>%
+              mutate(p = pd_to_p(pd, direction = "one-sided")) %>%
+              ungroup() %>%
+              select(Parameter, p),
+            by = "Parameter") %>%
+  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper,
+         CI_90_lower, CI_90_upper, p)
+
+# results table
+estimates_sr_exp4 %>%
+  mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+# hypothesis testing
+H1b <- ifelse((estimates_sr_exp4 %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_95_lower)) > 0, 
+              "Accepted", "Rejected")
+
+```
+
+*H1b*
+
+The content of the Deepfaked videos (i.e., Source Valence) will influence participants’ self-reported evaluations. 
+
+- Result: `r H1b`
+
+### Implicit
+
+#### Fit model
+
+```{r}
+
+fit_exploratory_implicit_exp4 <-
+  data_after_exclusions %>%
+  filter(experiment %in% c(4, 6)) %>%
+  brm(formula = IAT_D2 ~ source_valence * experiment_condition + (1 | experiment),
+      family  = gaussian(),
+      data    = .,
+      file    = "models/fit_exploratory_implicit_exp4",
+      prior   = prior(normal(0, 10)),
+      iter    = 10000,
+      warmup  = 3000,
+      control = list(adapt_delta = 0.99),  # to avoid divergent transitions
+      chains  = 4,
+      cores   = parallel::detectCores())
+
+```
+
+#### Inspect convergence
+
+```{r}
+
+summary(fit_exploratory_implicit_exp4)
+plot(fit_exploratory_implicit_exp4, ask = FALSE)
+
+```
+
+#### Check informativeness of prior
+
+Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-each-parameter-or-other-qoi-compare-the-posterior-sd-to-the-prior-sd-if-the-posterior-sd-for-any-parameter-or-qoi-is-more-than-0-1-times-the-prior-sd-then-print-out-a-note-the-prior-dist/) simple heuristic: For each parameter, compare the posterior sd to the prior sd. If the posterior sd for any parameter is more than 0.1 times the prior sd, then note that the prior was informative.
+
+```{r}
+
+check_prior(fit_exploratory_implicit_exp4) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+```
+
+#### Interpret posteriors
+
+```{r}
+
+#plot_model(fit_exploratory_implicit_exp4)
+plot_model(fit_exploratory_implicit_exp4, type = "pred", terms = c("source_valence", "experiment_condition"))
+
+# percent moderation
+draws_imp_exp4 <-
+  bind_cols(
+    select(spread_draws(fit_exploratory_implicit_exp4, b_source_valencepositive), b_source_valencepositive),
+    select(spread_draws(fit_exploratory_implicit_exp4, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
+    select(spread_draws(fit_exploratory_implicit_exp4, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
+  ) %>%
+  rename(main_valence = b_source_valencepositive,
+         main_experiment_condition = b_experiment_conditiondeepfaked,
+         interaction = `b_source_valencepositive:experiment_conditiondeepfaked`) %>%
+  mutate(effect_deepfaked = main_valence + interaction)
+
+# results table
+estimates_imp_exp4 <-
+  map_estimate(draws_imp_exp4) %>%
+  full_join(bayestestR::hdi(draws_imp_exp4, ci = .95) %>%
+              rename(CI_95_lower = CI_low,
+                     CI_95_upper = CI_high) %>%
+              as_tibble(),
+            by = "Parameter") %>%
+  full_join(bayestestR::hdi(draws_imp_exp4, ci = .90) %>%
+              as_tibble() %>%
+              rename(CI_90_lower = CI_low,
+                     CI_90_upper = CI_high),
+            by = "Parameter") %>%
+  full_join(draws_imp_exp4 %>%
+              select(-percent_comparison) %>%
+              gather(Parameter, value) %>%
+              group_by(Parameter) %>%
+              summarize(pd = mean(value > 0)) %>%
+              mutate(p = pd_to_p(pd, direction = "one-sided")) %>%
+              ungroup() %>%
+              select(Parameter, p),
+            by = "Parameter") %>%
+  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper,
+         CI_90_lower, CI_90_upper, p)
+
+estimates_imp_exp4 %>%
+  mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+# hypothesis testing
+H1d <- ifelse((estimates_imp_exp4 %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_95_lower)) > 0, 
+              "Accepted", "Rejected")
+
+```
+
+*H1d*
+
+The content of the Deepfaked videos (i.e., Source Valence) will influence participants’ IAT D2 scores. 
+
+- Result: `r H1d`
+
+### Behavioural intentions
+
+#### Fit model
+
+```{r}
+
+fit_exploratory_intentions_exp4 <-
+  data_after_exclusions %>%
+  filter(experiment %in% c(4, 6)) %>%
+  brm(formula = mean_intentions ~ source_valence * experiment_condition, # no random effect for experiment as only exp 6 assessed intentions
+      family  = gaussian(),
+      data    = .,
+      file    = "models/fit_exploratory_intentions_exp4",
+      prior   = prior(normal(0, 10)),
+      iter    = 10000,
+      warmup  = 3000,
+      control = list(adapt_delta = 0.99),  # to avoid divergent transitions
+      chains  = 4,
+      cores   = parallel::detectCores())
+
+```
+
+#### Inspect convergence
+
+```{r}
+
+summary(fit_exploratory_intentions_exp4)
+plot(fit_exploratory_intentions_exp4, ask = FALSE)
+
+```
+
+#### Check informativeness of prior
+
+Using [Gelman's (2019)](https://statmodeling.stat.columbia.edu/2019/08/10/for-each-parameter-or-other-qoi-compare-the-posterior-sd-to-the-prior-sd-if-the-posterior-sd-for-any-parameter-or-qoi-is-more-than-0-1-times-the-prior-sd-then-print-out-a-note-the-prior-dist/) simple heuristic: For each parameter, compare the posterior sd to the prior sd. If the posterior sd for any parameter is more than 0.1 times the prior sd, then note that the prior was informative.
+
+```{r}
+
+check_prior(fit_exploratory_intentions_exp4) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+```
+
+#### Interpret posteriors
+
+```{r}
+
+#plot_model(fit_exploratory_intentions_exp4)
+plot_model(fit_exploratory_intentions_exp4, type = "pred", terms = c("source_valence", "experiment_condition"))
+
+# percent moderation
+draws_intentions_intentions_exp4 <-
+  bind_cols(
+    select(spread_draws(fit_exploratory_intentions_exp4, b_source_valencepositive), b_source_valencepositive),
+    select(spread_draws(fit_exploratory_intentions_exp4, b_experiment_conditiondeepfaked), b_experiment_conditiondeepfaked),
+    select(spread_draws(fit_exploratory_intentions_exp4, `b_source_valencepositive:experiment_conditiondeepfaked`), `b_source_valencepositive:experiment_conditiondeepfaked`)
+  ) %>%
+  rename(main_valence = b_source_valencepositive,
+         main_experiment_condition = b_experiment_conditiondeepfaked,
+         interaction = `b_source_valencepositive:experiment_conditiondeepfaked`) %>%
+  mutate(effect_deepfaked = main_valence + interaction)
+
+# results table
+estimates_intentions_intentions_exp4 <-
+  map_estimate(draws_intentions_intentions_exp4) %>%
+  full_join(bayestestR::hdi(draws_intentions_intentions_exp4, ci = .95) %>%
+              rename(CI_95_lower = CI_low,
+                     CI_95_upper = CI_high) %>%
+              as_tibble(),
+            by = "Parameter") %>%
+  full_join(bayestestR::hdi(draws_intentions_intentions_exp4, ci = .90) %>%
+              as_tibble() %>%
+              rename(CI_90_lower = CI_low,
+                     CI_90_upper = CI_high),
+            by = "Parameter") %>%
+  full_join(draws_intentions_intentions_exp4 %>%
+              select(-percent_comparison) %>%
+              gather(Parameter, value) %>%
+              group_by(Parameter) %>%
+              summarize(pd = mean(value > 0)) %>%
+              mutate(p = pd_to_p(pd, direction = "one-sided")) %>%
+              ungroup() %>%
+              select(Parameter, p),
+            by = "Parameter") %>%
+  select(Parameter, MAP_Estimate, CI_95_lower, CI_95_upper,
+         CI_90_lower, CI_90_upper, p)
+
+estimates_intentions_intentions_exp4 %>%
+  mutate_at(.vars = c("MAP_Estimate", "CI_95_lower", "CI_95_upper", "CI_90_lower", "CI_90_upper"), round, digits = 2) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = FALSE)
+
+# hypothesis testing
+H1f <- ifelse((estimates_intentions_intentions_exp4 %>% filter(Parameter == "effect_deepfaked") %>% pull(CI_95_lower)) > 0, 
+              "Accepted", "Rejected")
+
+```
+
+*H1f*
+
+The content of the Deepfaked videos (i.e., Source Valence) will influence participants’ behavioral intention responses. 
+
+- Result: `r H1f`
 
 
 # Session Info
