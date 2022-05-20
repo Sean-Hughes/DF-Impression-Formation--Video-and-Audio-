@@ -1,6 +1,6 @@
-# Evaluative learning via Deepfaked online content
+# Deepfaked Online Content is Highly Effective in Manipulating Attitudes & Intentions
 
-A series of studies examining whether evaluative learning (assessed via self-reports, an implicit measure [the IAT], and behavioral intentions) can be established via Deepfaked (online audio and video) content, and whether Deepfakes are as effective as genuine online content.
+A series of studies examining whether explicit attitudes, implicit attitudes, and intentions (assessed via self-reports, an implicit measure [the IAT], and behavioral intentions questions) can be established via Deepfaked (online audio and video) content.
 
 ## License
 
@@ -9,7 +9,7 @@ Code: MIT license
 Data and documents: CC-BY
 ## Citation
 
-Hughes, S., Fried, O., Ferguson, M., Yao, D., Hughes, C., & Hughes, R, & Hussey, I. Using Deepfakes to Hack the Human Mind    
+Hughes, S., Fried, O., Ferguson, M., Yao, D., Hughes, C., & Hughes, R, & Hussey, I. Deepfaked Online Content is Highly Effective in Manipulating Attitudes & Intentions    
 
 ### IMPORTANT UPDATE (April 2022)
 
